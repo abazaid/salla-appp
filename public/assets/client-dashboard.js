@@ -3,6 +3,9 @@
     return;
   }
   window.__CLIENT_DASHBOARD_PRODUCTS_INIT__ = true;
+  const appBasePath = (document.querySelector('.dashboard-shell')?.dataset.appBasePath || '').replace(/\/+$/, '');
+  const apiUrl = (path) => `${appBasePath}${path}`;
+
   const state = {
     products: [],
     page: 1,
@@ -16,7 +19,9 @@
     quickFilter: 'all',
     loadingProductId: null,
     modalLoading: false,
-    editor: null
+    editor: null,
+    altSelectedProductIds: new Set(),
+    altEditor: null
   };
 
   function escapeHtml(value) {
@@ -32,6 +37,34 @@
     const div = document.createElement('div');
     div.innerHTML = html || '';
     return (div.textContent || div.innerText || '').trim();
+  }
+
+  function buildDescriptionPreview(rawHtml) {
+    let text = stripHtml(rawHtml || '');
+    text = text
+      .replace(/https?:\/\/\S+/gi, ' ')
+      .replace(/[{}[\]<>|]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!text) {
+      return 'لا يوجد وصف حالي لهذا المنتج.';
+    }
+
+    const cleaned = text
+      .split(' ')
+      .filter((token) => {
+        if (!token) return false;
+        if (token.length > 42) return false;
+        if (/^[0-9.\-_/]{8,}$/.test(token)) return false;
+        return true;
+      })
+      .join(' ')
+      .trim();
+
+    const finalText = cleaned || text;
+    if (finalText.length <= 170) return finalText;
+    return `${finalText.slice(0, 170).trim()}...`;
   }
 
   function normalizeText(value) {
@@ -146,7 +179,7 @@
     const descriptionReady = isDescriptionOptimized(product);
     const seoReady = isSeoOptimized(product);
     const image = product.thumbnail || product.main_image || '';
-    const preview = stripHtml(product.description || '').slice(0, 140) || 'لا يوجد وصف حالي لهذا المنتج.';
+    const preview = buildDescriptionPreview(product.description || '');
     const isLoading = state.loadingProductId === product.id;
 
     return `
@@ -163,7 +196,7 @@
             <span>الحالة: <strong>${escapeHtml(getStatusLabel(product))}</strong></span>
           </div>
         </div>
-        <p class="muted" style="margin:0;">${escapeHtml(preview)}</p>
+        <p class="muted product-preview" style="margin:0;">${escapeHtml(preview)}</p>
         <div class="product-actions">
           <button class="btn" type="button" ${isLoading ? 'disabled' : ''} data-action="description" data-id="${Number(product.id)}">${isLoading ? 'جاري التحضير...' : 'تحسين الوصف'}</button>
           <button class="btn btn-sky" type="button" ${isLoading ? 'disabled' : ''} data-action="seo" data-id="${Number(product.id)}">تحسين السيو</button>
@@ -197,6 +230,7 @@
       `;
       renderPagination('products-pagination-top', totalPages);
       renderPagination('products-pagination-bottom', totalPages);
+      renderAltProducts();
       return;
     }
 
@@ -209,6 +243,288 @@
 
     renderPagination('products-pagination-top', totalPages);
     renderPagination('products-pagination-bottom', totalPages);
+    renderAltProducts();
+  }
+
+  function setAltAlert(type, message) {
+    const root = document.getElementById('alt-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  function getProductImages(product) {
+    return Array.isArray(product?.images) ? product.images.filter((image) => Number(image?.id || 0) > 0) : [];
+  }
+
+  function buildAltProductCard(product) {
+    const images = getProductImages(product);
+    const selected = state.altSelectedProductIds.has(Number(product.id));
+    const previewImages = images.slice(0, 4).map((image) => `
+      <img src="${escapeHtml(image.url || '')}" alt="${escapeHtml(image.alt || product.name || 'image')}" style="width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid rgba(202,177,149,.5);">
+    `).join('');
+
+    return `
+      <article class="product-card">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+          <label style="display:flex;gap:8px;align-items:center;">
+            <input type="checkbox" data-alt-select-product="${Number(product.id)}" ${selected ? 'checked' : ''}>
+            <span class="muted">تحديد</span>
+          </label>
+          <span class="status-badge ${images.length ? 'success' : 'danger'}">${images.length} صور</span>
+        </div>
+        <h3 class="product-title" style="margin-bottom:0;">${escapeHtml(product.name || 'منتج')}</h3>
+        <div class="meta-list"><span>SKU: <code>${escapeHtml(product.sku || '-')}</code></span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;min-height:58px;">
+          ${previewImages || '<span class="muted">لا توجد صور متاحة لهذا المنتج.</span>'}
+        </div>
+        <div class="product-actions">
+          <button class="btn btn-sky" type="button" data-open-alt-editor="${Number(product.id)}" ${images.length ? '' : 'disabled'}>كتابة ALT للصور</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderAltProducts() {
+    const root = document.getElementById('alt-products-list');
+    const summary = document.getElementById('alt-products-summary');
+    if (!root || !summary) return;
+
+    const { filtered, totalPages, items, from, to } = getPagedProducts();
+    summary.textContent = filtered.length
+      ? `عرض ${from} إلى ${to} من أصل ${filtered.length} منتج`
+      : 'لا توجد منتجات مطابقة للفلاتر الحالية.';
+
+    if (!items.length) {
+      root.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p class="muted">لا توجد منتجات لعرض ALT.</p></div>';
+      renderPagination('alt-products-pagination-top', totalPages);
+      renderPagination('alt-products-pagination-bottom', totalPages);
+      return;
+    }
+
+    root.innerHTML = items.map(buildAltProductCard).join('');
+    root.querySelectorAll('[data-alt-select-product]').forEach((input) => {
+      input.addEventListener('change', () => {
+        const productId = Number(input.getAttribute('data-alt-select-product'));
+        if (!productId) return;
+        if (input.checked) state.altSelectedProductIds.add(productId);
+        else state.altSelectedProductIds.delete(productId);
+      });
+    });
+    root.querySelectorAll('[data-open-alt-editor]').forEach((button) => {
+      button.addEventListener('click', () => {
+        openImageAltEditor(Number(button.getAttribute('data-open-alt-editor')));
+      });
+    });
+
+    renderPagination('alt-products-pagination-top', totalPages);
+    renderPagination('alt-products-pagination-bottom', totalPages);
+  }
+
+  function openImageAltModal() {
+    document.getElementById('image-alt-modal')?.classList.add('is-open');
+  }
+
+  function closeImageAltModal() {
+    document.getElementById('image-alt-modal')?.classList.remove('is-open');
+    state.altEditor = null;
+    renderImageAltBody();
+  }
+
+  function renderImageAltBody() {
+    const root = document.getElementById('image-alt-body');
+    const title = document.getElementById('image-alt-title');
+    const subtitle = document.getElementById('image-alt-subtitle');
+    const alert = document.getElementById('image-alt-alert');
+    if (!root || !title || !subtitle || !alert) return;
+
+    const editor = state.altEditor;
+    if (!editor) {
+      title.textContent = 'كاتب النص البديل';
+      subtitle.textContent = 'اختر منتجًا لبدء تعديل ALT.';
+      alert.innerHTML = '';
+      root.innerHTML = '<div class="empty-state"><p class="muted">اختر منتجًا من قسم ALT للصور.</p></div>';
+      return;
+    }
+
+    title.textContent = editor.productName || 'كاتب ALT';
+    subtitle.textContent = 'يمكنك تحديد صورة واحدة أو عدة صور، ثم توليد ALT أو حفظه يدويًا.';
+    alert.innerHTML = editor.notice ? `<div class="notice ${editor.notice.type}">${escapeHtml(editor.notice.message)}</div>` : '';
+
+    const rows = editor.images.map((image) => `
+      <div class="card surface-soft" style="padding:12px;box-shadow:none;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <label style="margin-top:4px;"><input type="checkbox" data-alt-image-select="${image.image_id}" ${image.selected ? 'checked' : ''}></label>
+          <img src="${escapeHtml(image.image_url || '')}" alt="" style="width:70px;height:70px;object-fit:cover;border-radius:10px;border:1px solid rgba(202,177,149,.5);">
+          <div style="flex:1;display:grid;gap:8px;">
+            <label><strong>ALT الحالي</strong></label>
+            <textarea readonly rows="2">${escapeHtml(image.current_alt || '')}</textarea>
+            <label><strong>ALT بعد التحسين</strong></label>
+            <textarea rows="2" data-alt-image-value="${image.image_id}">${escapeHtml(image.optimized_alt || '')}</textarea>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    root.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">
+        <button class="btn btn-sky" id="optimize-selected-images" type="button">توليد ALT للمحدد</button>
+        <button class="btn" id="save-selected-images" type="button">حفظ المحدد في المتجر</button>
+      </div>
+      <div class="panel-stack">${rows}</div>
+    `;
+
+    root.querySelectorAll('[data-alt-image-select]').forEach((input) => {
+      input.addEventListener('change', () => {
+        const imageId = Number(input.getAttribute('data-alt-image-select'));
+        const item = state.altEditor?.images.find((img) => Number(img.image_id) === imageId);
+        if (item) item.selected = input.checked;
+      });
+    });
+    root.querySelectorAll('[data-alt-image-value]').forEach((input) => {
+      input.addEventListener('input', () => {
+        const imageId = Number(input.getAttribute('data-alt-image-value'));
+        const item = state.altEditor?.images.find((img) => Number(img.image_id) === imageId);
+        if (item) item.optimized_alt = input.value;
+      });
+    });
+
+    document.getElementById('optimize-selected-images')?.addEventListener('click', optimizeSelectedImagesAlt);
+    document.getElementById('save-selected-images')?.addEventListener('click', saveSelectedImagesAlt);
+  }
+
+  async function openImageAltEditor(productId) {
+    const product = getProductById(productId);
+    if (!product) return;
+
+    state.altEditor = {
+      productId: Number(productId),
+      productName: product.name || 'منتج',
+      notice: null,
+      images: getProductImages(product).map((image) => ({
+        image_id: Number(image.id),
+        image_url: image.url || '',
+        current_alt: image.alt || '',
+        optimized_alt: image.alt || '',
+        selected: true
+      }))
+    };
+    renderImageAltBody();
+    openImageAltModal();
+  }
+
+  async function optimizeSelectedImagesAlt() {
+    if (!state.altEditor) return;
+    const imageIds = state.altEditor.images.filter((image) => image.selected).map((image) => image.image_id);
+    if (!imageIds.length) {
+      state.altEditor.notice = { type: 'error', message: 'اختر صورة واحدة على الأقل.' };
+      renderImageAltBody();
+      return;
+    }
+
+    state.altEditor.notice = { type: 'success', message: 'جاري توليد ALT للصور المحددة...' };
+    renderImageAltBody();
+
+    try {
+      const response = await fetch(apiUrl(`/api/products/${state.altEditor.productId}/images/optimize-alt`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_ids: imageIds,
+          language: document.getElementById('language')?.value || 'ar'
+        })
+      });
+      const data = await response.json();
+      if (!data.success) {
+        state.altEditor.notice = { type: 'error', message: data.message || 'تعذر توليد ALT.' };
+        renderImageAltBody();
+        return;
+      }
+
+      (data.images || []).forEach((image) => {
+        const item = state.altEditor?.images.find((img) => Number(img.image_id) === Number(image.image_id));
+        if (item) item.optimized_alt = image.optimized_alt || item.optimized_alt;
+      });
+      state.altEditor.notice = { type: 'success', message: 'تم توليد ALT للصور المحددة.' };
+      renderImageAltBody();
+    } catch (error) {
+      state.altEditor.notice = { type: 'error', message: 'حدث خطأ أثناء توليد ALT.' };
+      renderImageAltBody();
+    }
+  }
+
+  async function saveSelectedImagesAlt() {
+    if (!state.altEditor) return;
+    const payload = state.altEditor.images
+      .filter((image) => image.selected)
+      .map((image) => ({ image_id: image.image_id, alt: String(image.optimized_alt || '').trim() }))
+      .filter((image) => image.alt);
+
+    if (!payload.length) {
+      state.altEditor.notice = { type: 'error', message: 'لا توجد بيانات ALT صالحة للحفظ.' };
+      renderImageAltBody();
+      return;
+    }
+
+    state.altEditor.notice = { type: 'success', message: 'جاري حفظ ALT داخل المتجر...' };
+    renderImageAltBody();
+
+    try {
+      const response = await fetch(apiUrl(`/api/products/${state.altEditor.productId}/images/save-alt`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: payload })
+      });
+      const data = await response.json();
+      if (!data.success) {
+        state.altEditor.notice = { type: 'error', message: data.message || 'تعذر حفظ ALT.' };
+        renderImageAltBody();
+        return;
+      }
+
+      state.altEditor.notice = { type: 'success', message: 'تم حفظ ALT للصور المحددة.' };
+      renderImageAltBody();
+      await loadProducts();
+      await loadOperations();
+      await loadUsage();
+    } catch (error) {
+      state.altEditor.notice = { type: 'error', message: 'حدث خطأ أثناء حفظ ALT.' };
+      renderImageAltBody();
+    }
+  }
+
+  async function optimizeSelectedProductsAlt() {
+    const selected = Array.from(state.altSelectedProductIds);
+    if (!selected.length) {
+      setAltAlert('error', 'اختر منتجًا واحدًا على الأقل.');
+      return;
+    }
+
+    setAltAlert('success', 'جاري تحسين ALT لكل صور المنتجات المحددة...');
+    try {
+      const response = await fetch(apiUrl('/api/products/alt/bulk'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_ids: selected,
+          language: document.getElementById('language')?.value || 'ar'
+        })
+      });
+      const data = await response.json();
+      if (!data.success) {
+        setAltAlert('error', data.message || 'تعذر تنفيذ التحسين الجماعي.');
+        return;
+      }
+
+      const count = Array.isArray(data.processed) ? data.processed.length : 0;
+      const errors = Array.isArray(data.errors) ? data.errors.length : 0;
+      setAltAlert('success', `تمت معالجة ${count} منتج${errors ? `، مع ${errors} أخطاء` : ''}.`);
+      await loadProducts();
+      await loadOperations();
+      await loadUsage();
+      renderAltProducts();
+    } catch (error) {
+      setAltAlert('error', 'حدث خطأ أثناء التحسين الجماعي لصور ALT.');
+    }
   }
 
   function renderEditorBody() {
@@ -323,7 +639,7 @@
     openEditorModal();
 
     try {
-      const response = await fetch(`/api/products/${productId}/optimize`, {
+      const response = await fetch(apiUrl(`/api/products/${productId}/optimize`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -397,7 +713,7 @@
     renderEditorBody();
 
     try {
-      const response = await fetch(`/api/products/${editor.product.id}/save-description`, {
+      const response = await fetch(apiUrl(`/api/products/${editor.product.id}/save-description`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -431,11 +747,15 @@
     }
 
     try {
-      const response = await fetch('/api/products');
+      const response = await fetch(apiUrl('/api/products'));
       const data = await response.json();
       if (!data.success) {
         if (root) {
           root.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p class="muted">${escapeHtml(data.message || 'تعذّر تحميل المنتجات.')}</p></div>`;
+        }
+        const altSummary = document.getElementById('alt-products-summary');
+        if (altSummary) {
+          altSummary.textContent = 'تعذّر تحميل منتجات قسم ALT.';
         }
         return;
       }
@@ -445,6 +765,10 @@
     } catch (error) {
       if (root) {
         root.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p class="muted">تعذّر تحميل المنتجات.</p></div>';
+      }
+      const altSummary = document.getElementById('alt-products-summary');
+      if (altSummary) {
+        altSummary.textContent = 'تعذّر تحميل منتجات قسم ALT.';
       }
     }
   }
@@ -467,7 +791,7 @@
 
   async function loadStoreSeo() {
     try {
-      const data = await fetch('/api/store-seo').then((response) => response.json());
+      const data = await fetch(apiUrl('/api/store-seo')).then((response) => response.json());
       if (!data.success) {
         setStoreSeoAlert('error', data.message || 'تعذر جلب سيو المتجر.');
         return;
@@ -494,7 +818,7 @@
 
     setStoreSeoAlert('success', 'جاري إنشاء سيو المتجر...');
     try {
-      const data = await fetch('/api/store-seo/optimize', {
+      const data = await fetch(apiUrl('/api/store-seo/optimize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -542,7 +866,7 @@
 
     setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
     try {
-      const data = await fetch('/api/store-seo/save', {
+      const data = await fetch(apiUrl('/api/store-seo/save'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, description, keywords })
@@ -571,7 +895,7 @@
     if (!root) return;
 
     try {
-      const data = await fetch('/api/subscription').then((response) => response.json());
+      const data = await fetch(apiUrl('/api/subscription')).then((response) => response.json());
       if (!data.success) {
         root.innerHTML = `<h2>الاستهلاك</h2><p class="muted">${escapeHtml(data.message || 'تعذر تحميل بيانات الاستهلاك.')}</p>`;
         return;
@@ -615,7 +939,7 @@
     if (status !== 'all') params.set('status', status);
     if (mode !== 'all') params.set('mode', mode);
     params.set('limit', limit);
-    return `/api/operations?${params.toString()}`;
+    return apiUrl(`/api/operations?${params.toString()}`);
   }
 
   function getOperationStatusClass(status) {
@@ -635,6 +959,8 @@
     if (mode === 'description') return 'وصف المنتج';
     if (mode === 'seo') return 'SEO المنتج';
     if (mode === 'store_seo') return 'سيو المتجر';
+    if (mode === 'image_alt') return 'ALT الصور';
+    if (mode === 'image_alt_bulk') return 'ALT الصور (جملة)';
     return 'الوصف + SEO';
   }
 
@@ -717,6 +1043,10 @@
     document.querySelectorAll('[data-section-target]').forEach((button) => {
       button.classList.toggle('is-active', button.getAttribute('data-section-target') === section);
     });
+
+    if (section === 'alt-images') {
+      renderAltProducts();
+    }
   }
 
   function bindEvents() {
@@ -737,6 +1067,12 @@
     document.getElementById('operations-show-all')?.addEventListener('click', () => loadOperations('all'));
     document.getElementById('generate-store-seo')?.addEventListener('click', optimizeStoreSeo);
     document.getElementById('save-store-seo')?.addEventListener('click', saveStoreSeo);
+    document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
+    document.getElementById('alt-clear-selection')?.addEventListener('click', () => {
+      state.altSelectedProductIds = new Set();
+      renderAltProducts();
+      setAltAlert('', '');
+    });
     document.getElementById('store-seo-title')?.addEventListener('input', updateStoreSeoCounters);
     document.getElementById('store-seo-description')?.addEventListener('input', updateStoreSeoCounters);
     document.getElementById('store-seo-keywords')?.addEventListener('input', updateStoreSeoCounters);
@@ -752,11 +1088,16 @@
     document.getElementById('editor-modal')?.addEventListener('click', (event) => {
       if (event.target.id === 'editor-modal') closeEditor();
     });
+    document.getElementById('close-image-alt')?.addEventListener('click', closeImageAltModal);
+    document.getElementById('image-alt-modal')?.addEventListener('click', (event) => {
+      if (event.target.id === 'image-alt-modal') closeImageAltModal();
+    });
   }
 
   bindEvents();
   switchSection('products');
   renderEditorBody();
+  renderImageAltBody();
   loadProducts();
   loadOperations();
   loadStoreSeo();

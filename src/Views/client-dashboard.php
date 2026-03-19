@@ -1,7 +1,13 @@
 <?php
 declare(strict_types=1);
+
+$appBasePath = (string) parse_url((string) \App\Config::get('APP_URL', ''), PHP_URL_PATH);
+$appBasePath = rtrim($appBasePath, '/');
+if ($appBasePath === '/') {
+    $appBasePath = '';
+}
 ?>
-<div class="dashboard-shell">
+<div class="dashboard-shell" data-app-base-path="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>">
   <aside class="card dashboard-sidebar">
     <div>
       <h3 style="margin:0 0 8px;">أدوات المتجر</h3>
@@ -203,7 +209,12 @@ declare(strict_types=1);
             <h2 style="margin:12px 0 8px;">إدارة النص البديل للصور</h2>
             <p class="muted" style="margin:0;">اختر منتجًا وافتح محرر الصور لكتابة ALT يدويًا أو توليده بالذكاء الاصطناعي، ثم احفظ في سلة.</p>
           </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="alt-optimize-selected-products" class="btn btn-sky" type="button">تحسين ALT للمنتجات المحددة</button>
+            <button id="alt-clear-selection" class="btn btn-secondary" type="button">إلغاء التحديد</button>
+          </div>
         </div>
+        <div id="alt-alert"></div>
       </div>
       <div class="card">
         <div class="section-head">
@@ -244,8 +255,8 @@ declare(strict_types=1);
           </div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-          <a class="btn btn-secondary" href="/forgot-password">استرجاع كلمة المرور</a>
-          <a class="btn" href="/logout">تسجيل الخروج</a>
+          <a class="btn btn-secondary" href="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>/forgot-password">استرجاع كلمة المرور</a>
+          <a class="btn" href="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>/logout">تسجيل الخروج</a>
         </div>
       </div>
 
@@ -295,5 +306,4 @@ declare(strict_types=1);
   </div>
 </div>
 
-<script defer src="/assets/client-dashboard.js?v=products-v6"></script>
-<script defer src="/public/assets/client-dashboard.js?v=products-v6"></script>
+<script defer src="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>/assets/client-dashboard.js?v=products-v8"></script>

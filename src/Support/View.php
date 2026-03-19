@@ -16,7 +16,7 @@ final class View
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{$title}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root {
       --bg: #f3ecdf;
       --surface: rgba(255, 251, 245, 0.82);
@@ -42,7 +42,7 @@ final class View
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
+      font-family: "Tajawal", "Segoe UI", sans-serif;
       background:
         radial-gradient(circle at 10% 10%, rgba(15, 123, 102, 0.18), transparent 20%),
         radial-gradient(circle at 90% 15%, rgba(46, 169, 214, 0.15), transparent 22%),
@@ -357,6 +357,27 @@ final class View
       gap: 8px;
       color: var(--muted);
       font-size: 14px;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .meta-list code {
+      display: inline-block;
+      max-width: 100%;
+      direction: ltr;
+      unicode-bidi: plaintext;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+    }
+    .product-preview {
+      line-height: 1.9;
+      min-height: 68px;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
     }
     .product-actions {
       display: grid;
@@ -469,12 +490,53 @@ final class View
       .dashboard-shell {
         grid-template-columns: 1fr;
       }
+      .wrap {
+        padding: 18px 12px 52px;
+      }
+      .card {
+        padding: 18px;
+        border-radius: 22px;
+      }
+      h1 {
+        font-size: clamp(28px, 8vw, 40px);
+      }
       .dashboard-sidebar {
         position: static;
         max-height: none;
       }
+      .toolbar-row > * {
+        min-width: 100%;
+      }
       .product-actions {
         grid-template-columns: 1fr;
+      }
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      }
+      .modal {
+        border-radius: 20px;
+        padding: 16px;
+      }
+    }
+    @media (max-width: 640px) {
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+      .pagination {
+        justify-content: flex-start;
+      }
+      .section-head {
+        gap: 10px;
+      }
+      .btn,
+      button.btn {
+        width: 100%;
+      }
+      .modal-backdrop {
+        padding: 10px;
+      }
+      .compare-card {
+        padding: 12px;
       }
     }
   </style>
