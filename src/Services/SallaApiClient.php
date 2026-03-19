@@ -115,17 +115,31 @@ final class SallaApiClient
 
     public function updateImageAlt(string $accessToken, int $imageId, string $alt): array
     {
-        $alt = $this->normalizeAltForSalla($alt);
-        if ($alt === '') {
-            throw new \RuntimeException('نص ALT غير صالح. استخدم أحرفًا وكلمات واضحة بدون رموز خاصة.');
-        }
-        $response = $this->httpClient->postForm(
-            self::API_BASE . '/products/images/' . $imageId,
-            ['alt' => $alt],
-            $this->headers($accessToken)
-        );
+        $candidates = $this->buildAltCandidates($alt);
 
-        return $response['body'];
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+
+            try {
+                $response = $this->httpClient->postForm(
+                    self::API_BASE . '/products/images/' . $imageId,
+                    ['alt' => $candidate],
+                    $this->headers($accessToken)
+                );
+
+                return $response['body'];
+            } catch (\RuntimeException $exception) {
+                if ($this->isSallaAltValidationError($exception->getMessage())) {
+                    continue;
+                }
+
+                throw $exception;
+            }
+        }
+
+        throw new \RuntimeException('نص ALT طويل أو غير متوافق مع شروط سلة. تم تقصيره تلقائيًا لكن ما زال مرفوضًا.');
     }
 
     public function getSeoSettings(string $accessToken): array
@@ -195,6 +209,57 @@ final class SallaApiClient
         }
 
         return trim($value);
+    }
+
+    private function buildAltCandidates(string $value): array
+    {
+        $clean = $this->sanitizeAltText(trim($value));
+        if ($clean === '') {
+            return [];
+        }
+
+        $candidates = [];
+        foreach ([70, 50, 35] as $maxBytes) {
+            $candidate = $this->limitByUtf8Bytes($clean, $maxBytes);
+            $candidate = $this->normalizeAltForSalla($candidate);
+            if ($candidate !== '') {
+                $candidates[] = $candidate;
+            }
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
+    private function limitByUtf8Bytes(string $value, int $maxBytes): string
+    {
+        $value = trim($value);
+        if ($value === '' || $maxBytes <= 0) {
+            return '';
+        }
+
+        while ($value !== '' && strlen($value) > $maxBytes) {
+            if (function_exists('mb_substr') && function_exists('mb_strlen')) {
+                $len = mb_strlen($value, 'UTF-8');
+                $value = rtrim(mb_substr($value, 0, max(0, $len - 1), 'UTF-8'));
+            } else {
+                $value = rtrim(substr($value, 0, max(0, strlen($value) - 1)));
+            }
+        }
+
+        return trim($value);
+    }
+
+    private function isSallaAltValidationError(string $message): bool
+    {
+        $message = trim($message);
+        if ($message === '') {
+            return false;
+        }
+
+        return str_contains($message, 'alert.invalid_fields')
+            || str_contains($message, '"alt"')
+            || str_contains($message, 'طول النص')
+            || str_contains($message, '70');
     }
 
 }
