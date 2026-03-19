@@ -18,44 +18,10 @@ if ($appBasePath === '/') {
       <button type="button" class="sidebar-link is-active" data-section-target="products">المنتجات</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
+      <button type="button" class="sidebar-link" data-section-target="operations">سجل العمليات</button>
       <button type="button" class="sidebar-link" data-section-target="account-settings">الحساب والإعدادات</button>
     </nav>
 
-    <hr style="border:none;border-top:1px solid rgba(202,177,149,.45);margin:0;">
-
-    <div class="panel-stack">
-      <h3 style="margin:0;">سجل العمليات</h3>
-      <div class="toolbar">
-        <div class="toolbar-row">
-          <div>
-            <label for="operations-status-filter"><strong>الحالة</strong></label>
-            <select id="operations-status-filter">
-              <option value="all">الكل</option>
-              <option value="completed">مكتمل</option>
-              <option value="failed">فشل</option>
-              <option value="in_progress">قيد التنفيذ</option>
-            </select>
-          </div>
-          <div>
-            <label for="operations-mode-filter"><strong>النوع</strong></label>
-            <select id="operations-mode-filter">
-              <option value="all">كل العمليات</option>
-              <option value="description">وصف المنتج</option>
-              <option value="seo">SEO المنتج</option>
-              <option value="combo_all">الوصف + SEO</option>
-              <option value="store_seo">سيو المتجر</option>
-            </select>
-          </div>
-        </div>
-        <div class="toolbar-row">
-          <button id="operations-apply-filter" class="btn btn-sky" type="button">تطبيق</button>
-          <button id="operations-show-all" class="btn btn-secondary" type="button">عرض الكل</button>
-        </div>
-      </div>
-      <div id="operations-list" class="panel-stack">
-        <div class="empty-state"><p class="muted" style="margin:0;">جاري تحميل العمليات...</p></div>
-      </div>
-    </div>
   </aside>
 
   <main class="panel-stack">
@@ -207,7 +173,7 @@ if ($appBasePath === '/') {
           <div>
             <div class="pill">كاتب ALT للصور</div>
             <h2 style="margin:12px 0 8px;">إدارة النص البديل للصور</h2>
-            <p class="muted" style="margin:0;">اختر منتجًا وافتح محرر الصور لكتابة ALT يدويًا أو توليده بالذكاء الاصطناعي، ثم احفظ في سلة.</p>
+            <p class="muted" style="margin:0;">اختر منتجًا وافتح محرر الصور لكتابة ALT يدويًا أو توليده بالذكاء الاصطناعي بصياغة محترف SEO، ثم احفظ في سلة.</p>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button id="alt-optimize-selected-products" class="btn btn-sky" type="button">تحسين ALT للمنتجات المحددة</button>
@@ -227,6 +193,50 @@ if ($appBasePath === '/') {
         <div id="alt-products-list" class="products-grid"></div>
         <div style="margin-top:20px;">
           <div id="alt-products-pagination-bottom" class="pagination"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-operations" data-app-section="operations" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">سجل العمليات</div>
+            <h2 style="margin:12px 0 8px;">متابعة العمليات والنتائج</h2>
+            <p class="muted" style="margin:0;">فلترة ومراجعة كل عمليات التحسين التي تمت على المنتجات، سيو المتجر، وكاتب ALT.</p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-row">
+            <div>
+              <label for="operations-status-filter"><strong>الحالة</strong></label>
+              <select id="operations-status-filter">
+                <option value="all">الكل</option>
+                <option value="completed">مكتمل</option>
+                <option value="failed">فشل</option>
+                <option value="in_progress">قيد التنفيذ</option>
+              </select>
+            </div>
+            <div>
+              <label for="operations-mode-filter"><strong>النوع</strong></label>
+              <select id="operations-mode-filter">
+                <option value="all">كل العمليات</option>
+                <option value="description">وصف المنتج</option>
+                <option value="seo">SEO المنتج</option>
+                <option value="combo_all">الوصف + SEO</option>
+                <option value="store_seo">سيو المتجر</option>
+              </select>
+            </div>
+          </div>
+          <div class="toolbar-row">
+            <button id="operations-apply-filter" class="btn btn-sky" type="button">تطبيق</button>
+            <button id="operations-show-all" class="btn btn-secondary" type="button">عرض الكل</button>
+          </div>
+        </div>
+
+        <div id="operations-list" class="panel-stack">
+          <div class="empty-state"><p class="muted" style="margin:0;">جاري تحميل العمليات...</p></div>
         </div>
       </div>
     </section>
@@ -293,7 +303,7 @@ if ($appBasePath === '/') {
       <div>
         <div class="pill">ALT الصور</div>
         <h2 id="image-alt-title" style="margin:10px 0 6px;">كاتب النص البديل</h2>
-        <p id="image-alt-subtitle" class="muted" style="margin:0;">اختر صورة أو أكثر ثم ولّد النص البديل واحفظه في المتجر.</p>
+        <p id="image-alt-subtitle" class="muted" style="margin:0;">اكتب وصف ALT كمحترف سيو: وصف واضح ودقيق (بحد أقصى 70 حرفًا) ثم احفظه في المتجر.</p>
       </div>
       <button id="close-image-alt" class="btn btn-secondary" type="button">إغلاق</button>
     </div>
@@ -310,8 +320,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v10',
-      base + '/assets/client-dashboard.js?v=products-v10'
+      base + '/public/assets/client-dashboard.js?v=products-v12',
+      base + '/assets/client-dashboard.js?v=products-v12'
     ];
     var index = 0;
 

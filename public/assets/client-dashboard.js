@@ -32,6 +32,61 @@
     throw lastError || new Error('API request failed');
   }
 
+  function parseApiMessage(value) {
+    if (value == null) return null;
+    if (typeof value === 'object') return value;
+    if (typeof value !== 'string') return null;
+
+    const text = value.trim();
+    if (!text) return null;
+    if (!(text.startsWith('{') || text.startsWith('['))) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function pickFirstFieldMessage(fields) {
+    if (!fields || typeof fields !== 'object') return '';
+    const values = Object.values(fields);
+    if (!values.length) return '';
+    const first = values[0];
+    if (Array.isArray(first)) return String(first[0] || '').trim();
+    if (typeof first === 'string') return first.trim();
+    return '';
+  }
+
+  function normalizeApiMessage(rawMessage, fallbackMessage) {
+    const fallback = fallbackMessage || 'حدث خطأ غير متوقع.';
+    if (!rawMessage) return fallback;
+
+    if (typeof rawMessage === 'string') {
+      const parsed = parseApiMessage(rawMessage);
+      if (!parsed) {
+        if (rawMessage.includes('metadata.read') || rawMessage.includes('metadata.read_write')) {
+          return 'يلزم تفعيل صلاحية Meta Data (Read/Write) للتطبيق ثم إعادة تثبيته من سلة.';
+        }
+        if (rawMessage.includes('Route not found')) {
+          return 'المسار غير متاح حالياً. تأكد من رفع آخر نسخة على الاستضافة.';
+        }
+        return rawMessage;
+      }
+      rawMessage = parsed;
+    }
+
+    if (typeof rawMessage === 'object' && rawMessage !== null) {
+      const fieldsMessage = pickFirstFieldMessage(rawMessage.fields);
+      if (fieldsMessage) return fieldsMessage;
+      if (typeof rawMessage.message === 'string' && rawMessage.message.trim()) return rawMessage.message.trim();
+      if (typeof rawMessage.error === 'string' && rawMessage.error.trim()) return rawMessage.error.trim();
+      if (typeof rawMessage.error_description === 'string' && rawMessage.error_description.trim()) return rawMessage.error_description.trim();
+    }
+
+    return fallback;
+  }
+
   const state = {
     products: [],
     page: 1,
@@ -373,7 +428,7 @@
     }
 
     title.textContent = editor.productName || 'كاتب ALT';
-    subtitle.textContent = 'يمكنك تحديد صورة واحدة أو عدة صور، ثم توليد ALT أو حفظه يدويًا.';
+    subtitle.textContent = 'اكتب وصف ALT كمحترف سيو: وصف واضح، طبيعي، ودقيق (حتى 70 حرفًا).';
     alert.innerHTML = editor.notice ? `<div class="notice ${editor.notice.type}">${escapeHtml(editor.notice.message)}</div>` : '';
 
     const rows = editor.images.map((image) => `
@@ -385,7 +440,7 @@
             <label><strong>ALT الحالي</strong></label>
             <textarea readonly rows="2">${escapeHtml(image.current_alt || '')}</textarea>
             <label><strong>ALT بعد التحسين</strong></label>
-            <textarea rows="2" data-alt-image-value="${image.image_id}">${escapeHtml(image.optimized_alt || '')}</textarea>
+            <textarea rows="2" maxlength="70" placeholder="اكتب وصف ALT كمحترف سيو (حتى 70 حرفًا)" data-alt-image-value="${image.image_id}">${escapeHtml(image.optimized_alt || '')}</textarea>
           </div>
         </div>
       </div>
@@ -461,7 +516,7 @@
       });
       const data = await response.json();
       if (!data.success) {
-        state.altEditor.notice = { type: 'error', message: data.message || 'تعذر توليد ALT.' };
+        state.altEditor.notice = { type: 'error', message: normalizeApiMessage(data.message, 'تعذر توليد ALT.') };
         renderImageAltBody();
         return;
       }
@@ -482,7 +537,7 @@
     if (!state.altEditor) return;
     const payload = state.altEditor.images
       .filter((image) => image.selected)
-      .map((image) => ({ image_id: image.image_id, alt: String(image.optimized_alt || '').trim() }))
+      .map((image) => ({ image_id: image.image_id, alt: String(image.optimized_alt || '').trim().slice(0, 70) }))
       .filter((image) => image.alt);
 
     if (!payload.length) {
@@ -502,7 +557,7 @@
       });
       const data = await response.json();
       if (!data.success) {
-        state.altEditor.notice = { type: 'error', message: data.message || 'تعذر حفظ ALT.' };
+        state.altEditor.notice = { type: 'error', message: normalizeApiMessage(data.message, 'تعذر حفظ ALT.') };
         renderImageAltBody();
         return;
       }
@@ -537,7 +592,7 @@
       });
       const data = await response.json();
       if (!data.success) {
-        setAltAlert('error', data.message || 'تعذر تنفيذ التحسين الجماعي.');
+        setAltAlert('error', normalizeApiMessage(data.message, 'تعذر تنفيذ التحسين الجماعي.'));
         return;
       }
 
@@ -680,7 +735,7 @@
         state.editor = {
           product,
           mode,
-          notice: { type: 'error', message: data.message || 'فشل التحسين.' },
+          notice: { type: 'error', message: normalizeApiMessage(data.message, 'فشل التحسين.') },
           currentDescription: '',
           optimizedDescription: '',
           currentMetaTitle: '',
@@ -761,7 +816,7 @@
       const data = await response.json();
 
       if (!data.success) {
-        state.editor.notice = { type: 'error', message: data.message || 'تعذّر حفظ المحتوى.' };
+        state.editor.notice = { type: 'error', message: normalizeApiMessage(data.message, 'تعذّر حفظ المحتوى.') };
         renderEditorBody();
         return;
       }
@@ -786,7 +841,7 @@
       const data = await response.json();
       if (!data.success) {
         if (root) {
-          root.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p class="muted">${escapeHtml(data.message || 'تعذّر تحميل المنتجات.')}</p></div>`;
+          root.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p class="muted">${escapeHtml(normalizeApiMessage(data.message, 'تعذّر تحميل المنتجات.'))}</p></div>`;
         }
         const altSummary = document.getElementById('alt-products-summary');
         if (altSummary) {
@@ -828,7 +883,7 @@
     try {
       const data = await apiFetch('/store-seo').then((response) => response.json());
       if (!data.success) {
-        setStoreSeoAlert('error', data.message || 'تعذر جلب سيو المتجر.');
+        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر جلب سيو المتجر.'));
         return;
       }
 
@@ -863,7 +918,7 @@
       }).then((response) => response.json());
 
       if (!data.success) {
-        setStoreSeoAlert('error', data.message || 'تعذر توليد سيو المتجر.');
+        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر توليد سيو المتجر.'));
         return;
       }
 
@@ -908,11 +963,11 @@
       }).then((response) => response.json());
 
       if (!data.success) {
-        setStoreSeoAlert('error', data.message || 'تعذر حفظ سيو المتجر.');
+        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ سيو المتجر.'));
         return;
       }
 
-      setStoreSeoAlert('success', data.message || 'تم حفظ سيو المتجر بنجاح.');
+      setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
       await loadOperations();
       await loadUsage();
     } catch (error) {
@@ -932,7 +987,7 @@
     try {
       const data = await apiFetch('/subscription').then((response) => response.json());
       if (!data.success) {
-        root.innerHTML = `<h2>الاستهلاك</h2><p class="muted">${escapeHtml(data.message || 'تعذر تحميل بيانات الاستهلاك.')}</p>`;
+        root.innerHTML = `<h2>الاستهلاك</h2><p class="muted">${escapeHtml(normalizeApiMessage(data.message, 'تعذر تحميل بيانات الاستهلاك.'))}</p>`;
         return;
       }
 
@@ -1017,7 +1072,7 @@
     if (!root) return;
 
     if (!data.success) {
-      root.innerHTML = `<div class="empty-state"><p class="muted">${escapeHtml(data.message || 'تعذّر تحميل السجل.')}</p></div>`;
+      root.innerHTML = `<div class="empty-state"><p class="muted">${escapeHtml(normalizeApiMessage(data.message, 'تعذّر تحميل السجل.'))}</p></div>`;
       return;
     }
 
@@ -1081,6 +1136,9 @@
 
     if (section === 'alt-images') {
       renderAltProducts();
+    }
+    if (section === 'operations') {
+      loadOperations();
     }
   }
 

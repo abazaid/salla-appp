@@ -133,7 +133,7 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => 'You write concise, descriptive, SEO-friendly alt text for ecommerce product images. Return only the final alt text without quotes, JSON, or markdown.',
+                            'text' => 'You are an expert ecommerce SEO specialist writing image ALT text. Write concise, natural, descriptive ALT text for product images. Return only plain ALT text without quotes, JSON, markdown, emojis, hashtags, or extra commentary.',
                         ],
                     ],
                 ],
@@ -142,7 +142,7 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => "Generate alt text in language={$language}. Mention the product accurately, avoid keyword stuffing, and keep it concise.\n\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
+                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Maximum length: 70 characters.\n- Mention the product clearly and naturally.\n- No keyword stuffing.\n- No promotional phrases.\n- Return only ALT text.\n\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
                         ],
                         [
                             'type' => 'input_image',
@@ -162,6 +162,8 @@ final class OpenAIClient
         if ($text === '') {
             throw new RuntimeException('OpenAI returned an empty image alt text.');
         }
+
+        $text = $this->limitText($text, 70);
 
         $usage = is_array($body['usage'] ?? null) ? $body['usage'] : [];
 
@@ -196,7 +198,7 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => 'You write ecommerce homepage SEO for online stores. Return valid JSON only with keys: title, description, keywords. Keep the title concise, the description SEO-friendly around 140-170 characters, and keywords as a short comma-separated list. Do not fabricate unverifiable claims.',
+                            'text' => 'You are a senior ecommerce SEO strategist. Return valid JSON only with keys: title, description, keywords. First analyze existing SEO and improve it (do not rewrite blindly). Infer the store niche from product names/topics. Keep claims factual and specific to the store context.',
                         ],
                     ],
                 ],
@@ -205,10 +207,13 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => "Generate homepage SEO settings in language={$language} with tone={$tone}. Return JSON only.\n\nStore context:\n" . json_encode([
+                            'text' => "Generate homepage SEO settings in language={$language} with tone={$tone}. Return JSON only.\nRules:\n- Title should be around 35-65 characters and include core intent.\n- Description should be around 120-160 characters, compelling but factual.\n- Keywords should be 6-12 high-intent terms, comma-separated, no stuffing.\n- Reuse useful existing terms if they are relevant.\n- Reflect the actual store activity from products sample/topics.\n\nStore context:\n" . json_encode([
                                 'store_name' => $storeContext['store_name'] ?? null,
                                 'merchant_id' => $storeContext['merchant_id'] ?? null,
                                 'store_url' => $storeContext['store_url'] ?? null,
+                                'products_count' => $storeContext['products_count'] ?? null,
+                                'products_sample' => $storeContext['products_sample'] ?? [],
+                                'product_topics' => $storeContext['product_topics'] ?? [],
                                 'existing_title' => $currentSeo['title'] ?? null,
                                 'existing_description' => $currentSeo['description'] ?? null,
                                 'existing_keywords' => $currentSeo['keywords'] ?? null,
@@ -235,13 +240,42 @@ final class OpenAIClient
             throw new RuntimeException('OpenAI returned invalid JSON for store SEO.');
         }
 
+        $title = $this->limitText(trim((string) ($decoded['title'] ?? '')), 70);
+        $description = $this->limitText(trim((string) ($decoded['description'] ?? '')), 300);
+        $keywords = $this->normalizeKeywords((string) ($decoded['keywords'] ?? ''));
+
         return [
-            'title' => trim((string) ($decoded['title'] ?? '')),
-            'description' => trim((string) ($decoded['description'] ?? '')),
-            'keywords' => trim((string) ($decoded['keywords'] ?? '')),
+            'title' => $title,
+            'description' => $description,
+            'keywords' => $keywords,
             '_usage' => is_array($body['usage'] ?? null) ? $body['usage'] : [],
             '_model' => $model,
         ];
+    }
+
+    private function normalizeKeywords(string $keywords): string
+    {
+        $keywords = trim($keywords);
+        if ($keywords === '') {
+            return '';
+        }
+
+        $parts = preg_split('/[,،]+/u', $keywords) ?: [];
+        $clean = [];
+
+        foreach ($parts as $part) {
+            $token = trim($part);
+            if ($token === '') {
+                continue;
+            }
+            $token = preg_replace('/\s+/u', ' ', $token) ?? $token;
+            $lower = function_exists('mb_strtolower') ? mb_strtolower($token, 'UTF-8') : strtolower($token);
+            if (!isset($clean[$lower])) {
+                $clean[$lower] = $token;
+            }
+        }
+
+        return implode(', ', array_slice(array_values($clean), 0, 12));
     }
 
     private function buildPrompt(array $product, array $settings): array
@@ -280,6 +314,28 @@ final class OpenAIClient
                 ],
             ],
         ];
+    }
+
+    private function limitText(string $value, int $maxLength): string
+    {
+        $value = trim($value);
+        if ($value === '' || $maxLength <= 0) {
+            return '';
+        }
+
+        if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+            if (mb_strlen($value, 'UTF-8') <= $maxLength) {
+                return $value;
+            }
+
+            return rtrim(mb_substr($value, 0, $maxLength, 'UTF-8'));
+        }
+
+        if (strlen($value) <= $maxLength) {
+            return $value;
+        }
+
+        return rtrim(substr($value, 0, $maxLength));
     }
 
     private function buildContentPrompt(array $product, array $settings, string $mode): array

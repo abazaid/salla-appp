@@ -197,7 +197,11 @@ final class ProductController
             $metadataTitleToSave = null;
             $metadataDescriptionToSave = null;
 
-            if (in_array($mode, ['seo', 'all'], true)) {
+            if ($mode === 'description') {
+                // Preserve SEO metadata exactly as-is when user requested description-only optimization.
+                $metadataTitleToSave = (string) ($product['metadata']['title'] ?? '');
+                $metadataDescriptionToSave = (string) ($product['metadata']['description'] ?? '');
+            } elseif (in_array($mode, ['seo', 'all'], true)) {
                 $metadataTitleToSave = $finalMetadataTitle !== '' ? $finalMetadataTitle : null;
                 $metadataDescriptionToSave = $finalMetadataDescription !== '' ? $finalMetadataDescription : null;
             }
@@ -393,11 +397,17 @@ final class ProductController
             $client = new SallaApiClient();
             $seoResponse = $client->getSeoSettings($accessToken);
             $currentSeo = $seoResponse['data'] ?? $seoResponse;
+            $productsResponse = $client->listProducts($accessToken);
+            $products = is_array($productsResponse['data'] ?? null) ? $productsResponse['data'] : [];
+            $productsContext = $this->buildStoreProductsContext($products);
 
             $generated = (new OpenAIClient())->generateStoreSeo([
                 'store_name' => $store['store']['name'] ?? $store['store']['username'] ?? 'Store',
                 'merchant_id' => $store['merchant_id'] ?? null,
                 'store_url' => $store['store']['domain'] ?? $store['store']['url'] ?? null,
+                'products_count' => count($products),
+                'products_sample' => $productsContext['sample_products'],
+                'product_topics' => $productsContext['topics'],
             ], is_array($currentSeo) ? $currentSeo : [], $settings);
 
             if (Database::isAvailable()) {
@@ -891,6 +901,84 @@ final class ProductController
         }
 
         return null;
+    }
+
+    private function buildStoreProductsContext(array $products): array
+    {
+        $sample = [];
+        $tokens = [];
+
+        foreach (array_slice($products, 0, 60) as $product) {
+            $name = trim((string) ($product['name'] ?? ''));
+            if ($name !== '') {
+                $sample[] = $name;
+                foreach ($this->tokenizeText($name) as $token) {
+                    $length = function_exists('mb_strlen') ? mb_strlen($token, 'UTF-8') : strlen($token);
+                    if ($length >= 3) {
+                        $tokens[] = $token;
+                    }
+                }
+            }
+
+            $desc = trim(strip_tags((string) ($product['description'] ?? '')));
+            if ($desc !== '') {
+                foreach ($this->tokenizeText($desc) as $token) {
+                    $length = function_exists('mb_strlen') ? mb_strlen($token, 'UTF-8') : strlen($token);
+                    if ($length >= 4) {
+                        $tokens[] = $token;
+                    }
+                }
+            }
+        }
+
+        $topics = $this->topFrequentTokens($tokens, 12);
+
+        return [
+            'sample_products' => array_values(array_unique(array_slice($sample, 0, 20))),
+            'topics' => $topics,
+        ];
+    }
+
+    private function tokenizeText(string $text): array
+    {
+        $text = trim($text);
+        if (function_exists('mb_strtolower')) {
+            $text = mb_strtolower($text, 'UTF-8');
+        } else {
+            $text = strtolower($text);
+        }
+        if ($text === '') {
+            return [];
+        }
+
+        $parts = preg_split('/[^\p{L}\p{N}]+/u', $text) ?: [];
+        return array_values(array_filter(array_map('trim', $parts), static function (string $token): bool {
+            if ($token === '' || ctype_digit($token)) {
+                return false;
+            }
+
+            $stopWords = [
+                'من', 'الى', 'إلى', 'على', 'في', 'مع', 'عن', 'او', 'أو', 'the', 'and', 'for',
+                'هذا', 'هذه', 'ذلك', 'تلك', 'is', 'are', 'new', 'size', 'color', 'colors',
+            ];
+
+            return !in_array($token, $stopWords, true);
+        }));
+    }
+
+    private function topFrequentTokens(array $tokens, int $limit): array
+    {
+        if ($tokens === []) {
+            return [];
+        }
+
+        $counts = [];
+        foreach ($tokens as $token) {
+            $counts[$token] = ($counts[$token] ?? 0) + 1;
+        }
+
+        arsort($counts);
+        return array_slice(array_keys($counts), 0, max(1, $limit));
     }
 
     private function resolveStore(): ?array

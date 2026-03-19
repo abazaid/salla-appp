@@ -115,6 +115,7 @@ final class SallaApiClient
 
     public function updateImageAlt(string $accessToken, int $imageId, string $alt): array
     {
+        $alt = $this->limitText(trim($alt), 70);
         $response = $this->httpClient->postForm(
             self::API_BASE . '/products/images/' . $imageId,
             ['alt' => $alt],
@@ -158,4 +159,5 @@ final class SallaApiClient
             'Accept' => 'application/json',
         ];
     }
+
 }
