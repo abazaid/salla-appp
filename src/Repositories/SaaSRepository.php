@@ -11,6 +11,7 @@ use PDO;
 final class SaaSRepository
 {
     private PDO $pdo;
+    private ?bool $aiUsageHasModeColumn = null;
 
     public function __construct()
     {
@@ -311,13 +312,10 @@ final class SaaSRepository
         return $stmt->fetchAll();
     }
 
-    public function logAiUsage(int $storeId, ?int $productId, string $model, array $usageCost): void
+    public function logAiUsage(int $storeId, ?int $productId, string $model, array $usageCost, ?string $mode = null): void
     {
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO ai_usage_logs (store_id, product_id, model, input_tokens, output_tokens, cached_input_tokens, total_tokens, input_cost_usd, output_cost_usd, total_cost_usd, created_at)
-             VALUES (:store_id, :product_id, :model, :input_tokens, :output_tokens, :cached_input_tokens, :total_tokens, :input_cost_usd, :output_cost_usd, :total_cost_usd, :created_at)'
-        );
-        $stmt->execute([
+        $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
+        $payload = [
             'store_id' => $storeId,
             'product_id' => $productId,
             'model' => $model,
@@ -328,8 +326,23 @@ final class SaaSRepository
             'input_cost_usd' => $usageCost['input_cost_usd'] ?? 0,
             'output_cost_usd' => $usageCost['output_cost_usd'] ?? 0,
             'total_cost_usd' => $usageCost['total_cost_usd'] ?? 0,
-            'created_at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
-        ]);
+            'created_at' => $now,
+        ];
+
+        if ($this->hasAiUsageModeColumn()) {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO ai_usage_logs (store_id, product_id, mode, model, input_tokens, output_tokens, cached_input_tokens, total_tokens, input_cost_usd, output_cost_usd, total_cost_usd, created_at)
+                 VALUES (:store_id, :product_id, :mode, :model, :input_tokens, :output_tokens, :cached_input_tokens, :total_tokens, :input_cost_usd, :output_cost_usd, :total_cost_usd, :created_at)'
+            );
+            $stmt->execute($payload + ['mode' => $mode ?: 'unknown']);
+            return;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO ai_usage_logs (store_id, product_id, model, input_tokens, output_tokens, cached_input_tokens, total_tokens, input_cost_usd, output_cost_usd, total_cost_usd, created_at)
+             VALUES (:store_id, :product_id, :model, :input_tokens, :output_tokens, :cached_input_tokens, :total_tokens, :input_cost_usd, :output_cost_usd, :total_cost_usd, :created_at)'
+        );
+        $stmt->execute($payload);
     }
 
     public function aiUsageSummary(): array
@@ -354,6 +367,102 @@ final class SaaSRepository
             'input_tokens' => 0,
             'output_tokens' => 0,
         ];
+    }
+
+    public function aiUsageSummaryByMode(): array
+    {
+        return $this->aiUsageByMode(null);
+    }
+
+    public function storeAiUsageSummaryByMode(int $storeId): array
+    {
+        return $this->aiUsageByMode($storeId);
+    }
+
+    private function aiUsageByMode(?int $storeId): array
+    {
+        $labels = [
+            'description' => 'وصف المنتجات',
+            'seo' => 'سيو المنتج',
+            'all' => 'وصف + سيو المنتج',
+            'image_alt' => 'ALT الصور',
+            'image_alt_bulk' => 'ALT الصور (جملة)',
+            'store_seo' => 'سيو المتجر',
+            'unknown' => 'غير مصنف',
+        ];
+        $summary = [];
+
+        foreach ($labels as $key => $label) {
+            $summary[$key] = [
+                'mode' => $key,
+                'label' => $label,
+                'runs_count' => 0,
+                'total_cost_usd' => 0.0,
+                'input_tokens' => 0,
+                'output_tokens' => 0,
+            ];
+        }
+
+        if (!$this->hasAiUsageModeColumn()) {
+            $overall = $storeId === null ? $this->aiUsageSummary() : $this->storeAiUsageSummary($storeId);
+            $summary['unknown'] = [
+                'mode' => 'unknown',
+                'label' => $labels['unknown'],
+                'runs_count' => (int) ($overall['runs_count'] ?? 0),
+                'total_cost_usd' => (float) ($overall['total_cost_usd'] ?? 0),
+                'input_tokens' => (int) ($overall['input_tokens'] ?? 0),
+                'output_tokens' => (int) ($overall['output_tokens'] ?? 0),
+            ];
+            return array_values(array_filter($summary, static fn (array $row): bool => $row['runs_count'] > 0 || $row['mode'] === 'unknown'));
+        }
+
+        $sql = 'SELECT COALESCE(mode, "unknown") AS mode, COUNT(*) AS runs_count, COALESCE(SUM(total_cost_usd),0) AS total_cost_usd, COALESCE(SUM(input_tokens),0) AS input_tokens, COALESCE(SUM(output_tokens),0) AS output_tokens FROM ai_usage_logs';
+        $params = [];
+        if ($storeId !== null) {
+            $sql .= ' WHERE store_id = :store_id';
+            $params['store_id'] = $storeId;
+        }
+        $sql .= ' GROUP BY COALESCE(mode, "unknown")';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll();
+
+        foreach ($rows as $row) {
+            $mode = (string) ($row['mode'] ?? 'unknown');
+            if (!isset($summary[$mode])) {
+                $summary[$mode] = [
+                    'mode' => $mode,
+                    'label' => $mode,
+                    'runs_count' => 0,
+                    'total_cost_usd' => 0.0,
+                    'input_tokens' => 0,
+                    'output_tokens' => 0,
+                ];
+            }
+            $summary[$mode]['runs_count'] = (int) ($row['runs_count'] ?? 0);
+            $summary[$mode]['total_cost_usd'] = (float) ($row['total_cost_usd'] ?? 0);
+            $summary[$mode]['input_tokens'] = (int) ($row['input_tokens'] ?? 0);
+            $summary[$mode]['output_tokens'] = (int) ($row['output_tokens'] ?? 0);
+        }
+
+        return array_values(array_filter($summary, static fn (array $row): bool => $row['runs_count'] > 0));
+    }
+
+    private function hasAiUsageModeColumn(): bool
+    {
+        if ($this->aiUsageHasModeColumn !== null) {
+            return $this->aiUsageHasModeColumn;
+        }
+
+        try {
+            $stmt = $this->pdo->query("SHOW COLUMNS FROM ai_usage_logs LIKE 'mode'");
+            $this->aiUsageHasModeColumn = (bool) $stmt->fetch();
+        } catch (\Throwable) {
+            $this->aiUsageHasModeColumn = false;
+        }
+
+        return $this->aiUsageHasModeColumn;
     }
 
     private function toSqlDate(?string $date): ?string

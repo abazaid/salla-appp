@@ -111,7 +111,8 @@ final class ProductController
                         (int) $dbStore['id'],
                         $productId,
                         (string) $optimized['_model'],
-                        $usageCost
+                        $usageCost,
+                        $mode
                     );
                 }
             }
@@ -418,7 +419,8 @@ final class ProductController
                         (int) $dbStore['id'],
                         0,
                         (string) $generated['_model'],
-                        $usageCost
+                        $usageCost,
+                        'store_seo'
                     );
                 }
             }
@@ -553,7 +555,7 @@ final class ProductController
                 $dbStore = (new SaaSRepository())->findStoreByMerchantId((int) ($store['merchant_id'] ?? 0));
                 if ($dbStore) {
                     $usageCost = (new OpenAICostCalculator())->calculate((array) ($generated['_usage'] ?? []));
-                    (new SaaSRepository())->logAiUsage((int) $dbStore['id'], $productId, (string) ($generated['_model'] ?? 'mock'), $usageCost);
+                    (new SaaSRepository())->logAiUsage((int) $dbStore['id'], $productId, (string) ($generated['_model'] ?? 'mock'), $usageCost, 'image_alt');
                 }
             }
 
@@ -815,6 +817,12 @@ final class ProductController
         $client = new SallaApiClient();
         $processed = [];
         $errors = [];
+        $dbStoreId = null;
+
+        if (Database::isAvailable()) {
+            $dbStore = (new SaaSRepository())->findStoreByMerchantId((int) ($store['merchant_id'] ?? 0));
+            $dbStoreId = $dbStore ? (int) $dbStore['id'] : null;
+        }
 
         foreach ($productIds as $productId) {
             if (!$subscriptionManager->canOptimize($store)) {
@@ -836,6 +844,16 @@ final class ProductController
                         ];
 
                     $client->updateImageAlt($accessToken, (int) $image['id'], (string) $generated['alt']);
+                    if ($dbStoreId !== null && isset($generated['_usage'], $generated['_model'])) {
+                        $usageCost = (new OpenAICostCalculator())->calculate((array) $generated['_usage']);
+                        (new SaaSRepository())->logAiUsage(
+                            $dbStoreId,
+                            $productId,
+                            (string) $generated['_model'],
+                            $usageCost,
+                            'image_alt_bulk'
+                        );
+                    }
                 }
 
                 $store = $subscriptionManager->recordOptimization($store, $productId, $product['name'] ?? null, 'image_alt_bulk', 'completed');

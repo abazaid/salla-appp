@@ -69,6 +69,7 @@ HTML));
         $repository = new SaaSRepository();
         $stats = $repository->dashboardStats();
         $aiUsage = $repository->aiUsageSummary();
+        $aiUsageByMode = $repository->aiUsageSummaryByMode();
 $stores = array_slice($repository->listStores(), 0, 6);
         $rows = '';
 
@@ -98,6 +99,7 @@ $stores = array_slice($repository->listStores(), 0, 6);
     <div class="card"><h2>تكلفة OpenAI</h2><p>$ {$aiUsage['total_cost_usd']}</p></div>
     <div class="card"><h2>AI Runs</h2><p>{$aiUsage['runs_count']}</p></div>
   </div>
+  {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI حسب نوع التوليد')}
   <div class="card" style="margin-top:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
       <h2>آخر المتاجر</h2>
@@ -194,6 +196,7 @@ HTML));
         $jsonStore = (new StoreRepository())->find((string) ($store['merchant_id'] ?? '')) ?? [];
         $usageLogs = $jsonStore['usage_logs'] ?? [];
         $aiUsage = $repository->storeAiUsageSummary($storeId);
+        $aiUsageByMode = $repository->storeAiUsageSummaryByMode($storeId);
         $logHtml = '';
 
         foreach (array_reverse($usageLogs) as $log) {
@@ -221,6 +224,7 @@ HTML));
     <div class="card"><h2>الاستهلاك</h2><p>{$used} / {$quota}</p></div>
     <div class="card"><h2>تكلفة OpenAI</h2><p>$ {$aiUsage['total_cost_usd']}</p></div>
   </div>
+  {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI لهذا المتجر حسب النوع')}
   <div class="card" style="margin-top:16px;">
     <h2>تعديل الاشتراك</h2>
     <form method="post" action="/admin/stores/{$store['id']}/subscription">
@@ -390,6 +394,62 @@ HTML));
         } catch (\Throwable $exception) {
             Response::html(View::render('Email Test Failed', '<div class="card"><h1>فشل إرسال بريد الاختبار</h1><p class="muted">' . htmlspecialchars($exception->getMessage(), ENT_QUOTES, 'UTF-8') . '</p><p><a class="btn" href="/admin/dashboard">العودة</a></p></div>'), 500);
         }
+    }
+
+    private function renderAiUsageByModeCard(array $rows, string $title): string
+    {
+        if ($rows === []) {
+            return '<div class="card" style="margin-top:16px;"><h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2><p class="muted">لا توجد بيانات تكلفة بعد.</p></div>';
+        }
+
+        $tableRows = '';
+        $totalRuns = 0;
+        $totalCost = 0.0;
+
+        foreach ($rows as $row) {
+            $label = htmlspecialchars((string) ($row['label'] ?? $row['mode'] ?? '-'), ENT_QUOTES, 'UTF-8');
+            $runs = (int) ($row['runs_count'] ?? 0);
+            $cost = (float) ($row['total_cost_usd'] ?? 0);
+            $inputTokens = number_format((int) ($row['input_tokens'] ?? 0));
+            $outputTokens = number_format((int) ($row['output_tokens'] ?? 0));
+            $totalRuns += $runs;
+            $totalCost += $cost;
+
+            $tableRows .= '<tr>'
+                . '<td style="padding:10px;">' . $label . '</td>'
+                . '<td style="padding:10px;">' . number_format($runs) . '</td>'
+                . '<td style="padding:10px;">$ ' . $this->formatUsd($cost) . '</td>'
+                . '<td style="padding:10px;">' . $inputTokens . '</td>'
+                . '<td style="padding:10px;">' . $outputTokens . '</td>'
+                . '</tr>';
+        }
+
+        $footer = '<tr style="font-weight:700;background:#f8f3ec;">'
+            . '<td style="padding:10px;">الإجمالي</td>'
+            . '<td style="padding:10px;">' . number_format($totalRuns) . '</td>'
+            . '<td style="padding:10px;">$ ' . $this->formatUsd($totalCost) . '</td>'
+            . '<td style="padding:10px;">-</td>'
+            . '<td style="padding:10px;">-</td>'
+            . '</tr>';
+
+        return '<div class="card" style="margin-top:16px;">'
+            . '<h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2>'
+            . '<table style="width:100%;border-collapse:collapse;margin-top:12px;">'
+            . '<thead><tr>'
+            . '<th style="text-align:right;padding:10px;">النوع</th>'
+            . '<th style="text-align:right;padding:10px;">عدد العمليات</th>'
+            . '<th style="text-align:right;padding:10px;">التكلفة (USD)</th>'
+            . '<th style="text-align:right;padding:10px;">Input Tokens</th>'
+            . '<th style="text-align:right;padding:10px;">Output Tokens</th>'
+            . '</tr></thead>'
+            . '<tbody>' . $tableRows . $footer . '</tbody>'
+            . '</table>'
+            . '</div>';
+    }
+
+    private function formatUsd(float $value): string
+    {
+        return number_format($value, 6, '.', '');
     }
 
     private function ensureAdmin(): bool
