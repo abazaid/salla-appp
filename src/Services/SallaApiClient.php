@@ -115,7 +115,10 @@ final class SallaApiClient
 
     public function updateImageAlt(string $accessToken, int $imageId, string $alt): array
     {
-        $alt = $this->limitText(trim($alt), 70);
+        $alt = $this->sanitizeAltText($this->limitText(trim($alt), 70));
+        if ($alt === '') {
+            throw new \RuntimeException('نص ALT غير صالح. استخدم أحرفًا وكلمات واضحة بدون رموز خاصة.');
+        }
         $response = $this->httpClient->postForm(
             self::API_BASE . '/products/images/' . $imageId,
             ['alt' => $alt],
@@ -158,6 +161,13 @@ final class SallaApiClient
             'Authorization' => 'Bearer ' . $accessToken,
             'Accept' => 'application/json',
         ];
+    }
+
+    private function sanitizeAltText(string $value): string
+    {
+        $value = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+        return trim($value);
     }
 
 }

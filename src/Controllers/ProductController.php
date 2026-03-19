@@ -49,8 +49,8 @@ final class ProductController
         } catch (\Throwable $exception) {
             Response::json([
                 'success' => false,
-                'message' => $exception->getMessage(),
-            ], 500);
+                'message' => $this->humanizeProviderError($exception->getMessage()),
+            ], $this->resolveProviderStatus($exception->getMessage()));
         }
     }
 
@@ -132,8 +132,8 @@ final class ProductController
         } catch (\Throwable $exception) {
             Response::json([
                 'success' => false,
-                'message' => $exception->getMessage(),
-            ], 500);
+                'message' => $this->humanizeProviderError($exception->getMessage()),
+            ], $this->resolveProviderStatus($exception->getMessage()));
         }
     }
 
@@ -628,7 +628,10 @@ final class ProductController
                 'subscription' => $subscriptionManager->summary($store),
             ]);
         } catch (\Throwable $exception) {
-            Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
+            Response::json([
+                'success' => false,
+                'message' => $this->humanizeProviderError($exception->getMessage()),
+            ], $this->resolveProviderStatus($exception->getMessage()));
         }
     }
 
@@ -708,7 +711,10 @@ final class ProductController
                 'images' => $results,
             ]);
         } catch (\Throwable $exception) {
-            Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
+            Response::json([
+                'success' => false,
+                'message' => $this->humanizeProviderError($exception->getMessage()),
+            ], $this->resolveProviderStatus($exception->getMessage()));
         }
     }
 
@@ -776,7 +782,10 @@ final class ProductController
                 'subscription' => $subscriptionManager->summary($store),
             ]);
         } catch (\Throwable $exception) {
-            Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
+            Response::json([
+                'success' => false,
+                'message' => $this->humanizeProviderError($exception->getMessage()),
+            ], $this->resolveProviderStatus($exception->getMessage()));
         }
     }
 
@@ -838,7 +847,7 @@ final class ProductController
             } catch (\Throwable $exception) {
                 $errors[] = [
                     'product_id' => $productId,
-                    'message' => $exception->getMessage(),
+                    'message' => $this->humanizeProviderError($exception->getMessage()),
                 ];
             }
         }
@@ -979,6 +988,54 @@ final class ProductController
 
         arsort($counts);
         return array_slice(array_keys($counts), 0, max(1, $limit));
+    }
+
+    private function humanizeProviderError(string $message): string
+    {
+        $trimmed = trim($message);
+        if ($trimmed === '') {
+            return 'حدث خطأ غير متوقع.';
+        }
+
+        $parsed = json_decode($trimmed, true);
+        if (!is_array($parsed)) {
+            if (preg_match('/\{.*\}/s', $trimmed, $matches) === 1) {
+                $parsed = json_decode($matches[0], true);
+            }
+        }
+
+        if (is_array($parsed)) {
+            $fields = is_array($parsed['fields'] ?? null) ? $parsed['fields'] : [];
+            if ($fields !== []) {
+                $first = array_values($fields)[0] ?? null;
+                if (is_array($first)) {
+                    $first = $first[0] ?? null;
+                }
+                if (is_string($first) && trim($first) !== '') {
+                    return trim($first);
+                }
+            }
+
+            if (is_string($parsed['message'] ?? null) && trim((string) $parsed['message']) !== '') {
+                return trim((string) $parsed['message']);
+            }
+        }
+
+        return $trimmed;
+    }
+
+    private function resolveProviderStatus(string $message): int
+    {
+        $normalized = $this->humanizeProviderError($message);
+        if (
+            str_contains($normalized, 'لا يتجاوز طول النص') ||
+            str_contains($normalized, 'لايحتوي على حروف خاصة') ||
+            str_contains($normalized, 'Alt text is required')
+        ) {
+            return 422;
+        }
+
+        return 500;
     }
 
     private function resolveStore(): ?array
