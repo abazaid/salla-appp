@@ -18,6 +18,63 @@
     activeTab: 'products'
   };
 
+  function mojibakeScore(value) {
+    return (String(value ?? '').match(/[\u00d8\u00d9\u00c3\u00c2]/g) || []).length;
+  }
+
+  function decodeMojibakeString(value) {
+    let text = String(value ?? '');
+
+    for (let i = 0; i < 4; i += 1) {
+      if (!/[\u00d8\u00d9\u00c3\u00c2]/.test(text)) {
+        break;
+      }
+
+      try {
+        const bytes = Uint8Array.from(Array.from(text).map((char) => char.charCodeAt(0) & 0xff));
+        const decoded = new TextDecoder('utf-8').decode(bytes);
+        if (mojibakeScore(decoded) < mojibakeScore(text)) {
+          text = decoded;
+          continue;
+        }
+      } catch (error) {
+        break;
+      }
+
+      break;
+    }
+
+    return text;
+  }
+
+  function fixDomMojibake(root = document.body) {
+    if (!root) {
+      return;
+    }
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+
+    while ((node = walker.nextNode())) {
+      const original = node.nodeValue || '';
+      if (!/[\u00d8\u00d9\u00c3\u00c2]/.test(original)) {
+        continue;
+      }
+      node.nodeValue = decodeMojibakeString(original);
+    }
+
+    root.querySelectorAll('[placeholder], option').forEach((element) => {
+      if (element.hasAttribute('placeholder')) {
+        element.setAttribute('placeholder', decodeMojibakeString(element.getAttribute('placeholder')));
+      }
+    });
+  }
+
+  function scheduleUiFix(root) {
+    requestAnimationFrame(() => fixDomMojibake(root || document.body));
+  }
+
+
   function escapeHtml(value) {
     return String(value ?? '')
       .replaceAll('&', '&amp;')
@@ -57,25 +114,25 @@
   }
 
   function getStatusLabel(product) {
-    if (product.status === 'hidden') return 'مخفي';
-    if (product.status === 'sale') return 'معروض للبيع';
-    if (product.is_available === false) return 'غير متوفر';
-    return product.status || 'غير محدد';
+    if (product.status === 'hidden') return '\u0645\u062e\u0641\u064a';
+    if (product.status === 'sale') return '\u0645\u0639\u0631\u0648\u0636 \u0644\u0644\u0628\u064a\u0639';
+    if (product.is_available === false) return '\u063a\u064a\u0631 \u0645\u062a\u0648\u0641\u0631';
+    return product.status || '\u063a\u064a\u0631 \u0645\u062d\u062f\u062f';
   }
 
   function getModeLabel(mode) {
-    if (mode === 'description') return 'ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬';
-    if (mode === 'seo') return 'ØªØ­Ø³ÙÙ SEO Ø§ÙÙÙØªØ¬';
-    if (mode === 'image_alt') return 'ALT Ø§ÙØµÙØ±';
-    if (mode === 'image_alt_bulk') return 'ALT Ø¨Ø§ÙØ¬ÙÙØ©';
-    if (mode === 'store_seo') return 'Ø³ÙÙ Ø§ÙÙØªØ¬Ø±';
-    return 'ØªØ­Ø³ÙÙ ÙØ§ÙÙ';
+    if (mode === 'description') return '\u062a\u062d\u0633\u064a\u0646 \u0648\u0635\u0641 \u0627\u0644\u0645\u0646\u062a\u062c';
+    if (mode === 'seo') return '\u062a\u062d\u0633\u064a\u0646 SEO \u0627\u0644\u0645\u0646\u062a\u062c';
+    if (mode === 'image_alt') return 'ALT \u0627\u0644\u0635\u0648\u0631';
+    if (mode === 'image_alt_bulk') return 'ALT \u0628\u0627\u0644\u062c\u0645\u0644\u0629';
+    if (mode === 'store_seo') return '\u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631';
+    return '\u062a\u062d\u0633\u064a\u0646 \u0643\u0627\u0645\u0644';
   }
 
   function getModeHelp(mode) {
-    if (mode === 'description') return 'سيظهر لك الوصف الحالي ثم الوصف الجديد مع إمكانية التعديل اليدوي قبل الحفظ.';
-    if (mode === 'seo') return 'سيظهر لك Meta Title وMeta Description الحاليان والجديدان مع قابلية التعديل الكامل قبل الحفظ.';
-    return 'سيظهر لك الوصف الحالي والجديد بالإضافة إلى Meta Title وMeta Description في نافذة واحدة قبل الحفظ.';
+    if (mode === 'description') return '\u0633\u064a\u0638\u0647\u0631 \u0644\u0643 \u0627\u0644\u0648\u0635\u0641 \u0627\u0644\u062d\u0627\u0644\u064a \u062b\u0645 \u0627\u0644\u0648\u0635\u0641 \u0627\u0644\u062c\u062f\u064a\u062f \u0645\u0639 \u0625\u0645\u0643\u0627\u0646\u064a\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u064a\u062f\u0648\u064a \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.';
+    if (mode === 'seo') return '\u0633\u064a\u0638\u0647\u0631 \u0644\u0643 Meta Title \u0648Meta Description \u0627\u0644\u062d\u0627\u0644\u064a\u0627\u0646 \u0648\u0627\u0644\u062c\u062f\u064a\u062f\u0627\u0646 \u0645\u0639 \u0642\u0627\u0628\u0644\u064a\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0643\u0627\u0645\u0644 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.';
+    return '\u0633\u064a\u0638\u0647\u0631 \u0644\u0643 \u0627\u0644\u0648\u0635\u0641 \u0627\u0644\u062d\u0627\u0644\u064a \u0648\u0627\u0644\u062c\u062f\u064a\u062f \u0628\u0627\u0644\u0625\u0636\u0627\u0641\u0629 \u0625\u0644\u0649 Meta Title \u0648Meta Description \u0641\u064a \u0646\u0627\u0641\u0630\u0629 \u0648\u0627\u062d\u062f\u0629 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.';
   }
 
   function getFilteredProducts() {
@@ -182,22 +239,22 @@
     return `
       <article class="product-card">
         <div class="product-badges">
-          <span class="status-badge ${altReady ? 'success' : 'danger'}">${altReady ? 'ALT ÙØ­Ø³ÙÙ' : 'ALT ØºÙØ± ÙØ­Ø³Ù'}</span>
-          <span class="status-badge ${images.length ? 'warning' : 'danger'}">${images.length ? `${images.length} ØµÙØ±` : 'Ø¨Ø¯ÙÙ ØµÙØ±'}</span>
+          <span class="status-badge ${altReady ? 'success' : 'danger'}">${altReady ? '\u0041\u004c\u0054 \u0645\u062d\u0633\u0651\u0646' : '\u0041\u004c\u0054 \u063a\u064a\u0631 \u0645\u062d\u0633\u0651\u0646'}</span>
+          <span class="status-badge ${images.length ? 'warning' : 'danger'}">${images.length ? `${images.length} \u0635\u0648\u0631` : '\u0628\u062f\u0648\u0646 \u0635\u0648\u0631'}</span>
         </div>
         <img class="product-thumb" src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}">
         <div>
           <h3 class="product-title">${escapeHtml(product.name)}</h3>
           <div class="meta-list">
             <span>SKU: <code>${escapeHtml(product.sku || '-')}</code></span>
-            <span>Ø¬Ø§ÙØ²: <strong>${altReadyCount}/${images.length}</strong></span>
-            <span>Ø§ÙÙØªØ¨ÙÙ: <strong>${pendingCount}</strong></span>
+            <span>\u062c\u0627\u0647\u0632: <strong>${altReadyCount}/${images.length}</strong></span>
+            <span>\u0627\u0644\u0645\u062a\u0628\u0642\u064a: <strong>${pendingCount}</strong></span>
           </div>
         </div>
-        <p class="muted" style="margin:0;">Ø§ÙØªØ¨ ALT ÙØµÙØ±Ø© ÙØ§Ø­Ø¯Ø© Ø£Ù Ø§ÙØªØ­ Ø§ÙÙÙØªØ¬ ÙØªØ­Ø³ÙÙ Ø¬ÙÙØ¹ Ø§ÙØµÙØ± Ø«Ù Ø±Ø§Ø¬Ø¹ Ø§ÙÙØµÙØµ ÙØ¨Ù Ø§ÙØ­ÙØ¸ ÙÙ Ø§ÙÙØªØ¬Ø±.</p>
+        <p class="muted" style="margin:0;">\u0627\u0643\u062a\u0628 \u0041\u004c\u0054 \u0644\u0635\u0648\u0631\u0629 \u0648\u0627\u062d\u062f\u0629 \u0623\u0648 \u0627\u0641\u062a\u062d \u0627\u0644\u0645\u0646\u062a\u062c \u0644\u062a\u062d\u0633\u064a\u0646 \u062c\u0645\u064a\u0639 \u0627\u0644\u0635\u0648\u0631 \u062b\u0645 \u0631\u0627\u062c\u0639 \u0627\u0644\u0646\u0635\u0648\u0635 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638 \u0641\u064a \u0627\u0644\u0645\u062a\u062c\u0631.</p>
         <div class="product-actions">
-          <button class="btn btn-dark" type="button" data-alt-product="${Number(product.id)}">ÙØªØ­ ÙØ§ØªØ¨ ALT</button>
-          <button class="btn btn-secondary" type="button" data-alt-focus-product="${Number(product.id)}">ØªØ­Ø¯ÙØ¯ ÙÙØªØ­</button>
+          <button class="btn btn-dark" type="button" data-alt-product="${Number(product.id)}">\u0641\u062a\u062d \u0643\u0627\u062a\u0628 \u0041\u004c\u0054</button>
+          <button class="btn btn-secondary" type="button" data-alt-focus-product="${Number(product.id)}">\u062a\u062d\u062f\u064a\u062f \u0648\u0641\u062a\u062d</button>
         </div>
       </article>
     `;
@@ -214,18 +271,19 @@
     const { filtered, totalPages, items, from, to } = getPagedProducts();
 
     summary.textContent = filtered.length
-      ? `Ø¹Ø±Ø¶ ${from} Ø¥ÙÙ ${to} ÙÙ Ø£ØµÙ ${filtered.length} ÙÙØªØ¬ ØµÙØ±`
-      : 'ÙØ§ ØªÙØ¬Ø¯ ÙÙØªØ¬Ø§Øª ÙØ·Ø§Ø¨ÙØ© ÙÙÙØ§ØªØ± Ø§ÙØµÙØ± Ø§ÙØ­Ø§ÙÙØ©.';
+      ? `\u0639\u0631\u0636 ${from} \u0625\u0644\u0649 ${to} \u0645\u0646 \u0623\u0635\u0644 ${filtered.length} \u0645\u0646\u062a\u062c \u0635\u0648\u0631`
+      : '\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0646\u062a\u062c\u0627\u062a \u0645\u0637\u0627\u0628\u0642\u0629 \u0644\u0641\u0644\u0627\u062a\u0631 \u0627\u0644\u0635\u0648\u0631 \u0627\u0644\u062d\u0627\u0644\u064a\u0629.';
 
     if (!items.length) {
       root.innerHTML = `
         <div class="empty-state" style="grid-column:1/-1;">
-          <h3>?? ØµÙØ±? ÙÙØªÙÙ ?? ÙÙØªÙÙ ALT</h3>
-          <p class="muted">ØµÙØ±? ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬? ?? ØµÙØ±? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±? ØµÙØ±Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ØªØ­Ø¯ÙØ¯ ÙÙØªØ­? ØµÙØ±?.</p>
+          <h3>\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0646\u062a\u062c\u0627\u062a \u0635\u0648\u0631 \u0645\u0637\u0627\u0628\u0642\u0629</h3>
+          <p class="muted">\u062c\u0631\u0651\u0628 \u0625\u0632\u0627\u0644\u0629 \u0628\u0639\u0636 \u0627\u0644\u0641\u0644\u0627\u062a\u0631 \u0623\u0648 \u0627\u0641\u062a\u062d \u062a\u0628\u0648\u064a\u0628 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u062b\u0645 \u0639\u062f \u0625\u0644\u0649 \u062a\u0628\u0648\u064a\u0628 \u0041\u004c\u0054 \u0644\u0644\u0635\u0648\u0631.</p>
         </div>
       `;
       renderPagination('alt-products-pagination-top', totalPages);
       renderPagination('alt-products-pagination-bottom', totalPages);
+      scheduleUiFix(root);
       return;
     }
 
@@ -246,13 +304,14 @@
 
     renderPagination('alt-products-pagination-top', totalPages);
     renderPagination('alt-products-pagination-bottom', totalPages);
+    scheduleUiFix(root);
   }
 
   function renderSubscriptionCard(data) {
     const card = document.getElementById('portal-subscription');
 
     if (!data.success) {
-      card.innerHTML = '<h2>الاشتراك والاستهلاك</h2><p class="muted">' + escapeHtml(data.message) + '</p>';
+      card.innerHTML = '<h2>\u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u0648\u0627\u0644\u0627\u0633\u062a\u0647\u0644\u0627\u0643</h2><p class="muted">' + escapeHtml(data.message) + '</p>';
       return;
     }
 
@@ -260,25 +319,25 @@
     card.innerHTML = `
       <div class="section-head">
         <div>
-          <h2 style="margin-bottom:6px;">الاشتراك والاستهلاك</h2>
-          <p class="muted" style="margin:0;">نظرة سريعة على حالة الباقة وعدد التحسينات المتبقية خلال الدورة الحالية.</p>
+          <h2 style="margin-bottom:6px;">\u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u0648\u0627\u0644\u0627\u0633\u062a\u0647\u0644\u0627\u0643</h2>
+          <p class="muted" style="margin:0;">\u0646\u0638\u0631\u0629 \u0633\u0631\u064a\u0639\u0629 \u0639\u0644\u0649 \u062d\u0627\u0644\u0629 \u0627\u0644\u0628\u0627\u0642\u0629 \u0648\u0639\u062f\u062f \u0627\u0644\u062a\u062d\u0633\u064a\u0646\u0627\u062a \u0627\u0644\u0645\u062a\u0628\u0642\u064a\u0629 \u062e\u0644\u0627\u0644 \u0627\u0644\u062f\u0648\u0631\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629.</p>
         </div>
       </div>
       <div class="grid" style="margin-top:0;">
         <div class="card surface-soft stat">
-          <span class="stat-label">الحالة</span>
+          <span class="stat-label">\u0627\u0644\u062d\u0627\u0644\u0629</span>
           <span class="stat-value" style="font-size:28px;">${escapeHtml(sub.status)}</span>
         </div>
         <div class="card surface-soft stat">
-          <span class="stat-label">الباقة</span>
+          <span class="stat-label">\u0627\u0644\u0628\u0627\u0642\u0629</span>
           <span class="stat-value" style="font-size:28px;">${escapeHtml(sub.plan_name ?? '-')}</span>
         </div>
         <div class="card surface-soft stat">
-          <span class="stat-label">المتبقي</span>
+          <span class="stat-label">\u0627\u0644\u0645\u062a\u0628\u0642\u064a</span>
           <span class="stat-value">${escapeHtml(sub.remaining_products)}</span>
         </div>
         <div class="card surface-soft stat">
-          <span class="stat-label">الاستهلاك الحالي</span>
+          <span class="stat-label">\u0627\u0644\u0627\u0633\u062a\u0647\u0644\u0627\u0643 \u0627\u0644\u062d\u0627\u0644\u064a</span>
           <span class="stat-value">${escapeHtml(sub.used_products)} / ${escapeHtml(sub.product_quota)}</span>
         </div>
       </div>
@@ -290,7 +349,7 @@
       const response = await fetch('/api/subscription');
       renderSubscriptionCard(await response.json());
     } catch (error) {
-      renderSubscriptionCard({ success: false, message: 'تعذر تحميل بيانات الاشتراك.' });
+      renderSubscriptionCard({ success: false, message: '\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0645\u064a\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643.' });
     }
   }
 
@@ -313,11 +372,12 @@
   }
 
   function getOperationLabel(mode) {
-    if (mode === 'image_alt') return 'ALT الصور';
-    if (mode === 'image_alt_bulk') return 'ALT بالجملة';
-    if (mode === 'description') return 'وصف المنتج';
-    if (mode === 'seo') return 'SEO';
-    return 'الوصف + SEO';
+    if (mode === 'image_alt') return 'ALT \u0627\u0644\u0635\u0648\u0631';
+    if (mode === 'image_alt_bulk') return 'ALT \u0628\u0627\u0644\u062c\u0645\u0644\u0629';
+    if (mode === 'description') return '\u0648\u0635\u0641 \u0627\u0644\u0645\u0646\u062a\u062c';
+    if (mode === 'seo') return 'SEO \u0627\u0644\u0645\u0646\u062a\u062c';
+    if (mode === 'store_seo') return '\u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631';
+    return '\u0627\u0644\u0648\u0635\u0641 + SEO';
   }
 
   function getOperationStatusClass(status) {
@@ -327,10 +387,10 @@
   }
 
   function getOperationStatusLabel(status) {
-    if (status === 'completed') return 'ÙÙØªÙÙ';
-    if (status === 'failed') return 'ÙØ´Ù';
-    if (status === 'in_progress') return 'ÙÙØ¯ Ø§ÙØªÙÙÙØ°';
-    return status || 'ØºÙØ± ÙØ¹Ø±ÙÙ';
+    if (status === 'completed') return '\u0645\u0643\u062a\u0645\u0644';
+    if (status === 'failed') return '\u0641\u0634\u0644';
+    if (status === 'in_progress') return '\u0642\u064a\u062f \u0627\u0644\u062a\u0646\u0641\u064a\u0630';
+    return status || '\u063a\u064a\u0631 \u0645\u0639\u0631\u0648\u0641';
   }
 
   function getOperationsQuery(limitOverride) {
@@ -358,7 +418,8 @@
     }
 
     if (!data.success) {
-      root.innerHTML = `<div class="empty-state"><p class="muted">${escapeHtml(data.message || 'ØµÙØ±? ??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±??.')}</p></div>`;
+      root.innerHTML = `<div class="empty-state"><p class="muted">${escapeHtml(data.message || '\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0645\u064a\u0644 \u0633\u062c\u0644 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a.')}</p></div>`;
+      scheduleUiFix(root);
       return;
     }
 
@@ -367,10 +428,11 @@
     if (!operations.length) {
       root.innerHTML = `
         <div class="empty-state">
-          <h3 style="margin-bottom:8px;">?? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ÙÙØªÙÙ?</h3>
-          <p class="muted" style="margin:0;">ØµÙØ±? ??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±? ?? ØµÙØ± ØµÙØ±? ÙÙØªÙÙ.</p>
+          <h3 style="margin-bottom:8px;">\u0644\u0627 \u062a\u0648\u062c\u062f \u0639\u0645\u0644\u064a\u0627\u062a \u0628\u0639\u062f</h3>
+          <p class="muted" style="margin:0;">\u0639\u0646\u062f\u0645\u0627 \u062a\u062d\u0641\u0638 \u0648\u0635\u0641\u064b\u0627 \u0623\u0648 SEO \u0623\u0648 ALT \u0633\u062a\u0638\u0647\u0631 \u0622\u062e\u0631 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0647\u0646\u0627.</p>
         </div>
       `;
+      scheduleUiFix(root);
       return;
     }
 
@@ -380,13 +442,15 @@
           <span class="status-badge ${getOperationStatusClass(operation.status)}">${escapeHtml(getOperationStatusLabel(operation.status))}</span>
           <span class="status-badge warning">${escapeHtml(getOperationLabel(operation.mode))}</span>
         </div>
-        <h3 style="margin:0 0 8px;line-height:1.5;">${escapeHtml(operation.product_name || 'ØµÙØ±? ØµÙØ±? ØµÙØ±')}</h3>
+        <h3 style="margin:0 0 8px;line-height:1.5;">${escapeHtml(operation.product_name || '\u0639\u0645\u0644\u064a\u0629 \u0628\u062f\u0648\u0646 \u0627\u0633\u0645 \u0645\u0646\u062a\u062c')}</h3>
         <div class="meta-list">
-          <span>??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±: <code>${escapeHtml(operation.product_id || '-')}</code></span>
-          <span>ØµÙØ± ÙÙØªÙÙ: <strong>${escapeHtml(formatDate(operation.used_at))}</strong></span>
+          <span>\u0645\u0639\u0631\u0651\u0641 \u0627\u0644\u0645\u0646\u062a\u062c: <code>${escapeHtml(operation.product_id || '-')}</code></span>
+          <span>\u0622\u062e\u0631 \u062a\u0646\u0641\u064a\u0630: <strong>${escapeHtml(formatDate(operation.used_at))}</strong></span>
         </div>
       </div>
     `).join('');
+
+    scheduleUiFix(root);
   }
 
   async function loadOperations(limitOverride) {
@@ -394,7 +458,7 @@
       const response = await fetch(getOperationsQuery(limitOverride));
       renderOperations(await response.json());
     } catch (error) {
-      renderOperations({ success: false, message: 'ØµÙØ±? ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬??.' });
+      renderOperations({ success: false, message: '\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0645\u064a\u0644 \u0633\u062c\u0644 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a.' });
     }
   }
 
@@ -414,13 +478,13 @@
     const start = Math.max(1, portalState.page - 2);
     const end = Math.min(totalPages, portalState.page + 2);
 
-    html += `<button type="button" ${portalState.page === 1 ? 'disabled' : ''} data-page="${portalState.page - 1}">‹</button>`;
+    html += `<button type="button" ${portalState.page === 1 ? 'disabled' : ''} data-page="${portalState.page - 1}">\u2039</button>`;
 
     for (let page = start; page <= end; page += 1) {
       html += `<button type="button" class="${page === portalState.page ? 'is-active' : ''}" data-page="${page}">${page}</button>`;
     }
 
-    html += `<button type="button" ${portalState.page === totalPages ? 'disabled' : ''} data-page="${portalState.page + 1}">›</button>`;
+    html += `<button type="button" ${portalState.page === totalPages ? 'disabled' : ''} data-page="${portalState.page + 1}">\u203a</button>`;
     root.innerHTML = html;
 
     root.querySelectorAll('[data-page]').forEach((button) => {
@@ -439,33 +503,33 @@
     const images = Array.isArray(product.images) ? product.images : [];
     const altReadyCount = images.filter(isImageAltReady).length;
     const image = product.thumbnail || product.main_image || '';
-    const preview = stripHtml(product.description || '').slice(0, 140) || '?? ØµÙØ±? ØµÙØ± ??Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±.';
+    const preview = stripHtml(product.description || '').slice(0, 140) || '\u0644\u0627 \u064a\u0648\u062c\u062f \u0648\u0635\u0641 \u062d\u0627\u0644\u064a \u0644\u0647\u0630\u0627 \u0627\u0644\u0645\u0646\u062a\u062c.';
     const isLoading = portalState.loadingProductId === product.id;
 
     return `
       <article class="product-card">
         <div class="product-badges">
-          <span class="status-badge ${descriptionReady ? 'success' : 'danger'}">${descriptionReady ? 'ØµÙØ± ÙÙØªÙÙ' : 'ØµÙØ± ØµÙØ± ÙÙØªÙÙ'}</span>
-          <span class="status-badge ${seoReady ? 'success' : 'danger'}">${seoReady ? 'SEO ÙÙØªÙÙ' : 'SEO ØµÙØ± ÙÙØªÙÙ'}</span>
-          <span class="status-badge ${altReady ? 'success' : 'danger'}">${altReady ? 'ALT ÙØ­Ø³ÙÙ' : 'ALT ØµÙØ± ÙÙØªÙÙ'}</span>
+          <span class="status-badge ${descriptionReady ? 'success' : 'danger'}">${descriptionReady ? '\u0648\u0635\u0641 \u0645\u062d\u0633\u0651\u0646' : '\u0648\u0635\u0641 \u063a\u064a\u0631 \u0645\u062d\u0633\u0651\u0646'}</span>
+          <span class="status-badge ${seoReady ? 'success' : 'danger'}">${seoReady ? 'SEO \u0645\u062d\u0633\u0651\u0646' : 'SEO \u063a\u064a\u0631 \u0645\u062d\u0633\u0651\u0646'}</span>
+          <span class="status-badge ${altReady ? 'success' : 'danger'}">${altReady ? 'ALT \u0645\u062d\u0633\u0651\u0646' : 'ALT \u063a\u064a\u0631 \u0645\u062d\u0633\u0651\u0646'}</span>
         </div>
         <img class="product-thumb" src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}">
         <div>
           <h3 class="product-title">${escapeHtml(product.name)}</h3>
           <div class="meta-list">
             <span>SKU: <code>${escapeHtml(product.sku || '-')}</code></span>
-            <span>ÙÙØªÙÙ?: <strong>${escapeHtml(getStatusLabel(product))}</strong></span>
-            <span>ÙÙØªÙÙ: <strong>${altReadyCount}/${images.length}</strong> ØµÙØ± ALT</span>
+            <span>\u0627\u0644\u062d\u0627\u0644\u0629: <strong>${escapeHtml(getStatusLabel(product))}</strong></span>
+            <span>\u0627\u0644\u0635\u0648\u0631 \u0627\u0644\u062c\u0627\u0647\u0632\u0629: <strong>${altReadyCount}/${images.length}</strong> ALT</span>
           </div>
         </div>
         <p class="muted" style="margin:0;">${escapeHtml(preview)}</p>
         <div class="product-actions">
-          <button class="btn" type="button" ${isLoading ? 'disabled' : ''} data-action="description" data-id="${Number(product.id)}">${isLoading ? '?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?...' : 'ØªØ­Ø¯ÙØ¯ ÙÙØªØ­?'}</button>
-          <button class="btn btn-sky" type="button" ${isLoading ? 'disabled' : ''} data-action="seo" data-id="${Number(product.id)}">ØªØ­Ø¯ÙØ¯ ÙÙØªØ­?</button>
-          <button class="btn btn-secondary" type="button" ${isLoading ? 'disabled' : ''} data-action="all" data-id="${Number(product.id)}">ØªØ­Ø¯ÙØ¯ ÙÙØªØ­</button>
-          <button class="btn btn-dark" type="button" data-alt-product="${Number(product.id)}">ALT ÙØ­Ø³ÙÙ</button>
+          <button class="btn" type="button" ${isLoading ? 'disabled' : ''} data-action="description" data-id="${Number(product.id)}">${isLoading ? '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0636\u064a\u0631...' : '\u062a\u062d\u0633\u064a\u0646 \u0627\u0644\u0648\u0635\u0641'}</button>
+          <button class="btn btn-sky" type="button" ${isLoading ? 'disabled' : ''} data-action="seo" data-id="${Number(product.id)}">\u062a\u062d\u0633\u064a\u0646 \u0627\u0644\u0633\u064a\u0648</button>
+          <button class="btn btn-secondary" type="button" ${isLoading ? 'disabled' : ''} data-action="all" data-id="${Number(product.id)}">\u062a\u062d\u0633\u064a\u0646 \u0627\u0644\u0643\u0644</button>
+          <button class="btn btn-dark" type="button" data-alt-product="${Number(product.id)}">ALT \u0627\u0644\u0635\u0648\u0631</button>
         </div>
-        <a class="btn btn-secondary" href="${escapeHtml(product.urls?.admin || '#')}" target="_blank">Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ?? ØµÙØ±? ØµÙØ±</a>
+        <a class="btn btn-secondary" href="${escapeHtml(product.urls?.admin || '#')}" target="_blank">\u0641\u062a\u062d \u0627\u0644\u0645\u0646\u062a\u062c \u0641\u064a \u0633\u0644\u0629</a>
       </article>
     `;
   }
@@ -480,14 +544,14 @@
     });
 
     summary.textContent = filtered.length
-      ? `عرض ${from} إلى ${to} من أصل ${filtered.length} منتج`
-      : 'لا توجد نتائج مطابقة للفلاتر الحالية.';
+      ? `\u0639\u0631\u0636 ${from} \u0625\u0644\u0649 ${to} \u0645\u0646 \u0623\u0635\u0644 ${filtered.length} \u0645\u0646\u062a\u062c`
+      : '\u0644\u0627 \u062a\u0648\u062c\u062f \u0646\u062a\u0627\u0626\u062c \u0645\u0637\u0627\u0628\u0642\u0629 \u0644\u0644\u0641\u0644\u0627\u062a\u0631 \u0627\u0644\u062d\u0627\u0644\u064a\u0629.';
 
     if (!items.length) {
       root.innerHTML = `
         <div class="empty-state" style="grid-column:1/-1;">
-          <h3>لا توجد منتجات مطابقة</h3>
-          <p class="muted">جرّب إزالة بعض الفلاتر أو تبديل فلتر المحتوى لإظهار نتائج أكثر.</p>
+          <h3>\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0646\u062a\u062c\u0627\u062a \u0645\u0637\u0627\u0628\u0642\u0629</h3>
+          <p class="muted">\u062c\u0631\u0651\u0628 \u0625\u0632\u0627\u0644\u0629 \u0628\u0639\u0636 \u0627\u0644\u0641\u0644\u0627\u062a\u0631 \u0623\u0648 \u062a\u0628\u062f\u064a\u0644 \u0641\u0644\u062a\u0631 \u0627\u0644\u0645\u062d\u062a\u0648\u0649 \u0644\u0625\u0638\u0647\u0627\u0631 \u0646\u062a\u0627\u0626\u062c \u0623\u0643\u062b\u0631.</p>
         </div>
       `;
       renderPagination('products-pagination-top', totalPages);
@@ -839,7 +903,7 @@
 
     portalState.imageAltEditor = {
       productId,
-      productName: product.name || 'ÙÙØªÙÙ?',
+      productName: product.name || '\u0645\u0646\u062a\u062c \u0628\u062f\u0648\u0646 \u0627\u0633\u0645',
       images: (product.images || []).map((image) => ({
         id: Number(image.id),
         url: image.url || '',
@@ -872,9 +936,9 @@
 
     if (portalState.imageAltLoading) {
       alertRoot.innerHTML = '';
-      title.textContent = 'ØµÙØ±? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ÙÙØªÙÙ';
-      subtitle.textContent = 'ØµÙØ±? ??Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ÙÙØªÙÙ...';
-      root.innerHTML = '<div class="empty-state"><p class="muted">ØµÙØ±? ØªØ­Ø¯ÙØ¯ ÙÙØªØ­?...</p></div>';
+      title.textContent = '\u062c\u0627\u0631\u064a \u062a\u062d\u0636\u064a\u0631 \u0627\u0644\u0635\u0648\u0631';
+      subtitle.textContent = '\u0627\u0646\u062a\u0638\u0631 \u0642\u0644\u064a\u0644\u064b\u0627 \u062d\u062a\u0649 \u064a\u0643\u062a\u0645\u0644 \u062c\u0644\u0628 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0635\u0648\u0631...';
+      root.innerHTML = '<div class="empty-state"><p class="muted">\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644 \u0645\u062d\u0631\u0631 ALT...</p></div>';
       return;
     }
 
@@ -882,29 +946,29 @@
 
     if (!editor) {
       alertRoot.innerHTML = '';
-      title.textContent = 'ØµÙØ±? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ÙÙØªÙÙ';
-      subtitle.textContent = 'ØµÙØ±? ALT ÙØ­Ø³ÙÙ ?? ÙÙØªÙÙ ?? ØµÙØ±?.';
-      root.innerHTML = '<div class="empty-state"><p class="muted">?? ØµÙØ±? ØµÙØ±? ØµÙØ±? ØµÙØ±.</p></div>';
+      title.textContent = '\u0645\u062d\u0631\u0631 ALT \u0627\u0644\u0635\u0648\u0631';
+      subtitle.textContent = '\u0627\u062e\u062a\u0631 \u0645\u0646\u062a\u062c\u064b\u0627 \u0644\u0641\u062a\u062d \u0645\u062d\u0631\u0631 \u0627\u0644\u0646\u0635 \u0627\u0644\u0628\u062f\u064a\u0644 \u0644\u0644\u0635\u0648\u0631.';
+      root.innerHTML = '<div class="empty-state"><p class="muted">\u0644\u0627 \u064a\u0648\u062c\u062f \u0645\u0646\u062a\u062c \u0645\u0641\u062a\u0648\u062d \u0627\u0644\u0622\u0646.</p></div>';
       return;
     }
 
     const selectedCount = editor.images.filter((image) => image.selected).length;
     title.textContent = editor.productName;
-    subtitle.textContent = `ØµÙØ±? ØµÙØ±? ÙÙØªÙÙ ?? ØµÙØ± ØµÙØ± ?? ?? Ø³ÙÙ Ø§ÙÙØªØ¬Ø±. ??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±? ØµÙØ±?: ${selectedCount}`;
+    subtitle.textContent = `\u0627\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629: ${selectedCount}`;
     alertRoot.innerHTML = editor.notice ? `<div class="notice ${editor.notice.type}">${escapeHtml(editor.notice.message)}</div>` : '';
 
     root.innerHTML = `
       <div class="card surface-soft" style="margin-bottom:16px;box-shadow:none;">
         <div class="section-head" style="margin-bottom:12px;">
           <div>
-            <h3 style="margin-bottom:6px;">ÙÙØªÙÙ? ALT ÙØ­Ø³ÙÙ</h3>
-            <p class="muted" style="margin:0;">ØªØ­Ø¯ÙØ¯ ÙÙØªØ­? ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ? ?? ØµÙØ± Ø³ÙÙ Ø§ÙÙØªØ¬Ø±? ?? Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?? ÙÙØªÙÙ?? ?? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±.</p>
+            <h3 style="margin-bottom:6px;">\u0625\u062f\u0627\u0631\u0629 ALT \u0627\u0644\u0635\u0648\u0631</h3>
+            <p class="muted" style="margin:0;">\u062d\u062f\u062f \u0635\u0648\u0631\u0629 \u0648\u0627\u062d\u062f\u0629 \u0623\u0648 \u0639\u062f\u0629 \u0635\u0648\u0631 \u062b\u0645 \u0648\u0644\u0651\u062f ALT \u0628\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0648\u0631\u0627\u062c\u0639\u0647 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.</p>
           </div>
           <div class="inline-actions">
-            <button class="btn btn-sky" type="button" data-alt-action="select-all">ØªØ­Ø¯ÙØ¯ ÙÙØªØ­</button>
-            <button class="btn btn-secondary" type="button" data-alt-action="clear-selection">??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?</button>
-            <button class="btn" type="button" data-alt-action="optimize-selected">??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±</button>
-            <button class="btn btn-secondary" type="button" data-alt-action="save-selected">Ø³ÙÙ Ø§ÙÙØªØ¬Ø±</button>
+            <button class="btn btn-sky" type="button" data-alt-action="select-all">\u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0643\u0644</button>
+            <button class="btn btn-secondary" type="button" data-alt-action="clear-selection">\u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u062a\u062d\u062f\u064a\u062f</button>
+            <button class="btn" type="button" data-alt-action="optimize-selected">\u062a\u062d\u0633\u064a\u0646 \u0627\u0644\u0645\u062d\u062f\u062f</button>
+            <button class="btn btn-secondary" type="button" data-alt-action="save-selected">\u062d\u0641\u0638 \u0627\u0644\u0645\u062d\u062f\u062f</button>
           </div>
         </div>
       </div>
@@ -914,22 +978,22 @@
             <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
               <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;">
                 <input type="checkbox" data-alt-select="${Number(image.id)}" ${image.selected ? 'checked' : ''}>
-                ÙÙØªÙÙ
+                \u062a\u062d\u062f\u064a\u062f
               </label>
-              <span class="status-badge ${String(image.currentAlt || '').trim() ? 'success' : 'danger'}">${String(image.currentAlt || '').trim() ? 'ØµÙØ± ALT' : '?? ØµÙØ±? ALT'}</span>
+              <span class="status-badge ${String(image.currentAlt || '').trim() ? 'success' : 'danger'}">${String(image.currentAlt || '').trim() ? 'ALT \u062c\u0627\u0647\u0632' : 'ALT \u063a\u064a\u0631 \u062c\u0627\u0647\u0632'}</span>
             </div>
             <img class="product-thumb" style="aspect-ratio:1/1;max-width:100%;height:auto;object-fit:cover;border-radius:18px;" src="${escapeHtml(image.url || '')}" alt="${escapeHtml(editor.productName)}">
             <div class="card surface-soft" style="padding:14px;box-shadow:none;">
-              <strong>ALT ÙØ­Ø³ÙÙ?</strong>
-              <p class="muted" style="margin:8px 0 0;line-height:1.8;">${escapeHtml(image.currentAlt || '?? ØµÙØ±? ?? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±.')}</p>
+              <strong>ALT \u0627\u0644\u062d\u0627\u0644\u064a</strong>
+              <p class="muted" style="margin:8px 0 0;line-height:1.8;">${escapeHtml(image.currentAlt || '\u0644\u0627 \u064a\u0648\u062c\u062f ALT \u062d\u0627\u0644\u064a \u0644\u0647\u0630\u0647 \u0627\u0644\u0635\u0648\u0631\u0629.')}</p>
             </div>
             <div>
-              <label><strong>ALT ÙØ­Ø³ÙÙ?</strong></label>
+              <label><strong>ALT \u0628\u0639\u062f \u0627\u0644\u062a\u062d\u0633\u064a\u0646</strong></label>
               <textarea rows="4" data-alt-input="${Number(image.id)}">${escapeHtml(image.optimizedAlt || '')}</textarea>
             </div>
             <div class="product-actions">
-              <button class="btn btn-sky" type="button" data-alt-action="optimize-one" data-image-id="${Number(image.id)}">ÙÙØªÙÙ ALT</button>
-              <button class="btn" type="button" data-alt-action="save-one" data-image-id="${Number(image.id)}">Ø³ÙÙ Ø§ÙÙØªØ¬Ø±</button>
+              <button class="btn btn-sky" type="button" data-alt-action="optimize-one" data-image-id="${Number(image.id)}">\u062a\u062d\u0633\u064a\u0646 ALT</button>
+              <button class="btn" type="button" data-alt-action="save-one" data-image-id="${Number(image.id)}">\u062d\u0641\u0638 ALT</button>
             </div>
           </article>
         `).join('')}
@@ -939,10 +1003,9 @@
 
   async function optimizeSingleImageAlt(imageId) {
     const editor = portalState.imageAltEditor;
-
     if (!editor) return;
 
-    editor.notice = { type: 'success', message: 'ØµÙØ±? ÙÙØªÙÙ ALT ÙØ­Ø³ÙÙ? ÙÙØªÙÙ??...' };
+    editor.notice = { type: 'success', message: '\u062c\u0627\u0631\u064a \u062a\u0648\u0644\u064a\u062f ALT \u0644\u0644\u0635\u0648\u0631\u0629...' };
     renderImageAltBody();
 
     try {
@@ -953,7 +1016,7 @@
       }).then((response) => response.json());
 
       if (!data.success) {
-        editor.notice = { type: 'error', message: data.message || 'ØµÙØ±? ÙÙØªÙÙ ALT ÙØ­Ø³ÙÙ?.' };
+        editor.notice = { type: 'error', message: data.message || '\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0635\u0648\u0631\u0629.' };
         renderImageAltBody();
         return;
       }
@@ -964,10 +1027,10 @@
         image.selected = true;
       }
 
-      editor.notice = { type: 'success', message: '??ALT ÙØ­Ø³ÙÙ?. ÙÙØªÙÙ ?? ÙÙØªÙÙ.' };
+      editor.notice = { type: 'success', message: '\u062a\u0645 \u062a\u0648\u0644\u064a\u062f ALT \u0628\u0646\u062c\u0627\u062d. \u0631\u0627\u062c\u0639 \u0627\u0644\u0646\u0635 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.' };
       renderImageAltBody();
     } catch (error) {
-      editor.notice = { type: 'error', message: 'ØµÙØ± ØµÙØ± ØªØ­Ø¯ÙØ¯ ÙÙØªØ­? ALT ÙØ­Ø³ÙÙ?.' };
+      editor.notice = { type: 'error', message: '\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0635\u0648\u0631\u0629.' };
       renderImageAltBody();
     }
   }
@@ -975,7 +1038,6 @@
   async function saveSingleImageAlt(imageId) {
     const editor = portalState.imageAltEditor;
     const image = getImageAltItem(imageId);
-
     if (!editor || !image) return;
 
     try {
@@ -986,7 +1048,7 @@
       }).then((response) => response.json());
 
       if (!data.success) {
-        editor.notice = { type: 'error', message: data.message || 'ØµÙØ±? ØµÙØ± ALT ÙØ­Ø³ÙÙ?.' };
+        editor.notice = { type: 'error', message: data.message || '\u062a\u0639\u0630\u0651\u0631 \u062d\u0641\u0638 ALT \u0644\u0644\u0635\u0648\u0631\u0629.' };
         renderImageAltBody();
         return;
       }
@@ -994,31 +1056,29 @@
       image.currentAlt = data.saved_alt || image.optimizedAlt || '';
       image.optimizedAlt = image.currentAlt;
       syncProductImageAlt(editor.productId, imageId, image.currentAlt);
-      editor.notice = { type: 'success', message: '?? ØµÙØ± ALT ÙØ­Ø³ÙÙ? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±.' };
+      editor.notice = { type: 'success', message: '\u062a\u0645 \u062d\u0641\u0638 ALT \u0644\u0644\u0635\u0648\u0631\u0629 \u0628\u0646\u062c\u0627\u062d.' };
       renderImageAltBody();
       renderDashboardProducts();
       await loadPortalSubscription();
       await loadOperations();
     } catch (error) {
-      editor.notice = { type: 'error', message: 'ØµÙØ± ØµÙØ± ÙÙØªÙÙ ØµÙØ± ALT ÙØ­Ø³ÙÙ?.' };
+      editor.notice = { type: 'error', message: '\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u062d\u0641\u0638 ALT \u0644\u0644\u0635\u0648\u0631\u0629.' };
       renderImageAltBody();
     }
   }
 
   async function optimizeSelectedImagesAlt() {
     const editor = portalState.imageAltEditor;
-
     if (!editor) return;
 
     const selectedIds = getSelectedImageIds();
-
     if (!selectedIds.length) {
-      editor.notice = { type: 'error', message: 'ØµÙØ± ØµÙØ±? ÙÙØªÙÙ ØµÙØ± ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬?.' };
+      editor.notice = { type: 'error', message: '\u062d\u062f\u062f \u0635\u0648\u0631\u0629 \u0648\u0627\u062d\u062f\u0629 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644 \u0642\u0628\u0644 \u0627\u0644\u062a\u062d\u0633\u064a\u0646.' };
       renderImageAltBody();
       return;
     }
 
-    editor.notice = { type: 'success', message: 'ØµÙØ±? ÙÙØªÙÙ ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ??...' };
+    editor.notice = { type: 'success', message: '\u062c\u0627\u0631\u064a \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629...' };
     renderImageAltBody();
 
     try {
@@ -1032,7 +1092,7 @@
       }).then((response) => response.json());
 
       if (!data.success) {
-        editor.notice = { type: 'error', message: data.message || 'ØµÙØ±? ÙÙØªÙÙ ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ??.' };
+        editor.notice = { type: 'error', message: data.message || '\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629.' };
         renderImageAltBody();
         return;
       }
@@ -1044,23 +1104,21 @@
         }
       });
 
-      editor.notice = { type: 'success', message: '??ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ??. ÙÙØªÙÙ? ?? ÙÙØªÙÙ?.' };
+      editor.notice = { type: 'success', message: '\u062a\u0645 \u062a\u0648\u0644\u064a\u062f ALT \u0644\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629. \u0631\u0627\u062c\u0639 \u0627\u0644\u0646\u0635\u0648\u0635 \u062b\u0645 \u0627\u062d\u0641\u0638\u0647\u0627.' };
       renderImageAltBody();
     } catch (error) {
-      editor.notice = { type: 'error', message: 'ØµÙØ± ØµÙØ± ØªØ­Ø¯ÙØ¯ ÙÙØªØ­? ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ??.' };
+      editor.notice = { type: 'error', message: '\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629.' };
       renderImageAltBody();
     }
   }
 
   async function saveSelectedImagesAlt() {
     const editor = portalState.imageAltEditor;
-
     if (!editor) return;
 
     const selectedImages = editor.images.filter((image) => image.selected);
-
     if (!selectedImages.length) {
-      editor.notice = { type: 'error', message: 'ØµÙØ± ØµÙØ±? ÙÙØªÙÙ ØµÙØ± ÙÙØªÙÙ ØµÙØ± ÙÙØªÙÙ.' };
+      editor.notice = { type: 'error', message: '\u062d\u062f\u062f \u0635\u0648\u0631\u0629 \u0648\u0627\u062d\u062f\u0629 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.' };
       renderImageAltBody();
       return;
     }
@@ -1078,7 +1136,7 @@
       }).then((response) => response.json());
 
       if (!data.success) {
-        editor.notice = { type: 'error', message: data.message || 'ØµÙØ±? ØµÙØ± ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ??.' };
+        editor.notice = { type: 'error', message: data.message || '\u062a\u0639\u0630\u0651\u0631 \u062d\u0641\u0638 ALT \u0644\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629.' };
         renderImageAltBody();
         return;
       }
@@ -1088,30 +1146,29 @@
         syncProductImageAlt(editor.productId, image.id, image.currentAlt);
       });
 
-      editor.notice = { type: 'success', message: '?? ØµÙØ± ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ?? ?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±.' };
+      editor.notice = { type: 'success', message: '\u062a\u0645 \u062d\u0641\u0638 ALT \u0644\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629 \u0628\u0646\u062c\u0627\u062d.' };
       renderImageAltBody();
       renderDashboardProducts();
       await loadPortalSubscription();
       await loadOperations();
     } catch (error) {
-      editor.notice = { type: 'error', message: 'ØµÙØ± ØµÙØ± ÙÙØªÙÙ ØµÙØ± ALT ÙØ­Ø³ÙÙ ÙÙØªÙÙ??.' };
+      editor.notice = { type: 'error', message: '\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u062d\u0641\u0638 ALT \u0644\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u062d\u062f\u062f\u0629.' };
       renderImageAltBody();
     }
   }
 
   async function bulkOptimizeVisibleAlt() {
     const visibleIds = getPagedProducts().items.map((product) => Number(product.id));
-
     if (!visibleIds.length) {
       return;
     }
 
     const button = document.getElementById('bulk-alt-visible');
-    const oldLabel = button?.textContent || 'ÙÙØªÙÙ ALT ÙØ­Ø³ÙÙ??';
+    const oldLabel = button?.textContent || '\u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0645\u0639\u0631\u0648\u0636';
 
     if (button) {
       button.disabled = true;
-      button.textContent = '?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?...';
+      button.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0633\u064a\u0646...';
     }
 
     try {
@@ -1125,16 +1182,16 @@
       }).then((response) => response.json());
 
       if (!data.success && !(Array.isArray(data.processed) && data.processed.length)) {
-        alert(data.message || 'ØµÙØ±? ÙÙØªÙÙ ALT ÙØ­Ø³ÙÙ??.');
+        alert(data.message || '\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0645\u0639\u0631\u0648\u0636.');
         return;
       }
 
       await loadPortalProducts();
       await loadPortalSubscription();
       await loadOperations();
-      alert(`?? ÙÙØªÙÙ ALT ÙØ­Ø³ÙÙ?? ØµÙØ± ${Array.isArray(data.processed) ? data.processed.length : 0} ØµÙØ±?.`);
+      alert(`\u062a\u0645 \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0635\u0648\u0631 \u0641\u064a ${Array.isArray(data.processed) ? data.processed.length : 0} \u0645\u0646\u062a\u062c.`);
     } catch (error) {
-      alert('ØµÙØ± ØµÙØ± ØªØ­Ø¯ÙØ¯ ÙÙØªØ­? ALT ÙØ­Ø³ÙÙ??.');
+      alert('\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u062a\u062d\u0633\u064a\u0646 ALT \u0644\u0644\u0645\u0639\u0631\u0648\u0636.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -1148,15 +1205,15 @@
 
     if (filterSelect && !filterSelect.querySelector('option[value="alt_ready"]')) {
       filterSelect.insertAdjacentHTML('beforeend', `
-        <option value="alt_ready">ØµÙØ±? ALT ÙØ­Ø³ÙÙ</option>
-        <option value="alt_missing">?? ØµÙØ±? ALT ÙØ­Ø³ÙÙ</option>
+        <option value="alt_ready">ALT \u0645\u062d\u0633\u0651\u0646</option>
+        <option value="alt_missing">ALT \u063a\u064a\u0631 \u0645\u062d\u0633\u0651\u0646</option>
       `);
     }
 
     const chipsRow = document.querySelector('.toolbar .chips');
 
     if (chipsRow && !chipsRow.querySelector('[data-quick-filter="alt_missing"]')) {
-      chipsRow.insertAdjacentHTML('beforeend', '<button class="chip" data-quick-filter="alt_missing" type="button">Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?? ØµÙØ±? ØµÙØ± ØµÙØ± ALT ÙØ­Ø³ÙÙ</button>');
+      chipsRow.insertAdjacentHTML('beforeend', '<button class="chip" data-quick-filter="alt_missing" type="button">\u0639\u0631\u0636 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0627\u0644\u062a\u064a \u0644\u064a\u0633 \u0644\u0647\u0627 ALT \u0645\u062d\u0633\u0651\u0646</button>');
     }
   }
 
@@ -1166,15 +1223,13 @@
     const keywords = document.getElementById('store-seo-keywords')?.value || '';
 
     if (document.getElementById('store-seo-title-count')) {
-      document.getElementById('store-seo-title-count').textContent = `${title.length} ØµÙØ±`;
+      document.getElementById('store-seo-title-count').textContent = `${title.length} \u062d\u0631\u0641`;
     }
-
     if (document.getElementById('store-seo-description-count')) {
-      document.getElementById('store-seo-description-count').textContent = `${description.length} ØµÙØ±`;
+      document.getElementById('store-seo-description-count').textContent = `${description.length} \u062d\u0631\u0641`;
     }
-
     if (document.getElementById('store-seo-keywords-count')) {
-      document.getElementById('store-seo-keywords-count').textContent = `${keywords.length} ØµÙØ±`;
+      document.getElementById('store-seo-keywords-count').textContent = `${keywords.length} \u062d\u0631\u0641`;
     }
   }
 
@@ -1187,9 +1242,8 @@
   async function loadStoreSeo() {
     try {
       const data = await fetch('/api/store-seo').then((response) => response.json());
-
       if (!data.success) {
-        setStoreSeoAlert('error', data.message || 'ØµÙØ±? ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬.');
+        setStoreSeoAlert('error', data.message || '\u062a\u0639\u0630\u0651\u0631 \u062c\u0644\u0628 \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631.');
         return;
       }
 
@@ -1200,33 +1254,33 @@
       setStoreSeoAlert('', '');
       updateStoreSeoCounters();
     } catch (error) {
-      setStoreSeoAlert('error', 'ØµÙØ± ØµÙØ± ÙÙØªÙÙ ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬.');
+      setStoreSeoAlert('error', '\u062a\u0639\u0630\u0651\u0631 \u062c\u0644\u0628 \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631.');
     }
   }
 
   async function optimizeStoreSeo() {
     const button = document.getElementById('generate-store-seo');
-    const oldText = button?.textContent || '??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±? ÙÙØªÙÙØµÙØ±?';
+    const oldText = button?.textContent || '\u0625\u0646\u0634\u0627\u0621 \u0628\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a';
 
     if (button) {
       button.disabled = true;
-      button.textContent = '?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?...';
+      button.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u0648\u0644\u064a\u062f...';
     }
 
-    setStoreSeoAlert('success', 'ØµÙØ±? ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬ ØµÙØ±?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±ØµÙØ±...');
+    setStoreSeoAlert('success', '\u062c\u0627\u0631\u064a \u0625\u0646\u0634\u0627\u0621 \u0639\u0646\u0648\u0627\u0646 \u0648\u0648\u0635\u0641 \u0627\u0644\u0645\u062a\u062c\u0631...');
 
     try {
       const data = await fetch('/api/store-seo/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tone: document.getElementById('tone')?.value || '??ØªØ­Ø¯ÙØ¯ ÙÙØªØ­',
+          tone: document.getElementById('tone')?.value || '\u0627\u062d\u062a\u0631\u0627\u0641\u064a \u0645\u0642\u0646\u0639',
           language: document.getElementById('language')?.value || 'ar'
         })
       }).then((response) => response.json());
 
       if (!data.success) {
-        setStoreSeoAlert('error', data.message || 'ØµÙØ±? ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬.');
+        setStoreSeoAlert('error', data.message || '\u062a\u0639\u0630\u0651\u0631 \u062a\u0648\u0644\u064a\u062f \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631.');
         return;
       }
 
@@ -1234,9 +1288,9 @@
       if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.optimized_description || '';
       if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.optimized_keywords || '';
       updateStoreSeoCounters();
-      setStoreSeoAlert('success', '?? ØªØ­Ø¯ÙØ¯ ÙÙØªØ­? ØµÙØ±? Ø³ÙÙ Ø§ÙÙØªØ¬Ø±. ÙÙØªÙÙ?? ?? ÙÙØªÙÙ??.');
+      setStoreSeoAlert('success', '\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631. \u0631\u0627\u062c\u0639 \u0627\u0644\u062d\u0642\u0648\u0644 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.');
     } catch (error) {
-      setStoreSeoAlert('error', 'ØµÙØ± ØµÙØ± ÙÙØªÙÙ ØªØ­Ø³ÙÙ ÙØµÙ Ø§ÙÙÙØªØ¬.');
+      setStoreSeoAlert('error', '\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u062a\u0648\u0644\u064a\u062f \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -1247,22 +1301,22 @@
 
   async function saveStoreSeo() {
     const button = document.getElementById('save-store-seo');
-    const oldText = button?.textContent || 'Ø³ÙÙ Ø§ÙÙØªØ¬Ø±ØµÙØ±';
+    const oldText = button?.textContent || '\u062d\u0641\u0638 \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a';
     const title = document.getElementById('store-seo-title')?.value.trim() || '';
     const description = document.getElementById('store-seo-description')?.value.trim() || '';
     const keywords = document.getElementById('store-seo-keywords')?.value.trim() || '';
 
     if (!title || !description) {
-      setStoreSeoAlert('error', '??Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ??Ø³ÙÙ Ø§ÙÙØªØ¬Ø±? ØµÙØ± ÙÙØªÙÙ.');
+      setStoreSeoAlert('error', '\u0623\u062f\u062e\u0644 \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0648\u0635\u0641\u0647 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638.');
       return;
     }
 
     if (button) {
       button.disabled = true;
-      button.textContent = 'ØµÙØ±? ÙÙØªÙÙ...';
+      button.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u062d\u0641\u0638...';
     }
 
-    setStoreSeoAlert('success', 'ØµÙØ±? ØµÙØ± Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ØµÙØ±? ØµÙØ±...');
+    setStoreSeoAlert('success', '\u062c\u0627\u0631\u064a \u062d\u0641\u0638 \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631...');
 
     try {
       const data = await fetch('/api/store-seo/save', {
@@ -1272,15 +1326,15 @@
       }).then((response) => response.json());
 
       if (!data.success) {
-        setStoreSeoAlert('error', data.message || 'ØµÙØ±? ØµÙØ± Ø³ÙÙ Ø§ÙÙØªØ¬Ø±.');
+        setStoreSeoAlert('error', data.message || '\u062a\u0639\u0630\u0651\u0631 \u062d\u0641\u0638 \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631.');
         return;
       }
 
-      setStoreSeoAlert('success', data.message || '?? ØµÙØ± Ø³ÙÙ Ø§ÙÙØªØ¬Ø± ÙÙØªÙÙ.');
+      setStoreSeoAlert('success', data.message || '\u062a\u0645 \u062d\u0641\u0638 \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631 \u0628\u0646\u062c\u0627\u062d.');
       await loadPortalSubscription();
       await loadOperations();
     } catch (error) {
-      setStoreSeoAlert('error', 'ØµÙØ± ØµÙØ± ÙÙØªÙÙ ØµÙØ± Ø³ÙÙ Ø§ÙÙØªØ¬Ø±.');
+      setStoreSeoAlert('error', '\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u062d\u0641\u0638 \u0633\u064a\u0648 \u0627\u0644\u0645\u062a\u062c\u0631.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -1412,22 +1466,22 @@
 
       try {
         if (action === 'optimize-one') {
-          button.textContent = '?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?...';
+          button.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0633\u064a\u0646...';
           await optimizeSingleImageAlt(imageId);
         }
 
         if (action === 'save-one') {
-          button.textContent = 'ØµÙØ±? ÙÙØªÙÙ...';
+          button.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u062d\u0641\u0638...';
           await saveSingleImageAlt(imageId);
         }
 
         if (action === 'optimize-selected') {
-          button.textContent = '?Ø³ÙÙ Ø§ÙÙØªØ¬Ø±?...';
+          button.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0633\u064a\u0646...';
           await optimizeSelectedImagesAlt();
         }
 
         if (action === 'save-selected') {
-          button.textContent = 'ØµÙØ±? ÙÙØªÙÙ...';
+          button.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u062d\u0641\u0638...';
           await saveSelectedImagesAlt();
         }
       } finally {
@@ -1445,4 +1499,5 @@
   loadStoreSeo();
   loadPortalProducts();
   loadOperations();
+  scheduleUiFix(document.body);
 })();
