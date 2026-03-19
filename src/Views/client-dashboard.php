@@ -5,14 +5,14 @@ declare(strict_types=1);
   <aside class="card dashboard-sidebar">
     <div>
       <h3 style="margin:0 0 8px;">أدوات المتجر</h3>
-      <p class="muted" style="margin:0;">تنقّل بين الأقسام. سننجز الآن قسم المنتجات بالكامل.</p>
+      <p class="muted" style="margin:0;">تنقّل بين الأقسام وأدر المحتوى والاشتراك من مكان واحد.</p>
     </div>
 
     <nav class="sidebar-nav">
       <button type="button" class="sidebar-link is-active" data-section-target="products">المنتجات</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
-      <button type="button" class="sidebar-link" data-section-target="usage">الاستهلاك</button>
+      <button type="button" class="sidebar-link" data-section-target="account-settings">الحساب والإعدادات</button>
     </nav>
 
     <hr style="border:none;border-top:1px solid rgba(202,177,149,.45);margin:0;">
@@ -37,6 +37,7 @@ declare(strict_types=1);
               <option value="description">وصف المنتج</option>
               <option value="seo">SEO المنتج</option>
               <option value="combo_all">الوصف + SEO</option>
+              <option value="store_seo">سيو المتجر</option>
             </select>
           </div>
         </div>
@@ -59,20 +60,6 @@ declare(strict_types=1);
             <div class="pill">لوحة العميل</div>
             <h1 style="margin:14px 0 10px;">إدارة المنتجات من لوحة واحدة</h1>
             <p class="muted" style="margin:0;">حسّن وصف المنتج أو سيو المنتج أو الاثنين معًا، ثم راجع قبل الحفظ داخل سلة.</p>
-          </div>
-          <div class="panel-stack" style="min-width:300px;">
-            <div class="card surface-soft stat" style="min-height:auto;">
-              <span class="stat-label">اسم المتجر</span>
-              <span class="stat-value" style="font-size:26px;"><?= htmlspecialchars($storeName, ENT_QUOTES, 'UTF-8') ?></span>
-            </div>
-            <div class="card surface-soft stat" style="min-height:auto;">
-              <span class="stat-label">Merchant ID</span>
-              <span class="stat-value" style="font-size:20px;"><?= htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') ?></span>
-            </div>
-            <div class="card surface-soft stat" style="min-height:auto;">
-              <span class="stat-label">الحساب</span>
-              <span class="stat-value" style="font-size:16px;line-height:1.5;"><?= htmlspecialchars($ownerEmail, ENT_QUOTES, 'UTF-8') ?></span>
-            </div>
           </div>
         </div>
       </div>
@@ -174,19 +161,98 @@ declare(strict_types=1);
       </div>
     </section>
 
-    <section id="section-store-seo" data-app-section="store-seo" class="card" style="display:none;">
-      <h2>سيو المتجر</h2>
-      <p class="muted">هذا القسم سنبنيه في الخطوة التالية مباشرة بعد تثبيت قسم المنتجات.</p>
+    <section id="section-store-seo" data-app-section="store-seo" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">سيو المتجر</div>
+            <h2 style="margin:12px 0 8px;">إعدادات SEO المتجر</h2>
+            <p class="muted" style="margin:0;">عدّل عنوان ووصف المتجر يدويًا أو أنشئهما بالذكاء الاصطناعي ثم احفظ مباشرة في سلة.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="generate-store-seo" class="btn btn-sky" type="button">إنشاء بالذكاء الاصطناعي</button>
+            <button id="save-store-seo" class="btn" type="button">حفظ في المتجر</button>
+          </div>
+        </div>
+        <div id="store-seo-alert"></div>
+        <div class="grid" style="margin-top:0;">
+          <div>
+            <label for="store-seo-title"><strong>عنوان المتجر</strong></label>
+            <input id="store-seo-title" type="text" placeholder="عنوان صفحة المتجر في نتائج البحث">
+            <div class="helper-row"><span>الموصى به 35-65 حرفًا</span><span id="store-seo-title-count">0 حرف</span></div>
+          </div>
+          <div>
+            <label for="store-seo-keywords"><strong>الكلمات المفتاحية</strong></label>
+            <input id="store-seo-keywords" type="text" placeholder="مثال: متجر، عروض، منتجات أصلية">
+            <div class="helper-row"><span>افصل الكلمات بفاصلة</span><span id="store-seo-keywords-count">0 حرف</span></div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="store-seo-description"><strong>وصف المتجر</strong></label>
+            <textarea id="store-seo-description" rows="6" placeholder="الوصف الذي سيظهر في محركات البحث للمتجر"></textarea>
+            <div class="helper-row"><span>الموصى به 120-160 حرفًا</span><span id="store-seo-description-count">0 حرف</span></div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section id="section-alt-images" data-app-section="alt-images" class="card" style="display:none;">
-      <h2>كاتب ALT للصور</h2>
-      <p class="muted">هذا القسم سنبنيه في الخطوة التي تلي سيو المتجر.</p>
+    <section id="section-alt-images" data-app-section="alt-images" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">كاتب ALT للصور</div>
+            <h2 style="margin:12px 0 8px;">إدارة النص البديل للصور</h2>
+            <p class="muted" style="margin:0;">اختر منتجًا وافتح محرر الصور لكتابة ALT يدويًا أو توليده بالذكاء الاصطناعي، ثم احفظ في سلة.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2 style="margin:0 0 6px;">منتجات الصور</h2>
+            <p id="alt-products-summary" class="muted" style="margin:0;">جاري تجهيز المنتجات...</p>
+          </div>
+          <div id="alt-products-pagination-top" class="pagination"></div>
+        </div>
+        <div id="alt-products-list" class="products-grid"></div>
+        <div style="margin-top:20px;">
+          <div id="alt-products-pagination-bottom" class="pagination"></div>
+        </div>
+      </div>
     </section>
 
-    <section id="section-usage" data-app-section="usage" class="card" style="display:none;">
-      <h2>الاستهلاك</h2>
-      <p class="muted">هذا القسم سنفصله بشكل مستقل بعد ALT.</p>
+    <section id="section-account-settings" data-app-section="account-settings" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">الحساب والإعدادات</div>
+            <h2 style="margin:12px 0 8px;">بيانات الحساب والمتجر</h2>
+            <p class="muted" style="margin:0;">بيانات الوصول الأساسية وروابط إدارة الحساب.</p>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:0;">
+          <div class="card surface-soft stat" style="min-height:auto;">
+            <span class="stat-label">اسم المتجر</span>
+            <span class="stat-value" style="font-size:26px;"><?= htmlspecialchars($storeName, ENT_QUOTES, 'UTF-8') ?></span>
+          </div>
+          <div class="card surface-soft stat" style="min-height:auto;">
+            <span class="stat-label">Merchant ID</span>
+            <span class="stat-value" style="font-size:20px;"><?= htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') ?></span>
+          </div>
+          <div class="card surface-soft stat" style="min-height:auto;">
+            <span class="stat-label">الحساب</span>
+            <span class="stat-value" style="font-size:16px;line-height:1.5;"><?= htmlspecialchars($ownerEmail, ENT_QUOTES, 'UTF-8') ?></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <a class="btn btn-secondary" href="/forgot-password">استرجاع كلمة المرور</a>
+          <a class="btn" href="/logout">تسجيل الخروج</a>
+        </div>
+      </div>
+
+      <div id="usage-card" class="card">
+        <h2 style="margin:0 0 8px;">الاشتراك والاستهلاك</h2>
+        <p class="muted" style="margin:0;">جاري تحميل بيانات الاستهلاك...</p>
+      </div>
     </section>
   </main>
 </div>
@@ -210,5 +276,24 @@ declare(strict_types=1);
   </div>
 </div>
 
-<script defer src="/assets/client-dashboard.js?v=products-v3"></script>
-<script defer src="/public/assets/client-dashboard.js?v=products-v3"></script>
+<div id="image-alt-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="pill">ALT الصور</div>
+        <h2 id="image-alt-title" style="margin:10px 0 6px;">كاتب النص البديل</h2>
+        <p id="image-alt-subtitle" class="muted" style="margin:0;">اختر صورة أو أكثر ثم ولّد النص البديل واحفظه في المتجر.</p>
+      </div>
+      <button id="close-image-alt" class="btn btn-secondary" type="button">إغلاق</button>
+    </div>
+    <div id="image-alt-alert"></div>
+    <div id="image-alt-body">
+      <div class="empty-state">
+        <p class="muted" style="margin:0;">اختر منتجًا لبدء تعديل ALT.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script defer src="/assets/client-dashboard.js?v=products-v6"></script>
+<script defer src="/public/assets/client-dashboard.js?v=products-v6"></script>

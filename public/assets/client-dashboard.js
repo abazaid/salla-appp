@@ -449,6 +449,162 @@
     }
   }
 
+  function setStoreSeoAlert(type, message) {
+    const root = document.getElementById('store-seo-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  function updateStoreSeoCounters() {
+    const title = document.getElementById('store-seo-title')?.value || '';
+    const description = document.getElementById('store-seo-description')?.value || '';
+    const keywords = document.getElementById('store-seo-keywords')?.value || '';
+
+    if (document.getElementById('store-seo-title-count')) document.getElementById('store-seo-title-count').textContent = `${title.length} حرف`;
+    if (document.getElementById('store-seo-description-count')) document.getElementById('store-seo-description-count').textContent = `${description.length} حرف`;
+    if (document.getElementById('store-seo-keywords-count')) document.getElementById('store-seo-keywords-count').textContent = `${keywords.length} حرف`;
+  }
+
+  async function loadStoreSeo() {
+    try {
+      const data = await fetch('/api/store-seo').then((response) => response.json());
+      if (!data.success) {
+        setStoreSeoAlert('error', data.message || 'تعذر جلب سيو المتجر.');
+        return;
+      }
+
+      const seo = data.seo || {};
+      if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = seo.title || '';
+      if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = seo.description || '';
+      if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = seo.keywords || '';
+      setStoreSeoAlert('', '');
+      updateStoreSeoCounters();
+    } catch (error) {
+      setStoreSeoAlert('error', 'تعذر جلب سيو المتجر.');
+    }
+  }
+
+  async function optimizeStoreSeo() {
+    const button = document.getElementById('generate-store-seo');
+    const oldText = button?.textContent || 'إنشاء بالذكاء الاصطناعي';
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري التوليد...';
+    }
+
+    setStoreSeoAlert('success', 'جاري إنشاء سيو المتجر...');
+    try {
+      const data = await fetch('/api/store-seo/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tone: document.getElementById('tone')?.value || 'احترافي مقنع',
+          language: document.getElementById('language')?.value || 'ar'
+        })
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setStoreSeoAlert('error', data.message || 'تعذر توليد سيو المتجر.');
+        return;
+      }
+
+      if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.optimized_title || '';
+      if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.optimized_description || '';
+      if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.optimized_keywords || '';
+      updateStoreSeoCounters();
+      setStoreSeoAlert('success', 'تم إنشاء سيو المتجر. راجع ثم احفظ.');
+    } catch (error) {
+      setStoreSeoAlert('error', 'حدث خطأ أثناء توليد سيو المتجر.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  async function saveStoreSeo() {
+    const button = document.getElementById('save-store-seo');
+    const oldText = button?.textContent || 'حفظ في المتجر';
+    const title = document.getElementById('store-seo-title')?.value.trim() || '';
+    const description = document.getElementById('store-seo-description')?.value.trim() || '';
+    const keywords = document.getElementById('store-seo-keywords')?.value.trim() || '';
+
+    if (!title || !description) {
+      setStoreSeoAlert('error', 'أدخل عنوان ووصف المتجر قبل الحفظ.');
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+
+    setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
+    try {
+      const data = await fetch('/api/store-seo/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, keywords })
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setStoreSeoAlert('error', data.message || 'تعذر حفظ سيو المتجر.');
+        return;
+      }
+
+      setStoreSeoAlert('success', data.message || 'تم حفظ سيو المتجر بنجاح.');
+      await loadOperations();
+      await loadUsage();
+    } catch (error) {
+      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  async function loadUsage() {
+    const root = document.getElementById('usage-card');
+    if (!root) return;
+
+    try {
+      const data = await fetch('/api/subscription').then((response) => response.json());
+      if (!data.success) {
+        root.innerHTML = `<h2>الاستهلاك</h2><p class="muted">${escapeHtml(data.message || 'تعذر تحميل بيانات الاستهلاك.')}</p>`;
+        return;
+      }
+
+      const sub = data.subscription || {};
+      root.innerHTML = `
+        <h2 style="margin:0 0 8px;">الاستهلاك</h2>
+        <p class="muted" style="margin:0 0 14px;">ملخص حالة الباقة واستهلاك التحسينات.</p>
+        <div class="grid" style="margin-top:0;">
+          <div class="card surface-soft stat" style="min-height:auto;">
+            <span class="stat-label">الحالة</span>
+            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.status || '-')}</span>
+          </div>
+          <div class="card surface-soft stat" style="min-height:auto;">
+            <span class="stat-label">الباقة</span>
+            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.plan_name || '-')}</span>
+          </div>
+          <div class="card surface-soft stat" style="min-height:auto;">
+            <span class="stat-label">المستخدم</span>
+            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.used_products ?? 0)}</span>
+          </div>
+          <div class="card surface-soft stat" style="min-height:auto;">
+            <span class="stat-label">المتبقي</span>
+            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.remaining_products ?? 0)}</span>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      root.innerHTML = '<h2>الاستهلاك</h2><p class="muted">تعذر تحميل بيانات الاستهلاك.</p>';
+    }
+  }
+
   function getOperationsQuery(limitOverride) {
     const status = document.getElementById('operations-status-filter')?.value || 'all';
     let mode = document.getElementById('operations-mode-filter')?.value || 'all';
@@ -478,6 +634,7 @@
   function getOperationLabel(mode) {
     if (mode === 'description') return 'وصف المنتج';
     if (mode === 'seo') return 'SEO المنتج';
+    if (mode === 'store_seo') return 'سيو المتجر';
     return 'الوصف + SEO';
   }
 
@@ -578,6 +735,11 @@
     document.getElementById('close-editor')?.addEventListener('click', closeEditor);
     document.getElementById('operations-apply-filter')?.addEventListener('click', () => loadOperations());
     document.getElementById('operations-show-all')?.addEventListener('click', () => loadOperations('all'));
+    document.getElementById('generate-store-seo')?.addEventListener('click', optimizeStoreSeo);
+    document.getElementById('save-store-seo')?.addEventListener('click', saveStoreSeo);
+    document.getElementById('store-seo-title')?.addEventListener('input', updateStoreSeoCounters);
+    document.getElementById('store-seo-description')?.addEventListener('input', updateStoreSeoCounters);
+    document.getElementById('store-seo-keywords')?.addEventListener('input', updateStoreSeoCounters);
 
     document.querySelectorAll('[data-quick-filter]').forEach((chip) => {
       chip.addEventListener('click', () => {
@@ -597,4 +759,6 @@
   renderEditorBody();
   loadProducts();
   loadOperations();
+  loadStoreSeo();
+  loadUsage();
 })();
