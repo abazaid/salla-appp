@@ -87,6 +87,22 @@
     return fallback;
   }
 
+  function sanitizeAltForSalla(value) {
+    let text = String(value ?? '');
+    text = text.replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/gu, ' ').trim();
+    if (!text) return '';
+
+    // Match strict server behavior: max 70 chars and max 70 UTF-8 bytes.
+    while (text.length > 0) {
+      const charsOk = Array.from(text).length <= 70;
+      const bytesOk = new TextEncoder().encode(text).length <= 70;
+      if (charsOk && bytesOk) break;
+      text = Array.from(text).slice(0, -1).join('').trim();
+    }
+
+    return text;
+  }
+
   const state = {
     products: [],
     page: 1,
@@ -465,7 +481,12 @@
       input.addEventListener('input', () => {
         const imageId = Number(input.getAttribute('data-alt-image-value'));
         const item = state.altEditor?.images.find((img) => Number(img.image_id) === imageId);
-        if (item) item.optimized_alt = input.value;
+        if (!item) return;
+        const safe = sanitizeAltForSalla(input.value);
+        if (safe !== input.value) {
+          input.value = safe;
+        }
+        item.optimized_alt = safe;
       });
     });
 
@@ -537,7 +558,7 @@
     if (!state.altEditor) return;
     const payload = state.altEditor.images
       .filter((image) => image.selected)
-      .map((image) => ({ image_id: image.image_id, alt: String(image.optimized_alt || '').trim().slice(0, 70) }))
+      .map((image) => ({ image_id: image.image_id, alt: sanitizeAltForSalla(image.optimized_alt || '') }))
       .filter((image) => image.alt);
 
     if (!payload.length) {

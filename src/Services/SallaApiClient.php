@@ -115,7 +115,7 @@ final class SallaApiClient
 
     public function updateImageAlt(string $accessToken, int $imageId, string $alt): array
     {
-        $alt = $this->sanitizeAltText($this->limitText(trim($alt), 70));
+        $alt = $this->normalizeAltForSalla($alt);
         if ($alt === '') {
             throw new \RuntimeException('نص ALT غير صالح. استخدم أحرفًا وكلمات واضحة بدون رموز خاصة.');
         }
@@ -167,6 +167,33 @@ final class SallaApiClient
     {
         $value = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $value) ?? $value;
         $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+        return trim($value);
+    }
+
+    private function normalizeAltForSalla(string $value): string
+    {
+        $value = $this->sanitizeAltText(trim($value));
+        if ($value === '') {
+            return '';
+        }
+
+        // Hard cap for both character-count and UTF-8 byte-count to avoid provider-side validation mismatch.
+        while ($value !== '') {
+            $charsOk = function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') <= 70 : strlen($value) <= 70;
+            $bytesOk = strlen($value) <= 70;
+
+            if ($charsOk && $bytesOk) {
+                break;
+            }
+
+            if (function_exists('mb_substr') && function_exists('mb_strlen')) {
+                $len = mb_strlen($value, 'UTF-8');
+                $value = rtrim(mb_substr($value, 0, max(0, $len - 1), 'UTF-8'));
+            } else {
+                $value = rtrim(substr($value, 0, max(0, strlen($value) - 1)));
+            }
+        }
+
         return trim($value);
     }
 
