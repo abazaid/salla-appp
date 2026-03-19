@@ -4,7 +4,33 @@
   }
   window.__CLIENT_DASHBOARD_PRODUCTS_INIT__ = true;
   const appBasePath = (document.querySelector('.dashboard-shell')?.dataset.appBasePath || '').replace(/\/+$/, '');
-  const apiUrl = (path) => `${appBasePath}${path}`;
+  const apiPrefixes = Array.from(new Set([
+    `${appBasePath}/api`,
+    `${appBasePath}/public/api`
+  ]));
+
+  async function apiFetch(path, options = {}) {
+    let lastResponse = null;
+    let lastError = null;
+
+    for (let i = 0; i < apiPrefixes.length; i += 1) {
+      const prefix = apiPrefixes[i].replace(/\/+$/, '');
+      try {
+        const response = await fetch(`${prefix}${path}`, options);
+        lastResponse = response;
+        if (response.status !== 404) {
+          return response;
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastResponse) {
+      return lastResponse;
+    }
+    throw lastError || new Error('API request failed');
+  }
 
   const state = {
     products: [],
@@ -425,7 +451,7 @@
     renderImageAltBody();
 
     try {
-      const response = await fetch(apiUrl(`/api/products/${state.altEditor.productId}/images/optimize-alt`), {
+      const response = await apiFetch(`/products/${state.altEditor.productId}/images/optimize-alt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -469,7 +495,7 @@
     renderImageAltBody();
 
     try {
-      const response = await fetch(apiUrl(`/api/products/${state.altEditor.productId}/images/save-alt`), {
+      const response = await apiFetch(`/products/${state.altEditor.productId}/images/save-alt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ images: payload })
@@ -501,7 +527,7 @@
 
     setAltAlert('success', 'جاري تحسين ALT لكل صور المنتجات المحددة...');
     try {
-      const response = await fetch(apiUrl('/api/products/alt/bulk'), {
+      const response = await apiFetch('/products/alt/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -639,7 +665,7 @@
     openEditorModal();
 
     try {
-      const response = await fetch(apiUrl(`/api/products/${productId}/optimize`), {
+      const response = await apiFetch(`/products/${productId}/optimize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -699,9 +725,13 @@
     if (!state.editor) return;
 
     const editor = state.editor;
-    const description = document.getElementById('editor-description')?.value.trim() ?? editor.currentDescription;
-    const metaTitle = document.getElementById('editor-meta-title')?.value.trim() ?? editor.currentMetaTitle;
-    const metaDescription = document.getElementById('editor-meta-description')?.value.trim() ?? editor.currentMetaDescription;
+    const descriptionInput = document.getElementById('editor-description');
+    const metaTitleInput = document.getElementById('editor-meta-title');
+    const metaDescriptionInput = document.getElementById('editor-meta-description');
+
+    const description = descriptionInput ? descriptionInput.value.trim() : (editor.currentDescription || '');
+    const metaTitle = metaTitleInput ? metaTitleInput.value.trim() : (editor.currentMetaTitle || '');
+    const metaDescription = metaDescriptionInput ? metaDescriptionInput.value.trim() : (editor.currentMetaDescription || '');
 
     if ((editor.mode === 'description' || editor.mode === 'all') && !description) {
       state.editor.notice = { type: 'error', message: 'الوصف الجديد مطلوب قبل الحفظ.' };
@@ -713,15 +743,20 @@
     renderEditorBody();
 
     try {
-      const response = await fetch(apiUrl(`/api/products/${editor.product.id}/save-description`), {
+      const payload = {
+        mode: editor.mode,
+        description
+      };
+
+      if (editor.mode === 'seo' || editor.mode === 'all') {
+        payload.metadata_title = metaTitle;
+        payload.metadata_description = metaDescription;
+      }
+
+      const response = await apiFetch(`/products/${editor.product.id}/save-description`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: editor.mode,
-          description,
-          metadata_title: metaTitle,
-          metadata_description: metaDescription
-        })
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
 
@@ -747,7 +782,7 @@
     }
 
     try {
-      const response = await fetch(apiUrl('/api/products'));
+      const response = await apiFetch('/products');
       const data = await response.json();
       if (!data.success) {
         if (root) {
@@ -791,7 +826,7 @@
 
   async function loadStoreSeo() {
     try {
-      const data = await fetch(apiUrl('/api/store-seo')).then((response) => response.json());
+      const data = await apiFetch('/store-seo').then((response) => response.json());
       if (!data.success) {
         setStoreSeoAlert('error', data.message || 'تعذر جلب سيو المتجر.');
         return;
@@ -818,7 +853,7 @@
 
     setStoreSeoAlert('success', 'جاري إنشاء سيو المتجر...');
     try {
-      const data = await fetch(apiUrl('/api/store-seo/optimize'), {
+      const data = await apiFetch('/store-seo/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -866,7 +901,7 @@
 
     setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
     try {
-      const data = await fetch(apiUrl('/api/store-seo/save'), {
+      const data = await apiFetch('/store-seo/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, description, keywords })
@@ -895,7 +930,7 @@
     if (!root) return;
 
     try {
-      const data = await fetch(apiUrl('/api/subscription')).then((response) => response.json());
+      const data = await apiFetch('/subscription').then((response) => response.json());
       if (!data.success) {
         root.innerHTML = `<h2>الاستهلاك</h2><p class="muted">${escapeHtml(data.message || 'تعذر تحميل بيانات الاستهلاك.')}</p>`;
         return;
@@ -939,7 +974,7 @@
     if (status !== 'all') params.set('status', status);
     if (mode !== 'all') params.set('mode', mode);
     params.set('limit', limit);
-    return apiUrl(`/api/operations?${params.toString()}`);
+    return `/operations?${params.toString()}`;
   }
 
   function getOperationStatusClass(status) {
@@ -1006,7 +1041,7 @@
 
   async function loadOperations(limitOverride) {
     try {
-      const response = await fetch(getOperationsQuery(limitOverride));
+      const response = await apiFetch(getOperationsQuery(limitOverride));
       renderOperations(await response.json());
     } catch (error) {
       renderOperations({ success: false, message: 'تعذّر تحميل السجل.' });

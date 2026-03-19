@@ -166,8 +166,8 @@ final class ProductController
         $input = Request::input();
         $mode = $this->normalizeMode((string) ($input['mode'] ?? 'all'));
         $finalDescription = trim((string) ($input['description'] ?? ''));
-        $finalMetadataTitle = trim((string) ($input['metadata_title'] ?? ''));
-        $finalMetadataDescription = trim((string) ($input['metadata_description'] ?? ''));
+        $finalMetadataTitle = $this->normalizeMetadataTitle((string) ($input['metadata_title'] ?? ''));
+        $finalMetadataDescription = $this->normalizeMetadataDescription((string) ($input['metadata_description'] ?? ''));
 
         if (!$accessToken) {
             Response::json([
@@ -194,13 +194,21 @@ final class ProductController
                 return;
             }
 
+            $metadataTitleToSave = null;
+            $metadataDescriptionToSave = null;
+
+            if (in_array($mode, ['seo', 'all'], true)) {
+                $metadataTitleToSave = $finalMetadataTitle !== '' ? $finalMetadataTitle : null;
+                $metadataDescriptionToSave = $finalMetadataDescription !== '' ? $finalMetadataDescription : null;
+            }
+
             $updated = $client->updateProductContent(
                 $accessToken,
                 $productId,
                 $product,
                 $descriptionToSave,
-                $finalMetadataTitle !== '' ? $finalMetadataTitle : null,
-                $finalMetadataDescription !== '' ? $finalMetadataDescription : null
+                $metadataTitleToSave,
+                $metadataDescriptionToSave
             );
 
             $store = $subscriptionManager->recordOptimization(
@@ -216,8 +224,8 @@ final class ProductController
                 'message' => 'Content saved successfully.',
                 'mode' => $mode,
                 'saved_description' => $descriptionToSave,
-                'saved_metadata_title' => $finalMetadataTitle !== '' ? $finalMetadataTitle : (string) ($product['metadata']['title'] ?? ''),
-                'saved_metadata_description' => $finalMetadataDescription !== '' ? $finalMetadataDescription : (string) ($product['metadata']['description'] ?? ''),
+                'saved_metadata_title' => $this->normalizeMetadataTitle((string) ($updated['data']['metadata']['title'] ?? ($product['metadata']['title'] ?? ''))),
+                'saved_metadata_description' => $this->normalizeMetadataDescription((string) ($updated['data']['metadata']['description'] ?? ($product['metadata']['description'] ?? ''))),
                 'salla_response' => $updated,
                 'subscription' => $subscriptionManager->summary($store),
             ]);
@@ -836,6 +844,42 @@ final class ProductController
     private function normalizeMode(string $mode): string
     {
         return in_array($mode, ['description', 'seo', 'all'], true) ? $mode : 'all';
+    }
+
+    private function normalizeMetadataTitle(string $value): string
+    {
+        return trim($value);
+    }
+
+    private function normalizeMetadataDescription(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        return $this->limitText($value, 300);
+    }
+
+    private function limitText(string $value, int $maxLength): string
+    {
+        if ($value === '' || $maxLength <= 0) {
+            return '';
+        }
+
+        if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+            if (mb_strlen($value, 'UTF-8') <= $maxLength) {
+                return $value;
+            }
+
+            return rtrim(mb_substr($value, 0, $maxLength, 'UTF-8'));
+        }
+
+        if (strlen($value) <= $maxLength) {
+            return $value;
+        }
+
+        return rtrim(substr($value, 0, $maxLength));
     }
 
     private function findProductImage(array $product, int $imageId): ?array

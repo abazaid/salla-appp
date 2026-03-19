@@ -48,6 +48,21 @@ final class SallaApiClient
 
     public function updateProductContent(string $accessToken, int $productId, array $product, string $description, ?string $metadataTitle = null, ?string $metadataDescription = null): array
     {
+        $resolvedMetadataTitle = $metadataTitle;
+        if ($resolvedMetadataTitle === null || trim($resolvedMetadataTitle) === '') {
+            $resolvedMetadataTitle = (string) ($product['metadata']['title'] ?? ($product['name'] ?? 'Product'));
+        }
+        $resolvedMetadataTitle = trim($resolvedMetadataTitle);
+
+        $resolvedMetadataDescription = $metadataDescription;
+        if ($resolvedMetadataDescription === null || trim($resolvedMetadataDescription) === '') {
+            $resolvedMetadataDescription = (string) ($product['metadata']['description'] ?? '');
+        }
+        if (trim($resolvedMetadataDescription) === '') {
+            $resolvedMetadataDescription = strip_tags($description);
+        }
+        $resolvedMetadataDescription = $this->limitText(trim((string) $resolvedMetadataDescription), 300);
+
         $payload = [
             'name' => $product['name'] ?? 'Product',
             'price' => $product['price']['amount'] ?? $product['price'] ?? 0,
@@ -57,8 +72,8 @@ final class SallaApiClient
             'require_shipping' => $product['require_shipping'] ?? true,
             'weight' => $product['weight'] ?? 0,
             'weight_type' => $product['weight_type'] ?? 'kg',
-            'metadata_title' => $metadataTitle ?: ($product['metadata']['title'] ?? ($product['name'] ?? 'Product')),
-            'metadata_description' => $metadataDescription ?: ($product['metadata']['description'] ?? strip_tags($description)),
+            'metadata_title' => $resolvedMetadataTitle,
+            'metadata_description' => $resolvedMetadataDescription,
         ];
 
         if (isset($product['quantity']) && $product['quantity'] !== null) {
@@ -75,6 +90,27 @@ final class SallaApiClient
 
         $response = $this->httpClient->put(self::API_BASE . '/products/' . $productId, $payload, $this->headers($accessToken));
         return $response['body'];
+    }
+
+    private function limitText(string $value, int $maxLength): string
+    {
+        if ($value === '' || $maxLength <= 0) {
+            return '';
+        }
+
+        if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+            if (mb_strlen($value, 'UTF-8') <= $maxLength) {
+                return $value;
+            }
+
+            return rtrim(mb_substr($value, 0, $maxLength, 'UTF-8'));
+        }
+
+        if (strlen($value) <= $maxLength) {
+            return $value;
+        }
+
+        return rtrim(substr($value, 0, $maxLength));
     }
 
     public function updateImageAlt(string $accessToken, int $imageId, string $alt): array
