@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+use App\Controllers\EmbeddedController;
+use App\Controllers\HomeController;
+use App\Controllers\OAuthController;
+use App\Controllers\ProductController;
+use App\Controllers\WebhookController;
+use App\Controllers\AuthController;
+use App\Controllers\AdminController;
+use App\Router;
+
+$router = new Router();
+
+$router->get('/', [HomeController::class, 'index']);
+$router->get('/admin/login', [AdminController::class, 'loginForm']);
+$router->post('/admin/login', [AdminController::class, 'loginSubmit']);
+$router->get('/admin/logout', [AdminController::class, 'logout']);
+$router->get('/admin/dashboard', [AdminController::class, 'dashboard']);
+$router->get('/admin/stores', [AdminController::class, 'stores']);
+$router->get('/admin/stores/{id}', [AdminController::class, 'store']);
+$router->post('/admin/stores/{id}/subscription', [AdminController::class, 'updateSubscription']);
+$router->post('/admin/stores/{id}/delete', [AdminController::class, 'deleteStore']);
+$router->get('/admin/activity', [AdminController::class, 'activity']);
+$router->post('/admin/email-test', [AdminController::class, 'sendTestEmail']);
+$router->get('/login', [AuthController::class, 'loginForm']);
+$router->post('/login', [AuthController::class, 'loginSubmit']);
+$router->get('/logout', [AuthController::class, 'logout']);
+$router->get('/forgot-password', [AuthController::class, 'forgotPasswordForm']);
+$router->post('/forgot-password', [AuthController::class, 'forgotPasswordSubmit']);
+$router->get('/set-password', [AuthController::class, 'setPasswordForm']);
+$router->post('/set-password', [AuthController::class, 'setPasswordSubmit']);
+$router->get('/dashboard', [AuthController::class, 'dashboard']);
+$router->get('/oauth/callback', [OAuthController::class, 'callback']);
+$router->post('/webhooks/salla', [WebhookController::class, 'handle']);
+$router->get('/embedded', [EmbeddedController::class, 'index']);
+$router->get('/api/products', [ProductController::class, 'index']);
+$router->get('/api/subscription', [ProductController::class, 'subscription']);
+$router->get('/api/operations', [ProductController::class, 'operations']);
+$router->get('/api/store-seo', [ProductController::class, 'storeSeo']);
+$router->post('/api/store-seo/optimize', [ProductController::class, 'optimizeStoreSeo']);
+$router->post('/api/store-seo/save', [ProductController::class, 'saveStoreSeo']);
+$router->post('/api/products/alt/bulk', [ProductController::class, 'bulkOptimizeVisibleImagesAlt']);
+$router->post('/api/products/{id}/optimize', [ProductController::class, 'optimize']);
+$router->post('/api/products/{id}/save-description', [ProductController::class, 'saveDescription']);
+$router->post('/api/products/{id}/images/optimize-alt', [ProductController::class, 'optimizeProductImagesAlt']);
+$router->post('/api/products/{id}/images/save-alt', [ProductController::class, 'saveProductImagesAlt']);
+$router->post('/api/products/{id}/images/{imageId}/optimize-alt', [ProductController::class, 'optimizeImageAlt']);
+$router->post('/api/products/{id}/images/{imageId}/save-alt', [ProductController::class, 'saveImageAlt']);
+
+$router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');
