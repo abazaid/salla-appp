@@ -306,4 +306,31 @@ if ($appBasePath === '/') {
   </div>
 </div>
 
-<script defer src="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>/assets/client-dashboard.js?v=products-v8"></script>
+<script>
+  (function () {
+    var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
+    var candidates = [
+      base + '/assets/client-dashboard.js?v=products-v9',
+      base + '/public/assets/client-dashboard.js?v=products-v9'
+    ];
+    var index = 0;
+
+    function loadNext() {
+      if (index >= candidates.length) {
+        console.error('Failed to load client-dashboard.js from all known paths.');
+        return;
+      }
+
+      var script = document.createElement('script');
+      script.defer = true;
+      script.src = candidates[index];
+      script.onerror = function () {
+        index += 1;
+        loadNext();
+      };
+      document.body.appendChild(script);
+    }
+
+    loadNext();
+  })();
+</script>
