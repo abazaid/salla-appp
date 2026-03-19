@@ -202,6 +202,47 @@ final class View
       gap: 20px;
       align-items: start;
     }
+    .dashboard-shell {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+    .dashboard-sidebar {
+      position: sticky;
+      top: 20px;
+      display: grid;
+      gap: 16px;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+    }
+    .sidebar-nav {
+      display: grid;
+      gap: 8px;
+    }
+    .sidebar-link {
+      display: block;
+      width: 100%;
+      border: 1px solid rgba(202, 177, 149, 0.55);
+      border-radius: 14px;
+      background: rgba(255,255,255,.85);
+      color: var(--ink);
+      text-align: right;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: .16s ease;
+      font: inherit;
+    }
+    .sidebar-link:hover {
+      border-color: rgba(46,169,214,.6);
+      transform: translateY(-1px);
+    }
+    .sidebar-link.is-active {
+      border-color: transparent;
+      background: linear-gradient(135deg, #2ea9d6 0%, #0f7b66 100%);
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+    }
     .section-head {
       display: flex;
       justify-content: space-between;
@@ -424,8 +465,13 @@ final class View
     @media (max-width: 980px) {
       .hero,
       .compare-grid,
-      .dashboard-layout {
+      .dashboard-layout,
+      .dashboard-shell {
         grid-template-columns: 1fr;
+      }
+      .dashboard-sidebar {
+        position: static;
+        max-height: none;
       }
       .product-actions {
         grid-template-columns: 1fr;
