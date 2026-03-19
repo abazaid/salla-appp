@@ -210,4 +210,5 @@ declare(strict_types=1);
   </div>
 </div>
 
-<script defer src="/assets/client-dashboard.js?v=products-v2"></script>
+<script defer src="/assets/client-dashboard.js?v=products-v3"></script>
+<script defer src="/public/assets/client-dashboard.js?v=products-v3"></script>

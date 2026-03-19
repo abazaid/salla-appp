@@ -1,4 +1,8 @@
 (function () {
+  if (window.__CLIENT_DASHBOARD_PRODUCTS_INIT__) {
+    return;
+  }
+  window.__CLIENT_DASHBOARD_PRODUCTS_INIT__ = true;
   const state = {
     products: [],
     page: 1,
