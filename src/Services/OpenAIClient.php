@@ -142,7 +142,7 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Maximum length: 70 characters.\n- Mention the product clearly and naturally.\n- No keyword stuffing.\n- No promotional phrases.\n- Return only ALT text.\n\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
+                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Maximum length: 60 characters.\n- Mention the product clearly and naturally.\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
                         ],
                         [
                             'type' => 'input_image',
@@ -163,7 +163,7 @@ final class OpenAIClient
             throw new RuntimeException('OpenAI returned an empty image alt text.');
         }
 
-        $text = $this->limitText($text, 70);
+        $text = $this->limitText($text, 60);
 
         $usage = is_array($body['usage'] ?? null) ? $body['usage'] : [];
 

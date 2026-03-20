@@ -551,6 +551,11 @@ final class ProductController
                     '_model' => 'mock',
                 ];
 
+            $safeAlt = (new SallaApiClient())->normalizeAltForStore(
+                (string) ($generated['alt'] ?? ''),
+                (string) ($product['name'] ?? 'صورة المنتج')
+            );
+
             if (Database::isAvailable()) {
                 $dbStore = (new SaaSRepository())->findStoreByMerchantId((int) ($store['merchant_id'] ?? 0));
                 if ($dbStore) {
@@ -565,7 +570,7 @@ final class ProductController
                 'image_id' => $imageId,
                 'image_url' => $image['url'] ?? null,
                 'current_alt' => (string) ($image['alt'] ?? ''),
-                'optimized_alt' => (string) ($generated['alt'] ?? ''),
+                'optimized_alt' => $safeAlt,
             ]);
         } catch (\Throwable $exception) {
             Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
@@ -603,7 +608,8 @@ final class ProductController
             return;
         }
 
-        if ($alt === '') {
+        $sanitizedAlt = (new SallaApiClient())->normalizeAltForStore($alt, 'صورة المنتج');
+        if ($sanitizedAlt === '') {
             Response::json(['success' => false, 'message' => 'Alt text is required.'], 422);
             return;
         }
@@ -618,14 +624,14 @@ final class ProductController
                 return;
             }
 
-            $response = (new SallaApiClient())->updateImageAlt($accessToken, $imageId, $alt);
+            $response = (new SallaApiClient())->updateImageAlt($accessToken, $imageId, $sanitizedAlt);
             $store = $subscriptionManager->recordOptimization($store, $productId, $product['name'] ?? null, 'image_alt', 'completed');
 
             Response::json([
                 'success' => true,
                 'product_id' => $productId,
                 'image_id' => $imageId,
-                'saved_alt' => $alt,
+                'saved_alt' => $sanitizedAlt,
                 'salla_response' => $response,
                 'subscription' => $subscriptionManager->summary($store),
             ]);
@@ -698,11 +704,16 @@ final class ProductController
                         '_model' => 'mock',
                     ];
 
+                $safeAlt = $client->normalizeAltForStore(
+                    (string) ($generated['alt'] ?? ''),
+                    (string) ($product['name'] ?? 'صورة المنتج')
+                );
+
                 $results[] = [
                     'image_id' => (int) ($image['id'] ?? 0),
                     'image_url' => $image['url'] ?? null,
                     'current_alt' => (string) ($image['alt'] ?? ''),
-                    'optimized_alt' => (string) ($generated['alt'] ?? ''),
+                    'optimized_alt' => $safeAlt,
                 ];
             }
 
@@ -760,27 +771,42 @@ final class ProductController
             $productPayload = $client->productDetails($accessToken, $productId);
             $product = $productPayload['data'] ?? [];
             $saved = [];
+            $errors = [];
 
             foreach ($images as $image) {
                 $imageId = (int) ($image['image_id'] ?? 0);
                 $alt = trim((string) ($image['alt'] ?? ''));
+                $safeAlt = $client->normalizeAltForStore($alt, (string) ($product['name'] ?? 'صورة المنتج'));
 
-                if ($imageId <= 0 || $alt === '') {
+                if ($imageId <= 0 || $safeAlt === '') {
                     continue;
                 }
 
-                $client->updateImageAlt($accessToken, $imageId, $alt);
-                $saved[] = [
-                    'image_id' => $imageId,
-                    'alt' => $alt,
-                ];
+                try {
+                    $client->updateImageAlt($accessToken, $imageId, $safeAlt);
+                    $saved[] = [
+                        'image_id' => $imageId,
+                        'alt' => $safeAlt,
+                    ];
+                } catch (\Throwable $exception) {
+                    $errors[] = [
+                        'image_id' => $imageId,
+                        'message' => $this->humanizeProviderError($exception->getMessage()),
+                    ];
+                }
             }
 
-            $store = $subscriptionManager->recordOptimization($store, $productId, $product['name'] ?? null, 'image_alt', 'completed');
+            if ($saved !== []) {
+                $store = $subscriptionManager->recordOptimization($store, $productId, $product['name'] ?? null, 'image_alt', 'completed');
+            }
 
             Response::json([
-                'success' => true,
+                'success' => $saved !== [],
+                'message' => $saved !== []
+                    ? ($errors === [] ? 'ALT saved successfully.' : 'Saved with partial failures.')
+                    : 'Failed to save ALT for selected images.',
                 'saved_images' => $saved,
+                'errors' => $errors,
                 'subscription' => $subscriptionManager->summary($store),
             ]);
         } catch (\Throwable $exception) {
@@ -843,7 +869,11 @@ final class ProductController
                             'alt' => trim((string) ($product['name'] ?? 'منتج') . ' - ' . (string) ($image['alt'] ?? 'صورة المنتج')),
                         ];
 
-                    $client->updateImageAlt($accessToken, (int) $image['id'], (string) $generated['alt']);
+                    $safeAlt = $client->normalizeAltForStore(
+                        (string) ($generated['alt'] ?? ''),
+                        (string) ($product['name'] ?? 'صورة المنتج')
+                    );
+                    $client->updateImageAlt($accessToken, (int) $image['id'], $safeAlt);
                     if ($dbStoreId !== null && isset($generated['_usage'], $generated['_model'])) {
                         $usageCost = (new OpenAICostCalculator())->calculate((array) $generated['_usage']);
                         (new SaaSRepository())->logAiUsage(

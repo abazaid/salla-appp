@@ -181,6 +181,46 @@ if ($appBasePath === '/') {
           </div>
         </div>
         <div id="alt-alert"></div>
+        <div class="toolbar" style="margin-top:14px;">
+          <div class="toolbar-row">
+            <div>
+              <label for="alt-filter-name"><strong>بحث باسم المنتج</strong></label>
+              <input id="alt-filter-name" type="text" placeholder="اكتب اسم المنتج">
+            </div>
+            <div>
+              <label for="alt-filter-sku"><strong>بحث برمز المنتج</strong></label>
+              <input id="alt-filter-sku" type="text" placeholder="SKU">
+            </div>
+            <div>
+              <label for="alt-filter-status"><strong>الحالة</strong></label>
+              <select id="alt-filter-status">
+                <option value="all">جميع الحالات</option>
+                <option value="sale">معروض للبيع</option>
+                <option value="hidden">مخفي</option>
+                <option value="out">غير متوفر</option>
+              </select>
+            </div>
+            <div>
+              <label for="alt-filter-content"><strong>فلتر ALT</strong></label>
+              <select id="alt-filter-content">
+                <option value="all">بدون فلتر</option>
+                <option value="alt_missing">كل الصور بدون ALT</option>
+                <option value="alt_ready">كل الصور لها ALT</option>
+                <option value="alt_mixed">جزء محسّن + جزء غير محسّن</option>
+              </select>
+            </div>
+          </div>
+          <div class="toolbar-row">
+            <button id="alt-apply-filters" class="btn btn-sky" type="button">بحث وفلترة</button>
+            <button id="alt-clear-filters" class="btn btn-danger" type="button">تصفية الفلاتر</button>
+          </div>
+          <div class="chips">
+            <button class="chip" data-alt-quick-filter="alt_missing" type="button">التي صورها بدون ALT</button>
+            <button class="chip" data-alt-quick-filter="alt_ready" type="button">التي صورها ALT محسّن</button>
+            <button class="chip" data-alt-quick-filter="alt_mixed" type="button">التي صورها مختلطة</button>
+            <button class="chip is-active" data-alt-quick-filter="all" type="button">عرض كل المنتجات</button>
+          </div>
+        </div>
       </div>
       <div class="card">
         <div class="section-head">
@@ -303,7 +343,7 @@ if ($appBasePath === '/') {
       <div>
         <div class="pill">ALT الصور</div>
         <h2 id="image-alt-title" style="margin:10px 0 6px;">كاتب النص البديل</h2>
-        <p id="image-alt-subtitle" class="muted" style="margin:0;">اكتب وصف ALT كمحترف سيو: وصف واضح ودقيق (بحد أقصى 70 حرفًا) ثم احفظه في المتجر.</p>
+        <p id="image-alt-subtitle" class="muted" style="margin:0;">اكتب وصف ALT كمحترف سيو: وصف واضح ودقيق (بحد أقصى 60 حرفًا) ثم احفظه في المتجر.</p>
       </div>
       <button id="close-image-alt" class="btn btn-secondary" type="button">إغلاق</button>
     </div>
@@ -320,8 +360,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v14',
-      base + '/assets/client-dashboard.js?v=products-v14'
+      base + '/public/assets/client-dashboard.js?v=products-v15',
+      base + '/assets/client-dashboard.js?v=products-v15'
     ];
     var index = 0;
 

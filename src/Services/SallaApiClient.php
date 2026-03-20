@@ -142,6 +142,16 @@ final class SallaApiClient
         throw new \RuntimeException('نص ALT طويل أو غير متوافق مع شروط سلة. تم تقصيره تلقائيًا لكن ما زال مرفوضًا.');
     }
 
+    public function normalizeAltForStore(string $value, string $fallback = 'صورة المنتج'): string
+    {
+        $normalized = $this->normalizeAltForSalla($value);
+        if ($normalized !== '') {
+            return $normalized;
+        }
+
+        return $this->normalizeAltForSalla($fallback);
+    }
+
     public function getSeoSettings(string $accessToken): array
     {
         $response = $this->httpClient->get(self::API_BASE . '/seo', $this->headers($accessToken));
@@ -219,7 +229,7 @@ final class SallaApiClient
         }
 
         $candidates = [];
-        foreach ([70, 50, 35] as $maxBytes) {
+        foreach ([60, 50, 35, 25] as $maxBytes) {
             $candidate = $this->limitByUtf8Bytes($clean, $maxBytes);
             $candidate = $this->normalizeAltForSalla($candidate);
             if ($candidate !== '') {
