@@ -360,8 +360,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v16',
-      base + '/assets/client-dashboard.js?v=products-v16'
+      base + '/public/assets/client-dashboard.js?v=products-v17',
+      base + '/assets/client-dashboard.js?v=products-v17'
     ];
     var index = 0;
 

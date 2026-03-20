@@ -253,13 +253,45 @@
     };
   }
 
+  function normalizeComparableText(value) {
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+  }
+
+  function isImageAltOptimized(image, product = null) {
+    const altRaw = String(image?.alt || '').trim();
+    if (!altRaw) return false;
+
+    const alt = normalizeComparableText(altRaw);
+    const productName = normalizeComparableText(product?.name || '');
+    const productSku = normalizeComparableText(product?.sku || '');
+
+    if (!alt || alt.length < 4) return false;
+    if (productName && alt === productName) return false;
+    if (productSku && alt === productSku) return false;
+
+    const genericValues = new Set([
+      'صورة المنتج',
+      'صورة',
+      'منتج',
+      'product image',
+      'image',
+      'product',
+    ]);
+
+    if (genericValues.has(alt)) return false;
+    return true;
+  }
+
   function getImageAltText(image) {
     return String(image?.alt || '').trim();
   }
 
   function getAltStats(product) {
     const images = getProductImages(product);
-    const ready = images.filter((image) => getImageAltText(image)).length;
+    const ready = images.filter((image) => isImageAltOptimized(image, product)).length;
     const total = images.length;
     return {
       total,
@@ -458,7 +490,7 @@
     const selected = state.altSelectedProductIds.has(Number(product.id));
     const stats = getAltStats(product);
     const previewImages = images.slice(0, 6).map((image) => {
-      const ready = !!getImageAltText(image);
+      const ready = isImageAltOptimized(image, product);
       return `
       <div style="display:grid;gap:6px;justify-items:stretch;min-width:78px;">
         <span class="status-badge ${ready ? 'success' : 'danger'}" style="padding:4px 8px;font-size:11px;justify-content:center;">${ready ? 'نص ALT محسّن' : 'لا نص ALT'}</span>
@@ -622,7 +654,10 @@
     alert.innerHTML = editor.notice ? `<div class="notice ${editor.notice.type}">${escapeHtml(editor.notice.message)}</div>` : '';
 
     const rows = editor.images.map((image) => {
-      const isReady = String(image.current_alt || '').trim().length > 0;
+      const isReady = isImageAltOptimized(
+        { alt: image.current_alt },
+        { name: editor.productName, sku: editor.productSku || '' }
+      );
       return `
       <div class="card surface-soft" style="padding:12px;box-shadow:none;">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
@@ -687,6 +722,7 @@
     state.altEditor = {
       productId: Number(productId),
       productName: product.name || 'منتج',
+      productSku: product.sku || '',
       notice: null,
       images: getProductImages(product).map((image) => {
         const imageId = Number(image.id);
