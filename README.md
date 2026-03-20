@@ -1,123 +1,310 @@
-# Salla Description Optimizer
+# RankX SEO - Salla Content Optimizer
 
-هذا المشروع نواة أولية لتطبيق داخل سلة يساعد المتاجر على تحسين وصف المنتجات ورفعه مباشرة إلى المتجر.
+منصة خارجية مرتبطة بسلة لتحسين:
+- وصف المنتجات
+- SEO المنتج (Meta Title / Meta Description)
+- ALT الصور
+- SEO المتجر
 
-## ماذا يفعل؟
+مع لوحة عميل + لوحة أدمن + تتبع استهلاك وتكلفة OpenAI.
 
-- يربط المتجر مع سلة عبر OAuth.
-- يستقبل Webhooks من سلة ويتحقق من توقيعها.
-- يعرض صفحة مدمجة داخل لوحة التاجر.
-- يقرأ المنتجات من Salla Merchant API.
-- يرسل بيانات المنتج إلى OpenAI ويقترح وصفًا محسّنًا ثم يحدّث `description` في سلة.
-- يخزن إعدادات خاصة بكل متجر مثل نبرة الكتابة واللغة.
-- يتتبع عدد المنتجات المحسنة ضمن حصة الاشتراك لكل متجر.
+---
 
-## لماذا هذا الهيكل مناسب لسلة؟
+## 1) حالة المشروع الحالية
 
-- سلة تعتمد على OAuth 2.0 لتثبيت التطبيق ومنحه صلاحيات المتجر.
-- التطبيقات المنشورة تعتمد على Easy Mode للتفويض عند النشر في متجر تطبيقات سلة.
-- تحديث وصف المنتج يتم عبر `PUT /products/{product}` مع صلاحية `products.read_write`.
-- إعدادات التطبيق لكل متجر يمكن قراءتها وكتابتها عبر App Settings API.
-- الواجهة المدمجة داخل لوحة سلة يمكن تحميلها عبر Embedded Pages داخل Partner Portal.
-- عداد الاستخدام يمكن ربطه بأحداث اشتراك التطبيق من سلة مثل `app.subscription.started` و`app.subscription.renewed`.
+المشروع يعمل كبنية SaaS خارج سلة، ويتضمن:
+- OAuth + Webhook مع سلة.
+- لوحة عميل خارجية (`/dashboard`) مقسمة إلى:
+1. المنتجات
+2. سيو المتجر
+3. كاتب ALT للصور
+4. سجل العمليات
+5. الحساب والإعدادات
+- لوحة أدمن (`/admin/dashboard`) تعرض:
+1. المتاجر والاشتراكات
+2. تكلفة OpenAI الإجمالية
+3. تكلفة OpenAI حسب نوع التوليد
+4. تفاصيل تكلفة كل عملية (logs)
+5. إدارة المتاجر + حذف متجر + تعديل الاشتراك + سجل نشاط الأدمن
 
-## التوثيق الذي بني عليه هذا المشروع
+---
 
-- Welcome to Salla CLI: https://docs.salla.dev/429774m0
-- Authorization: https://docs.salla.dev/421118m0
-- Salla Webhooks: https://docs.salla.dev/421119m0
-- Get Started - Partner Apps API: https://docs.salla.dev/doc-421117
-- App Setting Details: https://docs.salla.dev/5401096e0
-- App Events: https://docs.salla.dev/421413m0
-- Create an Embedded App: https://docs.salla.dev/embedded-sdk/getting-started/create-app
-- List Products: https://docs.salla.dev/5394168e0
-- Product Details: https://docs.salla.dev/5394169e0
-- Update Product: https://docs.salla.dev/5394170e0
+## 2) الميزات المنفذة
 
-## التشغيل المحلي
+### تحسين المنتجات
+- تحسين وصف فقط.
+- تحسين SEO فقط.
+- تحسين الكل (وصف + SEO).
+- نافذة مقارنة قبل/بعد مع تعديل يدوي قبل الحفظ.
+- حفظ مباشر في سلة.
 
-1. انسخ الملف:
+### تحسين ALT للصور
+- تحسين صورة واحدة أو مجموعة صور لمنتج.
+- تحسين جماعي للمنتجات المحددة.
+- حفظ ALT المحدد في سلة.
+- فلترة ALT (محسن/غير محسن/مختلط).
 
+### SEO المتجر
+- جلب إعدادات SEO الحالية.
+- توليد SEO مقترح عبر الذكاء الاصطناعي بناءً على:
+1. بيانات المتجر الحالية
+2. سياق من المنتجات
+- حفظ إعدادات SEO في سلة.
+
+### الاستهلاك والتكلفة
+- تسجيل كل عملية AI في `ai_usage_logs`.
+- حفظ نوع العملية في عمود `mode` مثل:
+`description`, `seo`, `all`, `image_alt`, `image_alt_bulk`, `store_seo`.
+- عرض التكلفة حسب النوع + تفاصيل كل عملية في لوحة الأدمن.
+
+---
+
+## 3) المتطلبات
+
+- PHP 8.1+ (مفضل 8.2)
+- MySQL 8+ أو MariaDB حديثة
+- OpenSSL مفعّل
+- امتدادات PHP:
+`pdo`, `pdo_mysql`, `curl`, `mbstring`, `json`
+- اتصال إنترنت للوصول إلى:
+1. Salla API
+2. OpenAI API
+3. SMTP (Hostinger)
+
+---
+
+## 4) الإعداد المحلي
+
+1. نسخ ملف البيئة:
 ```bash
 copy .env.example .env
 ```
 
-2. حدّث القيم داخل `.env`.
+2. تعبئة القيم الأساسية في `.env`:
+- إعدادات Salla
+- إعدادات DB
+- مفاتيح OpenAI
+- إعدادات SMTP
+- حساب الأدمن
 
-أهم القيم:
+3. استيراد قاعدة البيانات:
+```sql
+database/schema.sql
+```
 
-- `AI_PROVIDER=openai`
-- `OPENAI_API_KEY` مفتاح OpenAI الخاص بك
-- `OPENAI_MODEL=gpt-5-mini`
-- `OPENAI_REASONING_EFFORT=low`
-
-3. شغّل السيرفر المحلي:
-
+4. تشغيل السيرفر:
 ```bash
 php -S localhost:8000 -t public
 ```
 
-4. افتح:
-
+5. فتح:
 ```text
 http://localhost:8000
 ```
 
-## ما الذي تحتاج تضبطه في Salla Partners Portal؟
+---
 
-1. أنشئ التطبيق داخل Partner Portal.
-2. فعّل الصلاحيات المطلوبة، وأهمها `products.read_write`.
-3. عرّف `Redirect URL` على:
+## 5) إعداد سلة (Partner Portal)
 
+### OAuth / Webhook / Embedded
+- Redirect URL:
 ```text
-http://localhost:8000/oauth/callback
+https://app.rankxseo.com/oauth/callback
+```
+- Webhook URL:
+```text
+https://app.rankxseo.com/webhooks/salla
+```
+- Embedded URL (اختياري حالياً):
+```text
+https://app.rankxseo.com/embedded
 ```
 
-4. عرّف Webhook URL على:
+### Scopes المطلوبة
+الحد الأدنى لهذا المشروع:
+- `products.read_write`
+- `metadata.read` أو `metadata.read_write` (ضروري لسيو المتجر)
+- `webhooks.read_write` (حسب إعداداتك)
 
-```text
-http://localhost:8000/webhooks/salla
+إذا عدلت Scopes، يفضّل إعادة تثبيت التطبيق على المتجر التجريبي لتحديث الـ access token.
+
+---
+
+## 6) المسارات (Routes)
+
+### واجهات عامة / Auth
+- `GET /`
+- `GET /login`
+- `POST /login`
+- `GET /logout`
+- `GET /forgot-password`
+- `POST /forgot-password`
+- `GET /set-password`
+- `POST /set-password`
+- `GET /dashboard`
+
+### OAuth / Webhook
+- `GET /oauth/callback`
+- `POST /webhooks/salla`
+
+### Admin
+- `GET /admin/login`
+- `POST /admin/login`
+- `GET /admin/logout`
+- `GET /admin/dashboard`
+- `GET /admin/stores`
+- `GET /admin/stores/{id}`
+- `POST /admin/stores/{id}/subscription`
+- `POST /admin/stores/{id}/delete`
+- `GET /admin/activity`
+- `POST /admin/email-test`
+
+### API
+- `GET /api/products`
+- `GET /api/subscription`
+- `GET /api/operations`
+- `GET /api/store-seo`
+- `POST /api/store-seo/optimize`
+- `POST /api/store-seo/save`
+- `POST /api/products/{id}/optimize`
+- `POST /api/products/{id}/save-description`
+- `POST /api/products/alt/bulk`
+- `POST /api/products/{id}/images/optimize-alt`
+- `POST /api/products/{id}/images/save-alt`
+- `POST /api/products/{id}/images/{imageId}/optimize-alt`
+- `POST /api/products/{id}/images/{imageId}/save-alt`
+
+---
+
+## 7) قاعدة البيانات
+
+الملف الرسمي:
+- `database/schema.sql`
+
+الجداول الرئيسية:
+- `stores`
+- `users`
+- `subscriptions`
+- `password_reset_tokens`
+- `admin_activity_logs`
+- `ai_usage_logs`
+
+### ملاحظة ترقية مهمة
+إذا كانت قاعدة البيانات قديمة، تأكد من وجود عمود `mode` في `ai_usage_logs`:
+```sql
+SHOW COLUMNS FROM ai_usage_logs LIKE 'mode';
+```
+إذا غير موجود:
+```sql
+ALTER TABLE ai_usage_logs
+ADD COLUMN mode VARCHAR(50) NULL AFTER product_id;
 ```
 
-5. أضف Embedded Page مثل:
+---
 
+## 8) النشر على Hostinger (Production)
+
+### المسار المقترح
+- كود التطبيق: `public_html/app`
+- Document Root للدومين الفرعي `app.rankxseo.com`:
 ```text
-Route Slug: optimizer
-Iframe URL: http://localhost:8000/embedded
+/public_html/app/public
 ```
 
-6. في التطبيق الحقيقي، انقل هذه الروابط إلى دومين HTTPS عام.
+### نقاط مهمة
+- لا ترفع `.env` إلى Git.
+- لا تعتمد على `public/storage/stores.json` للنسخة الإنتاجية إذا أنت تستخدم DB (هذا الملف runtime/history).
+- فعّل SSL على `app.rankxseo.com`.
+- تأكد من سجلات البريد SPF / DKIM / DMARC.
 
-## المسارات المتوفرة
+### إن كان عندك 404 في static أو API
+تأكد من:
+1. أن `public/.htaccess` مرفوع.
+2. أن الجذر يشير إلى `.../public`.
+3. أن آخر نسخة JS مرفوعة (version query).
 
-- `GET /` صفحة تعريفية سريعة
-- `GET /oauth/callback` استقبال بيانات الربط من سلة
-- `POST /webhooks/salla` استقبال Webhooks
-- `GET /embedded` واجهة مدمجة داخل لوحة التاجر
-- `GET /api/products` سحب المنتجات من سلة
-- `GET /api/subscription` حالة الاشتراك واستهلاك الحصة
-- `POST /api/products/{id}/optimize` تحسين وصف منتج ورفعه إلى سلة
+---
 
-## ملاحظات مهمة قبل البيع في متجر تطبيقات سلة
+## 9) فحص الجودة قبل كل نشر
 
-- هذا الـ starter يستخدم `GET /oauth/callback` لتبسيط التطوير المحلي. لكن عند تجهيز النسخة التجارية داخل سلة، راجع `Easy Mode` وحدث منطق التثبيت ليستقبل `app.store.authorize` عبر webhook كما توصي الوثائق.
-- لا تجعل التحديث تلقائيًا بالكامل في البداية. ابدأ بـ "اقتراح ثم اعتماد" لتقليل المخاطر على التجار.
-- احتفظ بسجل للتغييرات حتى يمكن التراجع عن الوصف السابق.
-- إذا استخدمت AI خارجيًا، وضّح سياسة الخصوصية وطريقة معالجة بيانات المنتج.
-- اربط الفوترة لاحقًا حسب باقة التاجر أو عدد المنتجات المحسنة شهريًا.
-- خصم الحصة في هذا المشروع يتم فقط بعد نجاح توليد الوصف وتحديث المنتج في سلة.
+```bash
+php -l public/index.php
+php -l src/Controllers/ProductController.php
+php -l src/Controllers/AdminController.php
+node --check public/assets/client-dashboard.js
+```
 
-## الخطوة التالية المقترحة
+ثم:
+```bash
+git status
+git add .
+git commit -m "your message"
+git push origin main
+```
 
-أقرب تطوير منطقي بعد هذا الـ starter:
+---
 
-1. إضافة شاشة مراجعة فعلية داخل embedded page قبل اعتماد التحديث.
-2. إضافة قاعدة بيانات بدل التخزين المحلي JSON.
-3. إضافة شاشة مراجعة جماعية للمنتجات قبل النشر.
-4. ربط أحداث مثل إنشاء/تحديث المنتج لتوليد اقتراحات ذكية.
+## 10) أخطاء شائعة وحلولها
 
-## مراجع OpenAI الرسمية
+### `Route not found` في `/api/...`
+الأسباب:
+1. كود قديم على السيرفر.
+2. Document Root خاطئ.
+3. `.htaccess` غير مفعل.
 
-- Responses API للمشاريع الجديدة: https://platform.openai.com/docs/guides/chat-completions
-- دليل النماذج: https://developers.openai.com/api/docs/models
-- نموذج `gpt-5-mini`: https://developers.openai.com/api/docs/models/gpt-5-mini
+الحل:
+- deploy آخر نسخة من `main`.
+- تأكد الجذر `.../public`.
+- اختبر مباشرة:
+`/api/operations` و `/api/products`.
+
+### خطأ صلاحيات SEO:
+رسالة مثل:
+`The access token should have access to metadata.read...`
+
+الحل:
+- فعّل Scope `Meta Data` في سلة.
+- أعد تثبيت التطبيق على المتجر.
+
+### ALT مرفوض من سلة
+بعض متاجر سلة تتشدد في ALT (طول/رموز).
+المشروع يطبّق sanitization تلقائي، لكن إذا استمر الرفض:
+- قلل الطول
+- تجنب الرموز الخاصة
+- استخدم نص وصفي بسيط
+
+---
+
+## 11) الأمان
+
+- لا تشارك مفاتيح OpenAI/Salla/SMTP.
+- غيّر أي أسرار تم استخدامها أثناء التطوير.
+- استخدم كلمات مرور قوية للأدمن.
+- استخدم HTTPS فقط في الإنتاج.
+
+---
+
+## 12) ملفات مهمة
+
+- Entry:
+  - `index.php`
+  - `public/index.php`
+- Dashboard UI:
+  - `src/Views/client-dashboard.php`
+  - `public/assets/client-dashboard.js`
+- Core logic:
+  - `src/Controllers/ProductController.php`
+  - `src/Controllers/AdminController.php`
+  - `src/Repositories/SaaSRepository.php`
+  - `src/Services/OpenAIClient.php`
+  - `src/Services/SallaApiClient.php`
+- DB schema:
+  - `database/schema.sql`
+
+---
+
+## 13) وثائق إضافية داخل المشروع
+
+- `HOSTINGER_DEPLOYMENT.md`
+- `GITHUB_HOSTINGER_DEPLOY.md`
+
