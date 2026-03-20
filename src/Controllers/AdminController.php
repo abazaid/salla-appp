@@ -70,7 +70,8 @@ HTML));
         $stats = $repository->dashboardStats();
         $aiUsage = $repository->aiUsageSummary();
         $aiUsageByMode = $repository->aiUsageSummaryByMode();
-$stores = array_slice($repository->listStores(), 0, 6);
+        $aiUsageLogs = $repository->listAiUsageLogs(200);
+        $stores = array_slice($repository->listStores(), 0, 6);
         $rows = '';
 
         foreach ($stores as $store) {
@@ -100,6 +101,7 @@ $stores = array_slice($repository->listStores(), 0, 6);
     <div class="card"><h2>AI Runs</h2><p>{$aiUsage['runs_count']}</p></div>
   </div>
   {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI حسب نوع التوليد')}
+  {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية AI')}
   <div class="card" style="margin-top:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
       <h2>آخر المتاجر</h2>
@@ -197,6 +199,7 @@ HTML));
         $usageLogs = $jsonStore['usage_logs'] ?? [];
         $aiUsage = $repository->storeAiUsageSummary($storeId);
         $aiUsageByMode = $repository->storeAiUsageSummaryByMode($storeId);
+        $aiUsageLogs = $repository->listStoreAiUsageLogs($storeId, 200);
         $logHtml = '';
 
         foreach (array_reverse($usageLogs) as $log) {
@@ -225,6 +228,7 @@ HTML));
     <div class="card"><h2>تكلفة OpenAI</h2><p>$ {$aiUsage['total_cost_usd']}</p></div>
   </div>
   {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI لهذا المتجر حسب النوع')}
+  {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية لهذا المتجر')}
   <div class="card" style="margin-top:16px;">
     <h2>تعديل الاشتراك</h2>
     <form method="post" action="/admin/stores/{$store['id']}/subscription">
@@ -443,6 +447,61 @@ HTML));
             . '<th style="text-align:right;padding:10px;">Output Tokens</th>'
             . '</tr></thead>'
             . '<tbody>' . $tableRows . $footer . '</tbody>'
+            . '</table>'
+            . '</div>';
+    }
+
+    private function renderAiUsageLogsCard(array $rows, string $title): string
+    {
+        if ($rows === []) {
+            return '<div class="card" style="margin-top:16px;"><h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2><p class="muted">لا توجد عمليات AI مسجلة بعد.</p></div>';
+        }
+
+        $modeLabels = [
+            'description' => 'وصف المنتج',
+            'seo' => 'سيو المنتج',
+            'all' => 'وصف + سيو المنتج',
+            'image_alt' => 'ALT الصور',
+            'image_alt_bulk' => 'ALT الصور (جملة)',
+            'store_seo' => 'سيو المتجر',
+            'unknown' => 'غير مصنف',
+        ];
+
+        $tableRows = '';
+        foreach ($rows as $row) {
+            $mode = (string) ($row['mode'] ?? 'unknown');
+            $label = $modeLabels[$mode] ?? $mode;
+            $storeName = (string) ($row['store_name'] ?? '-');
+            $merchantId = (string) ($row['merchant_id'] ?? '-');
+            $productId = (string) ($row['product_id'] ?? '-');
+            $inputTokens = number_format((int) ($row['input_tokens'] ?? 0));
+            $outputTokens = number_format((int) ($row['output_tokens'] ?? 0));
+            $totalTokens = number_format((int) ($row['total_tokens'] ?? 0));
+            $cost = (float) ($row['total_cost_usd'] ?? 0);
+            $createdAt = (string) ($row['created_at'] ?? '-');
+
+            $tableRows .= '<tr>'
+                . '<td style="padding:10px;">' . htmlspecialchars($createdAt, ENT_QUOTES, 'UTF-8') . '</td>'
+                . '<td style="padding:10px;">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</td>'
+                . '<td style="padding:10px;">' . htmlspecialchars($storeName, ENT_QUOTES, 'UTF-8') . '<br><code>' . htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') . '</code></td>'
+                . '<td style="padding:10px;"><code>' . htmlspecialchars($productId, ENT_QUOTES, 'UTF-8') . '</code></td>'
+                . '<td style="padding:10px;">' . $inputTokens . ' / ' . $outputTokens . ' / ' . $totalTokens . '</td>'
+                . '<td style="padding:10px;">$ ' . $this->formatUsd($cost) . '</td>'
+                . '</tr>';
+        }
+
+        return '<div class="card" style="margin-top:16px;">'
+            . '<h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2>'
+            . '<table style="width:100%;border-collapse:collapse;margin-top:12px;">'
+            . '<thead><tr>'
+            . '<th style="text-align:right;padding:10px;">الوقت</th>'
+            . '<th style="text-align:right;padding:10px;">نوع العملية</th>'
+            . '<th style="text-align:right;padding:10px;">المتجر</th>'
+            . '<th style="text-align:right;padding:10px;">Product ID</th>'
+            . '<th style="text-align:right;padding:10px;">Input/Output/Total Tokens</th>'
+            . '<th style="text-align:right;padding:10px;">التكلفة (USD)</th>'
+            . '</tr></thead>'
+            . '<tbody>' . $tableRows . '</tbody>'
             . '</table>'
             . '</div>';
     }

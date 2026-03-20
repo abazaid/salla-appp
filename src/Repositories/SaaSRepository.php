@@ -379,6 +379,57 @@ final class SaaSRepository
         return $this->aiUsageByMode($storeId);
     }
 
+    public function listAiUsageLogs(int $limit = 200): array
+    {
+        return $this->fetchAiUsageLogs(null, $limit);
+    }
+
+    public function listStoreAiUsageLogs(int $storeId, int $limit = 200): array
+    {
+        return $this->fetchAiUsageLogs($storeId, $limit);
+    }
+
+    private function fetchAiUsageLogs(?int $storeId, int $limit): array
+    {
+        $safeLimit = max(1, min(1000, $limit));
+        $modeSelect = $this->hasAiUsageModeColumn() ? 'COALESCE(a.mode, "unknown")' : '"unknown"';
+
+        $sql = 'SELECT
+                    a.id,
+                    a.created_at,
+                    a.store_id,
+                    s.merchant_id,
+                    s.store_name,
+                    a.product_id,
+                    ' . $modeSelect . ' AS mode,
+                    a.model,
+                    a.input_tokens,
+                    a.output_tokens,
+                    a.cached_input_tokens,
+                    a.total_tokens,
+                    a.input_cost_usd,
+                    a.output_cost_usd,
+                    a.total_cost_usd
+                FROM ai_usage_logs a
+                INNER JOIN stores s ON s.id = a.store_id';
+
+        $params = [];
+        if ($storeId !== null) {
+            $sql .= ' WHERE a.store_id = :store_id';
+            $params['store_id'] = $storeId;
+        }
+        $sql .= ' ORDER BY a.id DESC LIMIT :limit';
+
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value, PDO::PARAM_INT);
+        }
+        $stmt->bindValue(':limit', $safeLimit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
     private function aiUsageByMode(?int $storeId): array
     {
         $labels = [
