@@ -707,6 +707,19 @@
       `;
     }).join('');
 
+    const suggestionRows = keywordSuggestions.length
+      ? keywordSuggestions.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
+            <td>${escapeHtml(item.competition_level || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.competition || 0))}</td>
+            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="muted">لا توجد اقتراحات كلمات رئيسية متاحة.</td></tr>';
+
     root.innerHTML = `
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">
         <button class="btn btn-sky" id="optimize-selected-images" type="button">توليد ALT للمحدد</button>
@@ -2033,6 +2046,7 @@
     const serp = payload.serp || {};
     const serpItems = Array.isArray(serp.items) ? serp.items : [];
     const relatedKeywords = Array.isArray(payload.related_keywords) ? payload.related_keywords : [];
+    const keywordSuggestions = Array.isArray(payload.keyword_suggestions) ? payload.keyword_suggestions : [];
 
     summary.textContent = `نتائج: ${payload.keyword || '-'} • ${payload.country_name || 'السعودية'} • ${getKeywordDeviceLabel(payload.device)}`;
 
@@ -2120,7 +2134,7 @@
       </div>
 
       <div class="card surface-soft" style="box-shadow:none;margin-top:16px;">
-        <h3 style="margin:0 0 10px;">الكلمات المشابهة</h3>
+        <h3 style="margin:0 0 10px;">الكلمات المفتاحية ذات الصلة</h3>
         <table>
           <thead>
             <tr>
@@ -2133,6 +2147,203 @@
             </tr>
           </thead>
           <tbody>${relatedRows}</tbody>
+        </table>
+      </div>
+
+      <div class="card surface-soft" style="box-shadow:none;margin-top:16px;">
+        <h3 style="margin:0 0 10px;">اقتراحات الكلمات الرئيسية</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الكلمة</th>
+              <th>حجم البحث</th>
+              <th>مستوى المنافسة</th>
+              <th>مؤشر المنافسة</th>
+              <th>CPC</th>
+            </tr>
+          </thead>
+          <tbody>${suggestionRows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Override Domain SEO renderer to support full keyword list view and resilient empty states.
+  function renderDomainSeoResults(payload) {
+    const root = document.getElementById('domain-seo-results');
+    const summary = document.getElementById('domain-seo-summary');
+    if (!root || !summary) return;
+
+    if (!payload || !payload.last_data) {
+      summary.textContent = 'احفظ الدومين واضغط تحديث البيانات.';
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لا توجد بيانات محفوظة بعد.</p></div>';
+      return;
+    }
+
+    const data = payload.last_data || {};
+    const overview = data.overview || {};
+    const organic = overview.organic || {};
+    const paid = overview.paid || {};
+    const topKeywords = Array.isArray(data.top_keywords) ? data.top_keywords : [];
+    const allKeywords = Array.isArray(data.all_keywords) ? data.all_keywords : topKeywords;
+    const normalizeDomain = (value) => String(value || '')
+      .toLowerCase()
+      .replace(/^www\./, '')
+      .replace(/\.+$/, '')
+      .trim();
+    const targetDomain = normalizeDomain(payload.domain || data.domain || '');
+    const competitors = (Array.isArray(data.competitors) ? data.competitors : [])
+      .filter((item) => {
+        const candidate = normalizeDomain(item?.domain || '');
+        if (!candidate) return false;
+        if (!targetDomain) return true;
+        return candidate !== targetDomain;
+      });
+
+    const fetchedAt = data.fetched_at ? formatDate(data.fetched_at) : '-';
+    const refreshedAt = payload.refreshed_at ? formatDate(payload.refreshed_at) : '-';
+    const deviceLabel = (payload.device || 'desktop') === 'mobile' ? 'جوال' : 'كمبيوتر';
+
+    summary.textContent = `الدومين: ${payload.domain || '-'} • السعودية • ${deviceLabel} • آخر تحديث: ${refreshedAt}`;
+
+    const keywordsRows = topKeywords.length
+      ? topKeywords.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
+            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
+            <td>${escapeHtml(item.intent || '-')}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="muted">لا توجد كلمات مرتبة حالياً.</td></tr>';
+
+    const allKeywordsRows = allKeywords.length
+      ? allKeywords.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
+            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
+            <td>${escapeHtml(item.intent || '-')}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="muted">لا توجد بيانات إضافية لعرضها.</td></tr>';
+
+    const competitorsRows = competitors.length
+      ? competitors.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.domain || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.intersections || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.avg_position || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.organic_keywords || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.organic_traffic || 0))}</td>
+            <td>${escapeHtml(formatMoneyUsd(item.organic_cost || 0))}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="7" class="muted">لا توجد بيانات منافسين متاحة.</td></tr>';
+
+    root.innerHTML = `
+      <div class="grid" style="margin-top:0;">
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Organic Keywords</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(organic.keywords_count || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Organic Traffic (ETV)</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(organic.traffic || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Organic Traffic Cost</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatMoneyUsd(organic.traffic_cost || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Paid Keywords</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(paid.keywords_count || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Paid Traffic (ETV)</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(paid.traffic || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Paid Traffic Cost</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatMoneyUsd(paid.traffic_cost || 0))}</span>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px;">
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">ملخص ترتيب الكلمات المفتاحية</h3>
+          <table>
+            <tbody>
+              <tr><th>Top 3</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_3 || 0))}</td></tr>
+              <tr><th>Top 10</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_10 || 0))}</td></tr>
+              <tr><th>Top 20</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_20 || 0))}</td></tr>
+              <tr><th>Top 100</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_100 || 0))}</td></tr>
+              <tr><th>جديد</th><td>${escapeHtml(formatKeywordNumber(organic.new || 0))}</td></tr>
+              <tr><th>صاعد</th><td>${escapeHtml(formatKeywordNumber(organic.up || 0))}</td></tr>
+              <tr><th>هابط</th><td>${escapeHtml(formatKeywordNumber(organic.down || 0))}</td></tr>
+              <tr><th>مفقود</th><td>${escapeHtml(formatKeywordNumber(organic.lost || 0))}</td></tr>
+            </tbody>
+          </table>
+          <p class="muted" style="margin:10px 0 0;">تاريخ الجلب من DataForSEO: ${escapeHtml(fetchedAt)}</p>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">أهم الكلمات المفتاحية</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الكلمة</th>
+                <th>الترتيب</th>
+                <th>الحجم</th>
+                <th>CPC</th>
+                <th>النية</th>
+              </tr>
+            </thead>
+            <tbody>${keywordsRows}</tbody>
+          </table>
+          <details style="margin-top:12px;">
+            <summary class="btn btn-sky" style="display:inline-flex;cursor:pointer;">استعراض الجميع (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
+            <div style="margin-top:12px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>الكلمة</th>
+                    <th>الترتيب</th>
+                    <th>الحجم</th>
+                    <th>CPC</th>
+                    <th>النية</th>
+                  </tr>
+                </thead>
+                <tbody>${allKeywordsRows}</tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="card surface-soft" style="box-shadow:none;margin-top:16px;">
+        <h3 style="margin:0 0 10px;">أهم المنافسين</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الدومين</th>
+              <th>تقاطع الكلمات</th>
+              <th>متوسط الترتيب</th>
+              <th>Organic Keywords</th>
+              <th>Organic Traffic</th>
+              <th>Traffic Cost</th>
+            </tr>
+          </thead>
+          <tbody>${competitorsRows}</tbody>
         </table>
       </div>
     `;

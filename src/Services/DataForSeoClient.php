@@ -58,6 +58,7 @@ final class DataForSeoClient
 
         // Prefer DataForSEO Labs related keywords endpoint for richer/faster related terms.
         $relatedKeywords = [];
+        $keywordSuggestions = [];
         try {
             $labsRelatedPayload = [[
                 'keyword' => $normalizedKeyword,
@@ -78,6 +79,18 @@ final class DataForSeoClient
             $relatedKeywords = $this->extractRelatedKeywords($relatedTask);
         }
 
+        try {
+            $suggestionsPayload = [[
+                'keyword' => $normalizedKeyword,
+                'limit' => 50,
+            ]];
+            $suggestionsPayload[0] = array_merge($suggestionsPayload[0], $targetingOptions);
+            $suggestionsTask = $this->post('/dataforseo_labs/google/keyword_suggestions/live', $suggestionsPayload);
+            $keywordSuggestions = $this->extractKeywordSuggestions($suggestionsTask);
+        } catch (\Throwable $exception) {
+            $keywordSuggestions = [];
+        }
+
         return [
             'keyword' => $normalizedKeyword,
             'country' => $normalizedCountry,
@@ -89,6 +102,7 @@ final class DataForSeoClient
             'trend' => $keywordMetrics['trend'],
             'serp' => $serp,
             'related_keywords' => $relatedKeywords,
+            'keyword_suggestions' => $keywordSuggestions,
             'fetched_at' => date(DATE_ATOM),
         ];
     }
@@ -111,27 +125,27 @@ final class DataForSeoClient
             'item_types' => ['organic', 'paid'],
         ]]);
 
-        $competitorsTask = $this->post('/dataforseo_labs/google/competitors_domain/live', [[
-            'target' => $normalizedDomain,
-            'location_name' => 'Saudi Arabia',
-            'language_name' => 'Arabic',
-            'exclude_top_domains' => true,
-            'max_rank_group' => $normalizedDevice === 'mobile' ? 20 : 10,
-            'limit' => 12,
-        ]]);
+        $competitorsTask = $this->post('/dataforseo_labs/google/competitors_domain/live', [
+            $this->buildDomainCompetitorsPayload($normalizedDomain, $normalizedDevice, 'Arabic'),
+        ]);
+        $competitors = $this->extractDomainCompetitors($competitorsTask, $normalizedDomain);
+        if ($competitors === []) {
+            $competitorsTask = $this->post('/dataforseo_labs/google/competitors_domain/live', [
+                $this->buildDomainCompetitorsPayload($normalizedDomain, $normalizedDevice, 'English'),
+            ]);
+            $competitors = $this->extractDomainCompetitors($competitorsTask, $normalizedDomain);
+        }
 
-        $keywordsTask = $this->post('/dataforseo_labs/google/ranked_keywords/live', [[
-            'target' => $normalizedDomain,
-            'location_name' => 'Saudi Arabia',
-            'language_name' => 'Arabic',
-            'limit' => 12,
-            'order_by' => ['keyword_data.keyword_info.search_volume,desc'],
-            'filters' => [
-                ['ranked_serp_element.serp_item.rank_group', '<=', $normalizedDevice === 'mobile' ? 30 : 20],
-                'and',
-                ['ranked_serp_element.serp_item.type', '<>', 'paid'],
-            ],
-        ]]);
+        $keywordsTask = $this->post('/dataforseo_labs/google/ranked_keywords/live', [
+            $this->buildDomainKeywordsPayload($normalizedDomain, $normalizedDevice, 100, 'Arabic'),
+        ]);
+        $allKeywords = $this->extractDomainKeywords($keywordsTask);
+        if ($allKeywords === []) {
+            $keywordsTask = $this->post('/dataforseo_labs/google/ranked_keywords/live', [
+                $this->buildDomainKeywordsPayload($normalizedDomain, $normalizedDevice, 100, 'English'),
+            ]);
+            $allKeywords = $this->extractDomainKeywords($keywordsTask);
+        }
 
         return [
             'domain' => $normalizedDomain,
@@ -139,8 +153,9 @@ final class DataForSeoClient
             'country_name' => 'Saudi Arabia',
             'device' => $normalizedDevice,
             'overview' => $this->extractDomainOverview($overviewTask),
-            'competitors' => $this->extractDomainCompetitors($competitorsTask, $normalizedDomain),
-            'top_keywords' => $this->extractDomainKeywords($keywordsTask),
+            'competitors' => $competitors,
+            'top_keywords' => array_slice($allKeywords, 0, 12),
+            'all_keywords' => $allKeywords,
             'fetched_at' => date(DATE_ATOM),
         ];
     }
@@ -382,6 +397,42 @@ final class DataForSeoClient
         return array_slice($mapped, 0, 30);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractKeywordSuggestions(array $response): array
+    {
+        $tasks = (array) ($response['tasks'] ?? []);
+        $task = (array) ($tasks[0] ?? []);
+        $results = array_values(array_filter((array) ($task['result'] ?? []), 'is_array'));
+        $firstResult = (array) ($results[0] ?? []);
+        $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
+
+        $mapped = array_map(static function (array $item): array {
+            $keywordData = is_array($item['keyword_data'] ?? null) ? (array) $item['keyword_data'] : [];
+            $keywordInfo = is_array($keywordData['keyword_info'] ?? null) ? (array) $keywordData['keyword_info'] : [];
+            $keywordValue = (string) ($item['keyword'] ?? ($keywordData['keyword'] ?? ''));
+            $searchVolume = (int) ($item['search_volume'] ?? ($keywordInfo['search_volume'] ?? 0));
+            $competitionIndex = (float) ($item['competition_index'] ?? ($item['competition'] ?? ($keywordInfo['competition'] ?? 0)));
+            $competitionLevel = (string) ($item['competition'] ?? ($keywordInfo['competition_level'] ?? ''));
+            $cpc = (float) ($item['cpc'] ?? ($keywordInfo['cpc'] ?? 0));
+
+            return [
+                'keyword' => $keywordValue,
+                'search_volume' => $searchVolume,
+                'competition' => $competitionIndex,
+                'competition_level' => $competitionLevel,
+                'cpc' => $cpc,
+            ];
+        }, $items);
+
+        $mapped = array_values(array_filter($mapped, static function (array $row): bool {
+            return trim((string) ($row['keyword'] ?? '')) !== '';
+        }));
+
+        return array_slice($mapped, 0, 50);
+    }
+
     private function extractDomainOverview(array $response): array
     {
         $firstResult = $this->extractFirstResultItem($response);
@@ -437,8 +488,15 @@ final class DataForSeoClient
 
     private function extractDomainCompetitors(array $response, string $targetDomain): array
     {
-        $firstResult = $this->extractFirstResultItem($response);
+        $tasks = (array) ($response['tasks'] ?? []);
+        $task = (array) ($tasks[0] ?? []);
+        $results = array_values(array_filter((array) ($task['result'] ?? []), 'is_array'));
+        $firstResult = (array) ($results[0] ?? []);
         $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
+        if ($items === [] && $firstResult !== []) {
+            // Some responses can return the competitor rows directly in result[0].
+            $items = [$firstResult];
+        }
 
         $normalizedTarget = $this->normalizeComparableDomain($targetDomain);
         $mapped = array_values(array_filter(array_map(static function (array $item): array {
@@ -467,31 +525,86 @@ final class DataForSeoClient
             return true;
         }));
 
-        return array_slice($mapped, 0, 12);
+        return array_slice($mapped, 0, 20);
     }
 
     private function extractDomainKeywords(array $response): array
     {
-        $firstResult = $this->extractFirstResultItem($response);
+        $tasks = (array) ($response['tasks'] ?? []);
+        $task = (array) ($tasks[0] ?? []);
+        $results = array_values(array_filter((array) ($task['result'] ?? []), 'is_array'));
+        $firstResult = (array) ($results[0] ?? []);
         $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
+        if ($items === [] && $firstResult !== []) {
+            // Some responses can return a single keyword row directly in result[0].
+            $items = [$firstResult];
+        }
 
         $mapped = array_map(static function (array $item): array {
             $keywordData = (array) ($item['keyword_data'] ?? []);
             $keywordInfo = (array) ($keywordData['keyword_info'] ?? []);
             $rankedSerp = (array) ($item['ranked_serp_element'] ?? []);
             $serpItem = (array) ($rankedSerp['serp_item'] ?? []);
+            $keyword = (string) ($keywordData['keyword'] ?? ($item['keyword'] ?? ''));
+            $position = (int) ($serpItem['rank_group'] ?? ($item['rank_group'] ?? ($item['rank_absolute'] ?? 0)));
+            $searchVolume = (int) ($keywordInfo['search_volume'] ?? ($item['search_volume'] ?? 0));
+            $cpc = (float) ($keywordInfo['cpc'] ?? ($item['cpc'] ?? 0));
+            $competition = (float) ($keywordInfo['competition'] ?? ($item['competition'] ?? 0));
+            $intent = (string) (($keywordData['search_intent_info']['main_intent'] ?? ($item['search_intent'] ?? $item['intent'] ?? '')));
 
             return [
-                'keyword' => (string) ($keywordData['keyword'] ?? ''),
-                'position' => (int) ($serpItem['rank_group'] ?? 0),
-                'search_volume' => (int) ($keywordInfo['search_volume'] ?? 0),
-                'cpc' => (float) ($keywordInfo['cpc'] ?? 0),
-                'competition' => (float) ($keywordInfo['competition'] ?? 0),
-                'intent' => (string) (($keywordData['search_intent_info']['main_intent'] ?? '')),
+                'keyword' => $keyword,
+                'position' => $position,
+                'search_volume' => $searchVolume,
+                'cpc' => $cpc,
+                'competition' => $competition,
+                'intent' => $intent,
             ];
         }, $items);
 
-        return array_slice($mapped, 0, 12);
+        $mapped = array_values(array_filter($mapped, static function (array $row): bool {
+            return trim((string) ($row['keyword'] ?? '')) !== '';
+        }));
+
+        usort($mapped, static function (array $a, array $b): int {
+            return ($a['position'] ?? PHP_INT_MAX) <=> ($b['position'] ?? PHP_INT_MAX);
+        });
+
+        return $mapped;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildDomainCompetitorsPayload(string $domain, string $device, string $languageName): array
+    {
+        return [
+            'target' => $domain,
+            'location_name' => 'Saudi Arabia',
+            'language_name' => $languageName,
+            'exclude_top_domains' => false,
+            'max_rank_group' => $device === 'mobile' ? 20 : 10,
+            'limit' => 20,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildDomainKeywordsPayload(string $domain, string $device, int $limit, string $languageName): array
+    {
+        return [
+            'target' => $domain,
+            'location_name' => 'Saudi Arabia',
+            'language_name' => $languageName,
+            'limit' => max(12, min(200, $limit)),
+            'order_by' => ['keyword_data.keyword_info.search_volume,desc'],
+            'filters' => [
+                ['ranked_serp_element.serp_item.rank_group', '<=', $device === 'mobile' ? 50 : 30],
+                'and',
+                ['ranked_serp_element.serp_item.type', '<>', 'paid'],
+            ],
+        ];
     }
 
     private function extractFirstResultItem(array $response): array
