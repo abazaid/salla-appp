@@ -56,14 +56,27 @@ final class DataForSeoClient
 
         $serp = $this->extractSerp($serpTask);
 
-        $relatedTaskPayload = [[
-            'keywords' => [$normalizedKeyword],
-            'limit' => 50,
-            'sort_by' => 'relevance',
-        ]];
-        $relatedTaskPayload[0] = array_merge($relatedTaskPayload[0], $targetingOptions);
-        $relatedTask = $this->post('/keywords_data/google_ads/keywords_for_keywords/live', $relatedTaskPayload);
-        $relatedKeywords = $this->extractRelatedKeywords($relatedTask);
+        // Prefer DataForSEO Labs related keywords endpoint for richer/faster related terms.
+        $relatedKeywords = [];
+        try {
+            $labsRelatedPayload = [[
+                'keyword' => $normalizedKeyword,
+                'limit' => 50,
+            ]];
+            $labsRelatedPayload[0] = array_merge($labsRelatedPayload[0], $targetingOptions);
+            $labsRelatedTask = $this->post('/dataforseo_labs/google/related_keywords/live', $labsRelatedPayload);
+            $relatedKeywords = $this->extractRelatedKeywords($labsRelatedTask);
+        } catch (\Throwable $exception) {
+            // Fallback to Google Ads keywords_for_keywords endpoint if labs response is unavailable.
+            $relatedTaskPayload = [[
+                'keywords' => [$normalizedKeyword],
+                'limit' => 50,
+                'sort_by' => 'relevance',
+            ]];
+            $relatedTaskPayload[0] = array_merge($relatedTaskPayload[0], $targetingOptions);
+            $relatedTask = $this->post('/keywords_data/google_ads/keywords_for_keywords/live', $relatedTaskPayload);
+            $relatedKeywords = $this->extractRelatedKeywords($relatedTask);
+        }
 
         return [
             'keyword' => $normalizedKeyword,
@@ -340,15 +353,31 @@ final class DataForSeoClient
         $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
 
         $mapped = array_map(static function (array $item): array {
+            // Works with both:
+            // 1) keywords_data/google_ads/keywords_for_keywords/live
+            // 2) dataforseo_labs/google/related_keywords/live
+            $keywordData = is_array($item['keyword_data'] ?? null) ? (array) $item['keyword_data'] : [];
+            $keywordInfo = is_array($keywordData['keyword_info'] ?? null) ? (array) $keywordData['keyword_info'] : [];
+            $keywordValue = (string) ($item['keyword'] ?? ($keywordData['keyword'] ?? ''));
+            $searchVolume = (int) ($item['search_volume'] ?? ($keywordInfo['search_volume'] ?? 0));
+            $competitionIndex = (float) ($item['competition_index'] ?? ($item['competition'] ?? ($keywordInfo['competition'] ?? 0)));
+            $competitionLevel = (string) ($item['competition'] ?? ($keywordInfo['competition_level'] ?? ''));
+            $cpc = (float) ($item['cpc'] ?? ($keywordInfo['cpc'] ?? 0));
+            $monthly = $item['monthly_searches'] ?? ($keywordInfo['monthly_searches'] ?? []);
+
             return [
-                'keyword' => (string) ($item['keyword'] ?? ''),
-                'search_volume' => (int) ($item['search_volume'] ?? 0),
-                'competition' => (float) ($item['competition_index'] ?? 0),
-                'competition_level' => (string) ($item['competition'] ?? ''),
-                'cpc' => (float) ($item['cpc'] ?? 0),
-                'monthly_searches' => is_array($item['monthly_searches'] ?? null) ? $item['monthly_searches'] : [],
+                'keyword' => $keywordValue,
+                'search_volume' => $searchVolume,
+                'competition' => $competitionIndex,
+                'competition_level' => $competitionLevel,
+                'cpc' => $cpc,
+                'monthly_searches' => is_array($monthly) ? $monthly : [],
             ];
         }, $items);
+
+        $mapped = array_values(array_filter($mapped, static function (array $row): bool {
+            return trim((string) ($row['keyword'] ?? '')) !== '';
+        }));
 
         return array_slice($mapped, 0, 30);
     }
