@@ -56,6 +56,15 @@ final class DataForSeoClient
 
         $serp = $this->extractSerp($serpTask);
 
+        $relatedTaskPayload = [[
+            'keywords' => [$normalizedKeyword],
+            'limit' => 50,
+            'sort_by' => 'relevance',
+        ]];
+        $relatedTaskPayload[0] = array_merge($relatedTaskPayload[0], $targetingOptions);
+        $relatedTask = $this->post('/keywords_data/google_ads/keywords_for_keywords/live', $relatedTaskPayload);
+        $relatedKeywords = $this->extractRelatedKeywords($relatedTask);
+
         return [
             'keyword' => $normalizedKeyword,
             'country' => $normalizedCountry,
@@ -66,6 +75,7 @@ final class DataForSeoClient
             'metrics' => $keywordMetrics['metrics'],
             'trend' => $keywordMetrics['trend'],
             'serp' => $serp,
+            'related_keywords' => $relatedKeywords,
             'fetched_at' => date(DATE_ATOM),
         ];
     }
@@ -116,7 +126,7 @@ final class DataForSeoClient
             'country_name' => 'Saudi Arabia',
             'device' => $normalizedDevice,
             'overview' => $this->extractDomainOverview($overviewTask),
-            'competitors' => $this->extractDomainCompetitors($competitorsTask),
+            'competitors' => $this->extractDomainCompetitors($competitorsTask, $normalizedDomain),
             'top_keywords' => $this->extractDomainKeywords($keywordsTask),
             'fetched_at' => date(DATE_ATOM),
         ];
@@ -318,12 +328,34 @@ final class DataForSeoClient
         ];
     }
 
-    private function extractDomainOverview(array $response): array
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractRelatedKeywords(array $response): array
     {
         $tasks = (array) ($response['tasks'] ?? []);
         $task = (array) ($tasks[0] ?? []);
-        $results = (array) ($task['result'] ?? []);
+        $results = array_values(array_filter((array) ($task['result'] ?? []), 'is_array'));
         $firstResult = (array) ($results[0] ?? []);
+        $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
+
+        $mapped = array_map(static function (array $item): array {
+            return [
+                'keyword' => (string) ($item['keyword'] ?? ''),
+                'search_volume' => (int) ($item['search_volume'] ?? 0),
+                'competition' => (float) ($item['competition_index'] ?? 0),
+                'competition_level' => (string) ($item['competition'] ?? ''),
+                'cpc' => (float) ($item['cpc'] ?? 0),
+                'monthly_searches' => is_array($item['monthly_searches'] ?? null) ? $item['monthly_searches'] : [],
+            ];
+        }, $items);
+
+        return array_slice($mapped, 0, 30);
+    }
+
+    private function extractDomainOverview(array $response): array
+    {
+        $firstResult = $this->extractFirstResultItem($response);
         $metrics = (array) ($firstResult['metrics'] ?? []);
         $organic = (array) ($metrics['organic'] ?? []);
         $paid = (array) ($metrics['paid'] ?? []);
@@ -374,15 +406,13 @@ final class DataForSeoClient
         ];
     }
 
-    private function extractDomainCompetitors(array $response): array
+    private function extractDomainCompetitors(array $response, string $targetDomain): array
     {
-        $tasks = (array) ($response['tasks'] ?? []);
-        $task = (array) ($tasks[0] ?? []);
-        $results = (array) ($task['result'] ?? []);
-        $firstResult = (array) ($results[0] ?? []);
+        $firstResult = $this->extractFirstResultItem($response);
         $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
 
-        $mapped = array_map(static function (array $item): array {
+        $normalizedTarget = $this->normalizeComparableDomain($targetDomain);
+        $mapped = array_values(array_filter(array_map(static function (array $item): array {
             $fullMetrics = (array) ($item['full_domain_metrics'] ?? []);
             $organic = (array) ($fullMetrics['organic'] ?? []);
 
@@ -394,17 +424,26 @@ final class DataForSeoClient
                 'organic_traffic' => (float) ($organic['etv'] ?? 0),
                 'organic_cost' => (float) ($organic['estimated_paid_traffic_cost'] ?? 0),
             ];
-        }, $items);
+        }, $items), static function (array $item) use ($normalizedTarget): bool {
+            $candidate = strtolower(trim((string) ($item['domain'] ?? '')));
+            if ($candidate === '') {
+                return false;
+            }
+
+            $normalizedCandidate = preg_replace('/^www\./', '', trim($candidate, '.')) ?? $candidate;
+            if ($normalizedTarget !== '' && $normalizedCandidate === $normalizedTarget) {
+                return false;
+            }
+
+            return true;
+        }));
 
         return array_slice($mapped, 0, 12);
     }
 
     private function extractDomainKeywords(array $response): array
     {
-        $tasks = (array) ($response['tasks'] ?? []);
-        $task = (array) ($tasks[0] ?? []);
-        $results = (array) ($task['result'] ?? []);
-        $firstResult = (array) ($results[0] ?? []);
+        $firstResult = $this->extractFirstResultItem($response);
         $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
 
         $mapped = array_map(static function (array $item): array {
@@ -424,5 +463,34 @@ final class DataForSeoClient
         }, $items);
 
         return array_slice($mapped, 0, 12);
+    }
+
+    private function extractFirstResultItem(array $response): array
+    {
+        $tasks = (array) ($response['tasks'] ?? []);
+        $task = (array) ($tasks[0] ?? []);
+        $results = array_values(array_filter((array) ($task['result'] ?? []), 'is_array'));
+        $firstResult = (array) ($results[0] ?? []);
+
+        $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
+        if ($items !== []) {
+            $firstItem = (array) ($items[0] ?? []);
+            if ($firstItem !== []) {
+                return $firstItem;
+            }
+        }
+
+        return $firstResult;
+    }
+
+    private function normalizeComparableDomain(string $domain): string
+    {
+        $value = strtolower(trim($domain));
+        if ($value === '') {
+            return '';
+        }
+
+        $value = trim($value, '.');
+        return preg_replace('/^www\./', '', $value) ?? $value;
     }
 }

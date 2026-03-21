@@ -1497,7 +1497,19 @@
     const organic = overview.organic || {};
     const paid = overview.paid || {};
     const topKeywords = Array.isArray(data.top_keywords) ? data.top_keywords : [];
-    const competitors = Array.isArray(data.competitors) ? data.competitors : [];
+    const normalizeDomain = (value) => String(value || '')
+      .toLowerCase()
+      .replace(/^www\./, '')
+      .replace(/\.+$/, '')
+      .trim();
+    const targetDomain = normalizeDomain(payload.domain || data.domain || '');
+    const competitors = (Array.isArray(data.competitors) ? data.competitors : [])
+      .filter((item) => {
+        const candidate = normalizeDomain(item?.domain || '');
+        if (!candidate) return false;
+        if (!targetDomain) return true;
+        return candidate !== targetDomain;
+      });
     const fetchedAt = data.fetched_at ? formatDate(data.fetched_at) : '-';
     const refreshedAt = payload.refreshed_at ? formatDate(payload.refreshed_at) : '-';
     const deviceLabel = (payload.device || 'desktop') === 'mobile' ? 'جوال' : 'كمبيوتر';
@@ -1561,7 +1573,7 @@
 
       <div class="grid" style="margin-top:16px;">
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 10px;">ملخص الحركة العضوية</h3>
+          <h3 style="margin:0 0 10px;">ملخص ترتيب الكلمات المفتاحية</h3>
           <table>
             <tbody>
               <tr><th>Top 3</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_3 || 0))}</td></tr>
@@ -1578,7 +1590,7 @@
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 10px;">أهم الكلمات العضوية</h3>
+          <h3 style="margin:0 0 10px;">اهم الكلمات المفتاحية</h3>
           <table>
             <thead>
               <tr>
@@ -2002,6 +2014,128 @@
         button.textContent = oldText;
       }
     }
+  }
+
+  // Override keywords renderer with richer output (includes related keywords table).
+  function renderKeywordResults(payload) {
+    const root = document.getElementById('keyword-results');
+    const summary = document.getElementById('keyword-summary');
+    if (!root || !summary) return;
+
+    if (!payload) {
+      summary.textContent = 'أدخل كلمة مفتاحية ثم اضغط بحث.';
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لم يتم إجراء بحث بعد.</p></div>';
+      return;
+    }
+
+    const metrics = payload.metrics || {};
+    const trend = Array.isArray(payload.trend) ? payload.trend : [];
+    const serp = payload.serp || {};
+    const serpItems = Array.isArray(serp.items) ? serp.items : [];
+    const relatedKeywords = Array.isArray(payload.related_keywords) ? payload.related_keywords : [];
+
+    summary.textContent = `نتائج: ${payload.keyword || '-'} • ${payload.country_name || 'السعودية'} • ${getKeywordDeviceLabel(payload.device)}`;
+
+    const trendRows = trend.length
+      ? trend.map((row) => `
+          <tr>
+            <td>${escapeHtml(String(row.month || '-'))}/${escapeHtml(String(row.year || '-'))}</td>
+            <td>${escapeHtml(formatKeywordNumber(row.search_volume || 0))}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="2" class="muted">لا توجد بيانات اتجاه شهرية.</td></tr>';
+
+    const serpRows = serpItems.length
+      ? serpItems.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.title || '-')}</td>
+            <td>${escapeHtml(item.domain || '-')}</td>
+            <td><a href="${escapeHtml(item.url || '#')}" target="_blank" rel="noopener">فتح</a></td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="4" class="muted">لا توجد نتائج SERP متاحة.</td></tr>';
+
+    const relatedRows = relatedKeywords.length
+      ? relatedKeywords.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
+            <td>${escapeHtml(item.competition_level || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.competition || 0))}</td>
+            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="muted">لا توجد كلمات مشابهة متاحة.</td></tr>';
+
+    root.innerHTML = `
+      <div class="grid" style="margin-top:0;">
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">حجم البحث الشهري</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(metrics.search_volume || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">المنافسة</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(metrics.competition || 0))}</span>
+          <span class="muted">${escapeHtml(metrics.competition_level || '-')}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">CPC تقريبي</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordCurrency(metrics.cpc || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">مدى سعر الإعلان</span>
+          <span class="stat-value" style="font-size:20px;">${escapeHtml(formatKeywordCurrency(metrics.low_bid || 0))} - ${escapeHtml(formatKeywordCurrency(metrics.high_bid || 0))}</span>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px;">
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">الاتجاه الشهري</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>الشهر</th>
+                <th>حجم البحث</th>
+              </tr>
+            </thead>
+            <tbody>${trendRows}</tbody>
+          </table>
+        </div>
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">أفضل نتائج البحث (SERP)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>العنوان</th>
+                <th>الدومين</th>
+                <th>الرابط</th>
+              </tr>
+            </thead>
+            <tbody>${serpRows}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card surface-soft" style="box-shadow:none;margin-top:16px;">
+        <h3 style="margin:0 0 10px;">الكلمات المشابهة</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الكلمة</th>
+              <th>حجم البحث</th>
+              <th>مستوى المنافسة</th>
+              <th>مؤشر المنافسة</th>
+              <th>CPC</th>
+            </tr>
+          </thead>
+          <tbody>${relatedRows}</tbody>
+        </table>
+      </div>
+    `;
   }
 
   function bindEvents() {
