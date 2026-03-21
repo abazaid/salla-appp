@@ -1420,7 +1420,7 @@
   async function searchKeywordResearch() {
     const keyword = document.getElementById('keyword-query')?.value.trim() || '';
     const country = document.getElementById('keyword-country')?.value || 'sa';
-    const language = document.getElementById('keyword-language')?.value || 'auto';
+    const language = document.getElementById('keyword-language')?.value || 'ar';
     const device = document.getElementById('keyword-device')?.value || 'desktop';
     const button = document.getElementById('keyword-search-btn');
     const oldText = button?.textContent || 'بحث الكلمات المفتاحية';

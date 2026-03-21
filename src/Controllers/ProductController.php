@@ -420,7 +420,7 @@ final class ProductController
         $keyword = trim((string) ($input['keyword'] ?? ''));
         $country = strtolower(trim((string) ($input['country'] ?? 'sa')));
         $device = strtolower(trim((string) ($input['device'] ?? 'desktop')));
-        $language = strtolower(trim((string) ($input['language'] ?? 'auto')));
+        $language = strtolower(trim((string) ($input['language'] ?? 'ar')));
 
         if ($keyword === '') {
             Response::json([
@@ -442,8 +442,8 @@ final class ProductController
             $device = 'desktop';
         }
 
-        if (!in_array($language, ['auto', 'ar', 'en'], true)) {
-            $language = 'auto';
+        if (!in_array($language, ['ar', 'en'], true)) {
+            $language = 'ar';
         }
 
         try {
@@ -451,7 +451,7 @@ final class ProductController
                 $keyword,
                 $device,
                 $country,
-                $language === 'auto' ? null : $language
+                $language
             );
 
             Response::json([

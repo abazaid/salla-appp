@@ -33,7 +33,7 @@ final class DataForSeoClient
 
         $normalizedDevice = $this->normalizeDevice($device);
         $normalizedCountry = $this->normalizeCountry($country);
-        $normalizedLanguage = $this->normalizeKeywordLanguage($language);
+        $normalizedLanguage = $this->normalizeKeywordLanguage($language) ?? 'ar';
         $targetingOptions = $this->buildKeywordTargetingOptions($normalizedCountry, $normalizedLanguage);
 
         $volumeTaskPayload = [[
@@ -184,13 +184,13 @@ final class DataForSeoClient
     private function buildKeywordTargetingOptions(string $country, ?string $language): array
     {
         $payload = [
-            'location_name' => $country === 'sa' ? 'Saudi Arabia' : 'Saudi Arabia',
+            'location_code' => $country === 'sa' ? 2682 : 2682,
         ];
 
         if ($language === 'ar') {
-            $payload['language_name'] = 'Arabic';
+            $payload['language_code'] = 'ar';
         } elseif ($language === 'en') {
-            $payload['language_name'] = 'English';
+            $payload['language_code'] = 'en';
         }
 
         return $payload;
@@ -206,7 +206,7 @@ final class DataForSeoClient
         return match ($language) {
             'ar' => 'Arabic',
             'en' => 'English',
-            default => 'Auto',
+            default => 'Arabic',
         };
     }
 
@@ -237,10 +237,13 @@ final class DataForSeoClient
     {
         $tasks = (array) ($response['tasks'] ?? []);
         $task = (array) ($tasks[0] ?? []);
-        $resultSet = (array) ($task['result'] ?? []);
+        $resultSet = array_values(array_filter((array) ($task['result'] ?? []), 'is_array'));
         $firstResult = (array) ($resultSet[0] ?? []);
-        $items = (array) ($firstResult['items'] ?? []);
-        $item = (array) ($items[0] ?? []);
+
+        // Endpoint may return the keyword row directly in result[0],
+        // or nested under result[0].items[0] in some responses.
+        $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
+        $item = $items !== [] ? (array) ($items[0] ?? []) : $firstResult;
 
         if ($item === []) {
             return [
@@ -273,8 +276,8 @@ final class DataForSeoClient
             'metrics' => [
                 'keyword' => (string) ($item['keyword'] ?? $keyword),
                 'search_volume' => (int) ($item['search_volume'] ?? 0),
-                'competition' => (float) ($item['competition'] ?? 0),
-                'competition_level' => isset($item['competition_level']) ? (string) $item['competition_level'] : null,
+                'competition' => (float) ($item['competition_index'] ?? 0),
+                'competition_level' => isset($item['competition']) ? (string) $item['competition'] : null,
                 'cpc' => (float) ($item['cpc'] ?? 0),
                 'low_bid' => (float) ($item['low_top_of_page_bid'] ?? 0),
                 'high_bid' => (float) ($item['high_top_of_page_bid'] ?? 0),
