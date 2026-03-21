@@ -128,8 +128,37 @@
     modalLoading: false,
     editor: null,
     altSelectedProductIds: new Set(),
-    altEditor: null
+    altEditor: null,
+    keywords: {
+      loading: false,
+      lastResult: null
+    },
+    domainSeo: {
+      loading: false,
+      initialized: false,
+      data: null,
+      config: {
+        domain: '',
+        country: 'sa',
+        device: 'desktop'
+      }
+    }
   };
+
+  function readSettingValue(primaryId, secondaryId, fallback = '') {
+    const primary = document.getElementById(primaryId)?.value;
+    if (typeof primary === 'string' && primary !== '') return primary;
+    const secondary = document.getElementById(secondaryId)?.value;
+    if (typeof secondary === 'string' && secondary !== '') return secondary;
+    return fallback;
+  }
+
+  function getOutputLanguage(source = 'products') {
+    const value = source === 'alt'
+      ? readSettingValue('alt-setting-output-language', 'setting-output-language', '')
+      : readSettingValue('setting-output-language', 'alt-setting-output-language', '');
+    return value === 'ar' || value === 'en' ? value : '';
+  }
 
   function escapeHtml(value) {
     return String(value ?? '')
@@ -760,7 +789,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image_ids: imageIds,
-          language: document.getElementById('language')?.value || 'ar'
+          language: getOutputLanguage('alt') || 'ar'
         })
       });
       const data = await response.json();
@@ -807,7 +836,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product_ids: selected,
-          language: document.getElementById('language')?.value || 'ar'
+          language: getOutputLanguage('alt') || 'ar'
         })
       });
       const data = await response.json();
@@ -944,8 +973,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tone: document.getElementById('tone')?.value || 'احترافي مقنع',
-          language: document.getElementById('language')?.value || 'ar',
+          language: getOutputLanguage('products') || 'ar',
           mode
         })
       });
@@ -1099,6 +1127,84 @@
     if (document.getElementById('store-seo-keywords-count')) document.getElementById('store-seo-keywords-count').textContent = `${keywords.length} حرف`;
   }
 
+  function setOptimizationSettingsAlert(type, message, source = 'products') {
+    const root = source === 'alt'
+      ? document.getElementById('optimization-settings-alt-alert')
+      : document.getElementById('optimization-settings-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  function fillOptimizationSettings(settings) {
+    if (document.getElementById('setting-output-language')) document.getElementById('setting-output-language').value = settings.output_language || '';
+    if (document.getElementById('alt-setting-output-language')) document.getElementById('alt-setting-output-language').value = settings.output_language || '';
+    if (document.getElementById('setting-global-instructions')) document.getElementById('setting-global-instructions').value = settings.global_instructions || '';
+    if (document.getElementById('alt-setting-global-instructions')) document.getElementById('alt-setting-global-instructions').value = settings.global_instructions || '';
+    if (document.getElementById('setting-product-description-instructions')) document.getElementById('setting-product-description-instructions').value = settings.product_description_instructions || '';
+    if (document.getElementById('setting-meta-title-instructions')) document.getElementById('setting-meta-title-instructions').value = settings.meta_title_instructions || '';
+    if (document.getElementById('setting-meta-description-instructions')) document.getElementById('setting-meta-description-instructions').value = settings.meta_description_instructions || '';
+    if (document.getElementById('setting-image-alt-instructions')) document.getElementById('setting-image-alt-instructions').value = settings.image_alt_instructions || '';
+    if (document.getElementById('alt-setting-image-alt-instructions')) document.getElementById('alt-setting-image-alt-instructions').value = settings.image_alt_instructions || '';
+    if (document.getElementById('setting-store-seo-instructions')) document.getElementById('setting-store-seo-instructions').value = settings.store_seo_instructions || '';
+  }
+
+  async function loadOptimizationSettings() {
+    try {
+      const data = await apiFetch('/settings').then((response) => response.json());
+      if (!data.success) {
+        setOptimizationSettingsAlert('error', normalizeApiMessage(data.message, 'تعذر جلب إعدادات التحسين.'));
+        return;
+      }
+      fillOptimizationSettings(data.settings || {});
+      setOptimizationSettingsAlert('', '');
+    } catch (error) {
+      setOptimizationSettingsAlert('error', 'تعذر جلب إعدادات التحسين.');
+    }
+  }
+
+  async function saveOptimizationSettings() {
+    const button = document.getElementById('save-optimization-settings');
+    const oldText = button?.textContent || 'حفظ التعليمات';
+    const payload = {
+      output_language: getOutputLanguage(),
+      global_instructions: document.getElementById('setting-global-instructions')?.value || '',
+      product_description_instructions: document.getElementById('setting-product-description-instructions')?.value || '',
+      meta_title_instructions: document.getElementById('setting-meta-title-instructions')?.value || '',
+      meta_description_instructions: document.getElementById('setting-meta-description-instructions')?.value || '',
+      image_alt_instructions: document.getElementById('setting-image-alt-instructions')?.value || '',
+      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || ''
+    };
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+    setOptimizationSettingsAlert('success', 'جاري حفظ إعدادات التحسين...');
+
+    try {
+      const data = await apiFetch('/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setOptimizationSettingsAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ إعدادات التحسين.'));
+        return;
+      }
+
+      fillOptimizationSettings(data.settings || payload);
+      setOptimizationSettingsAlert('success', normalizeApiMessage(data.message, 'تم حفظ إعدادات التحسين.'));
+    } catch (error) {
+      setOptimizationSettingsAlert('error', 'حدث خطأ أثناء حفظ إعدادات التحسين.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
   async function loadStoreSeo() {
     try {
       const data = await apiFetch('/store-seo').then((response) => response.json());
@@ -1132,8 +1238,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tone: document.getElementById('tone')?.value || 'احترافي مقنع',
-          language: document.getElementById('language')?.value || 'ar'
+          language: getOutputLanguage('products') || 'ar'
         })
       }).then((response) => response.json());
 
@@ -1192,6 +1297,439 @@
       await loadUsage();
     } catch (error) {
       setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  function setKeywordAlert(type, message) {
+    const root = document.getElementById('keyword-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  function formatKeywordNumber(value) {
+    const numeric = Number(value || 0);
+    if (!Number.isFinite(numeric)) return '0';
+    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(numeric);
+  }
+
+  function formatKeywordCurrency(value) {
+    const numeric = Number(value || 0);
+    if (!Number.isFinite(numeric)) return '$0.00';
+    return `$${numeric.toFixed(2)}`;
+  }
+
+  function getKeywordDeviceLabel(device) {
+    return device === 'mobile' ? 'جوال' : 'كمبيوتر';
+  }
+
+  function renderKeywordResults(payload) {
+    const root = document.getElementById('keyword-results');
+    const summary = document.getElementById('keyword-summary');
+    if (!root || !summary) return;
+
+    if (!payload) {
+      summary.textContent = 'أدخل كلمة مفتاحية ثم اضغط بحث.';
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لم يتم إجراء بحث بعد.</p></div>';
+      return;
+    }
+
+    const metrics = payload.metrics || {};
+    const trend = Array.isArray(payload.trend) ? payload.trend : [];
+    const serp = payload.serp || {};
+    const serpItems = Array.isArray(serp.items) ? serp.items : [];
+
+    summary.textContent = `نتائج: ${payload.keyword || '-'} • ${payload.country_name || 'السعودية'} • ${getKeywordDeviceLabel(payload.device)}`;
+
+    const trendRows = trend.length
+      ? trend.map((row) => `
+          <tr>
+            <td>${escapeHtml(String(row.month || '-'))}/${escapeHtml(String(row.year || '-'))}</td>
+            <td>${escapeHtml(formatKeywordNumber(row.search_volume || 0))}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="2" class="muted">لا توجد بيانات اتجاه شهرية.</td></tr>';
+
+    const serpRows = serpItems.length
+      ? serpItems.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.title || '-')}</td>
+            <td>${escapeHtml(item.domain || '-')}</td>
+            <td><a href="${escapeHtml(item.url || '#')}" target="_blank" rel="noopener">فتح</a></td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="4" class="muted">لا توجد نتائج SERP متاحة.</td></tr>';
+
+    root.innerHTML = `
+      <div class="grid" style="margin-top:0;">
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">حجم البحث الشهري</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(metrics.search_volume || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">المنافسة</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(metrics.competition || 0))}</span>
+          <span class="muted">${escapeHtml(metrics.competition_level || '-')}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">CPC تقريبي</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordCurrency(metrics.cpc || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">مدى سعر الإعلان</span>
+          <span class="stat-value" style="font-size:20px;">${escapeHtml(formatKeywordCurrency(metrics.low_bid || 0))} - ${escapeHtml(formatKeywordCurrency(metrics.high_bid || 0))}</span>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px;">
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">الاتجاه الشهري</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>الشهر</th>
+                <th>حجم البحث</th>
+              </tr>
+            </thead>
+            <tbody>${trendRows}</tbody>
+          </table>
+        </div>
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">أفضل نتائج البحث (SERP)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>العنوان</th>
+                <th>الدومين</th>
+                <th>الرابط</th>
+              </tr>
+            </thead>
+            <tbody>${serpRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  async function searchKeywordResearch() {
+    const keyword = document.getElementById('keyword-query')?.value.trim() || '';
+    const country = document.getElementById('keyword-country')?.value || 'sa';
+    const device = document.getElementById('keyword-device')?.value || 'desktop';
+    const button = document.getElementById('keyword-search-btn');
+    const oldText = button?.textContent || 'بحث الكلمات المفتاحية';
+
+    if (!keyword) {
+      setKeywordAlert('error', 'اكتب الكلمة المفتاحية أولًا.');
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري البحث...';
+    }
+    state.keywords.loading = true;
+    setKeywordAlert('success', 'جاري جلب بيانات الكلمة المفتاحية...');
+
+    try {
+      const data = await apiFetch('/keywords/research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword, country, device }),
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setKeywordAlert('error', normalizeApiMessage(data.message, 'تعذر جلب بيانات الكلمة المفتاحية.'));
+        return;
+      }
+
+      state.keywords.lastResult = data.keyword_data || null;
+      renderKeywordResults(state.keywords.lastResult);
+      setKeywordAlert('success', 'تم جلب بيانات الكلمة المفتاحية بنجاح.');
+    } catch (error) {
+      setKeywordAlert('error', 'حدث خطأ أثناء جلب بيانات الكلمات المفتاحية.');
+    } finally {
+      state.keywords.loading = false;
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  function setDomainSeoAlert(type, message) {
+    const root = document.getElementById('domain-seo-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  function formatMoneyUsd(value) {
+    const numeric = Number(value || 0);
+    if (!Number.isFinite(numeric)) return '$0.00';
+    return `$${numeric.toFixed(2)}`;
+  }
+
+  function fillDomainSeoForm(config) {
+    if (document.getElementById('domain-seo-domain')) document.getElementById('domain-seo-domain').value = config.domain || '';
+    if (document.getElementById('domain-seo-country')) document.getElementById('domain-seo-country').value = config.country || 'sa';
+    if (document.getElementById('domain-seo-device')) document.getElementById('domain-seo-device').value = config.device || 'desktop';
+  }
+
+  function renderDomainSeoResults(payload) {
+    const root = document.getElementById('domain-seo-results');
+    const summary = document.getElementById('domain-seo-summary');
+    if (!root || !summary) return;
+
+    if (!payload || !payload.last_data) {
+      summary.textContent = 'احفظ الدومين واضغط تحديث البيانات.';
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لا توجد بيانات محفوظة بعد.</p></div>';
+      return;
+    }
+
+    const data = payload.last_data || {};
+    const overview = data.overview || {};
+    const organic = overview.organic || {};
+    const paid = overview.paid || {};
+    const topKeywords = Array.isArray(data.top_keywords) ? data.top_keywords : [];
+    const competitors = Array.isArray(data.competitors) ? data.competitors : [];
+    const fetchedAt = data.fetched_at ? formatDate(data.fetched_at) : '-';
+    const refreshedAt = payload.refreshed_at ? formatDate(payload.refreshed_at) : '-';
+    const deviceLabel = (payload.device || 'desktop') === 'mobile' ? 'جوال' : 'كمبيوتر';
+
+    summary.textContent = `الدومين: ${payload.domain || '-'} • السعودية • ${deviceLabel} • آخر تحديث: ${refreshedAt}`;
+
+    const keywordsRows = topKeywords.length
+      ? topKeywords.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
+            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
+            <td>${escapeHtml(item.intent || '-')}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="muted">لا توجد كلمات مرتبة حاليًا.</td></tr>';
+
+    const competitorsRows = competitors.length
+      ? competitors.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.domain || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.intersections || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.avg_position || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.organic_keywords || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.organic_traffic || 0))}</td>
+            <td>${escapeHtml(formatMoneyUsd(item.organic_cost || 0))}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="7" class="muted">لا توجد بيانات منافسين متاحة.</td></tr>';
+
+    root.innerHTML = `
+      <div class="grid" style="margin-top:0;">
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Organic Keywords</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(organic.keywords_count || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Organic Traffic (ETV)</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(organic.traffic || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Organic Traffic Cost</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatMoneyUsd(organic.traffic_cost || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Paid Keywords</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(paid.keywords_count || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Paid Traffic (ETV)</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatKeywordNumber(paid.traffic || 0))}</span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;box-shadow:none;">
+          <span class="stat-label">Paid Traffic Cost</span>
+          <span class="stat-value" style="font-size:30px;">${escapeHtml(formatMoneyUsd(paid.traffic_cost || 0))}</span>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px;">
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">ملخص الحركة العضوية</h3>
+          <table>
+            <tbody>
+              <tr><th>Top 3</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_3 || 0))}</td></tr>
+              <tr><th>Top 10</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_10 || 0))}</td></tr>
+              <tr><th>Top 20</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_20 || 0))}</td></tr>
+              <tr><th>Top 100</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_100 || 0))}</td></tr>
+              <tr><th>جديد</th><td>${escapeHtml(formatKeywordNumber(organic.new || 0))}</td></tr>
+              <tr><th>صاعد</th><td>${escapeHtml(formatKeywordNumber(organic.up || 0))}</td></tr>
+              <tr><th>هابط</th><td>${escapeHtml(formatKeywordNumber(organic.down || 0))}</td></tr>
+              <tr><th>مفقود</th><td>${escapeHtml(formatKeywordNumber(organic.lost || 0))}</td></tr>
+            </tbody>
+          </table>
+          <p class="muted" style="margin:10px 0 0;">تاريخ الجلب من DataForSEO: ${escapeHtml(fetchedAt)}</p>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 10px;">أهم الكلمات العضوية</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الكلمة</th>
+                <th>الترتيب</th>
+                <th>الحجم</th>
+                <th>CPC</th>
+                <th>النية</th>
+              </tr>
+            </thead>
+            <tbody>${keywordsRows}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card surface-soft" style="box-shadow:none;margin-top:16px;">
+        <h3 style="margin:0 0 10px;">أهم المنافسين</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الدومين</th>
+              <th>تقاطع الكلمات</th>
+              <th>متوسط الترتيب</th>
+              <th>Organic Keywords</th>
+              <th>Organic Traffic</th>
+              <th>Traffic Cost</th>
+            </tr>
+          </thead>
+          <tbody>${competitorsRows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  async function loadDomainSeo() {
+    try {
+      const data = await apiFetch('/domain-seo').then((response) => response.json());
+      if (!data.success) {
+        setDomainSeoAlert('error', normalizeApiMessage(data.message, 'تعذّر تحميل إعدادات سيو الدومين.'));
+        return;
+      }
+
+      const payload = data.domain_seo || {};
+      state.domainSeo.initialized = true;
+      state.domainSeo.data = payload;
+      state.domainSeo.config = {
+        domain: payload.domain || '',
+        country: payload.country || 'sa',
+        device: payload.device || 'desktop'
+      };
+      fillDomainSeoForm(state.domainSeo.config);
+      renderDomainSeoResults(payload);
+      setDomainSeoAlert('', '');
+    } catch (error) {
+      setDomainSeoAlert('error', 'تعذّر تحميل قسم سيو الدومين.');
+    }
+  }
+
+  async function saveDomainSeoConfig() {
+    const button = document.getElementById('domain-seo-save-btn');
+    const oldText = button?.textContent || 'حفظ الدومين';
+    const domain = document.getElementById('domain-seo-domain')?.value.trim() || '';
+    const country = document.getElementById('domain-seo-country')?.value || 'sa';
+    const device = document.getElementById('domain-seo-device')?.value || 'desktop';
+
+    if (!domain) {
+      setDomainSeoAlert('error', 'أدخل الدومين أولًا.');
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+    setDomainSeoAlert('success', 'جاري حفظ الدومين...');
+
+    try {
+      const data = await apiFetch('/domain-seo/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain, country, device }),
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setDomainSeoAlert('error', normalizeApiMessage(data.message, 'تعذّر حفظ إعدادات الدومين.'));
+        return;
+      }
+
+      const payload = data.domain_seo || {};
+      state.domainSeo.data = payload;
+      state.domainSeo.config = {
+        domain: payload.domain || '',
+        country: payload.country || 'sa',
+        device: payload.device || 'desktop'
+      };
+      fillDomainSeoForm(state.domainSeo.config);
+      renderDomainSeoResults(payload);
+      setDomainSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ الدومين بنجاح.'));
+    } catch (error) {
+      setDomainSeoAlert('error', 'حدث خطأ أثناء حفظ إعدادات الدومين.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  async function refreshDomainSeoData() {
+    const button = document.getElementById('domain-seo-refresh-btn');
+    const oldText = button?.textContent || 'تحديث البيانات';
+    const domain = document.getElementById('domain-seo-domain')?.value.trim() || '';
+    const country = document.getElementById('domain-seo-country')?.value || 'sa';
+    const device = document.getElementById('domain-seo-device')?.value || 'desktop';
+
+    if (!domain) {
+      setDomainSeoAlert('error', 'احفظ الدومين أولًا ثم حدّث البيانات.');
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري التحديث...';
+    }
+    setDomainSeoAlert('success', 'جاري جلب بيانات الدومين من DataForSEO...');
+
+    try {
+      const data = await apiFetch('/domain-seo/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain, country, device }),
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setDomainSeoAlert('error', normalizeApiMessage(data.message, 'تعذّر تحديث بيانات الدومين.'));
+        return;
+      }
+
+      const payload = data.domain_seo || {};
+      state.domainSeo.data = payload;
+      state.domainSeo.config = {
+        domain: payload.domain || '',
+        country: payload.country || 'sa',
+        device: payload.device || 'desktop'
+      };
+      fillDomainSeoForm(state.domainSeo.config);
+      renderDomainSeoResults(payload);
+      setDomainSeoAlert('success', normalizeApiMessage(data.message, 'تم تحديث بيانات سيو الدومين.'));
+    } catch (error) {
+      setDomainSeoAlert('error', 'حدث خطأ أثناء تحديث بيانات الدومين.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -1380,8 +1918,88 @@
     if (section === 'alt-images') {
       renderAltProducts();
     }
+    if (section === 'keywords') {
+      renderKeywordResults(state.keywords.lastResult);
+    }
+    if (section === 'domain-seo') {
+      if (!state.domainSeo.initialized) {
+        loadDomainSeo();
+      } else {
+        fillDomainSeoForm(state.domainSeo.config);
+        renderDomainSeoResults(state.domainSeo.data);
+      }
+    }
     if (section === 'operations') {
       loadOperations();
+    }
+  }
+
+  // Override settings handlers to support both Products and ALT sections.
+  async function loadOptimizationSettings() {
+    try {
+      const data = await apiFetch('/settings').then((response) => response.json());
+      if (!data.success) {
+        const message = normalizeApiMessage(data.message, 'تعذر جلب إعدادات التحسين.');
+        setOptimizationSettingsAlert('error', message, 'products');
+        setOptimizationSettingsAlert('error', message, 'alt');
+        return;
+      }
+      fillOptimizationSettings(data.settings || {});
+      setOptimizationSettingsAlert('', '', 'products');
+      setOptimizationSettingsAlert('', '', 'alt');
+    } catch (error) {
+      setOptimizationSettingsAlert('error', 'تعذر جلب إعدادات التحسين.', 'products');
+      setOptimizationSettingsAlert('error', 'تعذر جلب إعدادات التحسين.', 'alt');
+    }
+  }
+
+  async function saveOptimizationSettings(source = 'products') {
+    const button = source === 'alt'
+      ? document.getElementById('save-optimization-settings-alt')
+      : document.getElementById('save-optimization-settings');
+    const oldText = button?.textContent || 'حفظ التعليمات';
+
+    const payload = {
+      output_language: getOutputLanguage(source),
+      global_instructions: source === 'alt'
+        ? readSettingValue('alt-setting-global-instructions', 'setting-global-instructions', '')
+        : readSettingValue('setting-global-instructions', 'alt-setting-global-instructions', ''),
+      product_description_instructions: document.getElementById('setting-product-description-instructions')?.value || '',
+      meta_title_instructions: document.getElementById('setting-meta-title-instructions')?.value || '',
+      meta_description_instructions: document.getElementById('setting-meta-description-instructions')?.value || '',
+      image_alt_instructions: source === 'alt'
+        ? readSettingValue('alt-setting-image-alt-instructions', 'setting-image-alt-instructions', '')
+        : readSettingValue('setting-image-alt-instructions', 'alt-setting-image-alt-instructions', ''),
+      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || ''
+    };
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+    setOptimizationSettingsAlert('success', 'جاري حفظ إعدادات التحسين...', source);
+
+    try {
+      const data = await apiFetch('/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setOptimizationSettingsAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ إعدادات التحسين.'), source);
+        return;
+      }
+
+      fillOptimizationSettings(data.settings || payload);
+      setOptimizationSettingsAlert('success', normalizeApiMessage(data.message, 'تم حفظ إعدادات التحسين.'), source);
+    } catch (error) {
+      setOptimizationSettingsAlert('error', 'حدث خطأ أثناء حفظ إعدادات التحسين.', source);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
     }
   }
 
@@ -1401,8 +2019,25 @@
     document.getElementById('close-editor')?.addEventListener('click', closeEditor);
     document.getElementById('operations-apply-filter')?.addEventListener('click', () => loadOperations());
     document.getElementById('operations-show-all')?.addEventListener('click', () => loadOperations('all'));
+    document.getElementById('keyword-search-btn')?.addEventListener('click', searchKeywordResearch);
+    document.getElementById('keyword-query')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        searchKeywordResearch();
+      }
+    });
+    document.getElementById('domain-seo-save-btn')?.addEventListener('click', saveDomainSeoConfig);
+    document.getElementById('domain-seo-refresh-btn')?.addEventListener('click', refreshDomainSeoData);
+    document.getElementById('domain-seo-domain')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        saveDomainSeoConfig();
+      }
+    });
     document.getElementById('generate-store-seo')?.addEventListener('click', optimizeStoreSeo);
     document.getElementById('save-store-seo')?.addEventListener('click', saveStoreSeo);
+    document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
+    document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
     document.getElementById('alt-clear-selection')?.addEventListener('click', () => {
       state.altSelectedProductIds = new Set();
@@ -1443,7 +2078,10 @@
   switchSection('products');
   renderEditorBody();
   renderImageAltBody();
+  renderKeywordResults(null);
+  renderDomainSeoResults(null);
   loadProducts();
+  loadOptimizationSettings();
   loadOperations();
   loadStoreSeo();
   loadUsage();

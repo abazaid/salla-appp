@@ -120,7 +120,12 @@ final class OpenAIClient
 
         $model = Config::get('OPENAI_MODEL', 'gpt-5-mini');
         $reasoningEffort = Config::get('OPENAI_REASONING_EFFORT', 'low');
-        $language = $settings['language'] ?? 'ar';
+        $language = trim((string) ($settings['output_language'] ?? ''));
+        if ($language === '') {
+            $language = 'ar';
+        }
+        $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
+        $imageAltInstructions = trim((string) ($settings['image_alt_instructions'] ?? ''));
 
         $response = $this->httpClient->post(self::API_BASE . '/responses', [
             'model' => $model,
@@ -142,7 +147,10 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Maximum length: 60 characters.\n- Mention the product clearly and naturally.\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
+                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Maximum length: 60 characters.\n- Mention the product clearly and naturally.\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n"
+                                . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
+                                . $this->buildInstructionBlock('Image ALT instructions', $imageAltInstructions)
+                                . "\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
                         ],
                         [
                             'type' => 'input_image',
@@ -184,8 +192,12 @@ final class OpenAIClient
 
         $model = Config::get('OPENAI_MODEL', 'gpt-5-mini');
         $reasoningEffort = Config::get('OPENAI_REASONING_EFFORT', 'low');
-        $language = $settings['language'] ?? 'ar';
-        $tone = $settings['tone'] ?? 'احترافي مقنع';
+        $language = trim((string) ($settings['output_language'] ?? ''));
+        if ($language === '') {
+            $language = 'ar';
+        }
+        $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
+        $storeSeoInstructions = trim((string) ($settings['store_seo_instructions'] ?? ''));
 
         $response = $this->httpClient->post(self::API_BASE . '/responses', [
             'model' => $model,
@@ -207,17 +219,20 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => "Generate homepage SEO settings in language={$language} with tone={$tone}. Return JSON only.\nRules:\n- Title should be around 35-65 characters and include core intent.\n- Description should be around 120-160 characters, compelling but factual.\n- Keywords should be 6-12 high-intent terms, comma-separated, no stuffing.\n- Reuse useful existing terms if they are relevant.\n- Reflect the actual store activity from products sample/topics.\n\nStore context:\n" . json_encode([
-                                'store_name' => $storeContext['store_name'] ?? null,
-                                'merchant_id' => $storeContext['merchant_id'] ?? null,
-                                'store_url' => $storeContext['store_url'] ?? null,
-                                'products_count' => $storeContext['products_count'] ?? null,
-                                'products_sample' => $storeContext['products_sample'] ?? [],
-                                'product_topics' => $storeContext['product_topics'] ?? [],
-                                'existing_title' => $currentSeo['title'] ?? null,
-                                'existing_description' => $currentSeo['description'] ?? null,
-                                'existing_keywords' => $currentSeo['keywords'] ?? null,
-                            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+                            'text' => "Generate homepage SEO settings in language={$language}. Return JSON only.\nRules:\n- Title should be around 35-65 characters and include core intent.\n- Description should be around 120-160 characters, compelling but factual.\n- Keywords should be 6-12 high-intent terms, comma-separated, no stuffing.\n- Reuse useful existing terms if they are relevant.\n- Reflect the actual store activity from products sample/topics.\n"
+                                . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
+                                . $this->buildInstructionBlock('Store SEO instructions', $storeSeoInstructions)
+                                . "\nStore context:\n" . json_encode([
+                                    'store_name' => $storeContext['store_name'] ?? null,
+                                    'merchant_id' => $storeContext['merchant_id'] ?? null,
+                                    'store_url' => $storeContext['store_url'] ?? null,
+                                    'products_count' => $storeContext['products_count'] ?? null,
+                                    'products_sample' => $storeContext['products_sample'] ?? [],
+                                    'product_topics' => $storeContext['product_topics'] ?? [],
+                                    'existing_title' => $currentSeo['title'] ?? null,
+                                    'existing_description' => $currentSeo['description'] ?? null,
+                                    'existing_keywords' => $currentSeo['keywords'] ?? null,
+                                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
                         ],
                     ],
                 ],
@@ -280,8 +295,12 @@ final class OpenAIClient
 
     private function buildPrompt(array $product, array $settings): array
     {
-        $tone = $settings['tone'] ?? 'احترافي مقنع';
-        $language = $settings['language'] ?? 'ar';
+        $language = trim((string) ($settings['output_language'] ?? ''));
+        if ($language === '') {
+            $language = 'ar';
+        }
+        $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
+        $productInstructions = trim((string) ($settings['product_description_instructions'] ?? ''));
 
         $productSummary = [
             'id' => $product['id'] ?? null,
@@ -309,7 +328,10 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => "Generate an improved product description in language={$language} with tone={$tone}. Focus on benefits, clarity, and conversion while staying faithful to the provided product data.\n\nProduct:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+                        'text' => "Generate an improved product description in language={$language}. Focus on benefits, clarity, and conversion while staying faithful to the provided product data.\n"
+                            . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
+                            . $this->buildInstructionBlock('Product description instructions', $productInstructions)
+                            . "\nProduct:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
                     ],
                 ],
             ],
@@ -340,8 +362,14 @@ final class OpenAIClient
 
     private function buildContentPrompt(array $product, array $settings, string $mode): array
     {
-        $tone = $settings['tone'] ?? 'احترافي مقنع';
-        $language = $settings['language'] ?? 'ar';
+        $language = trim((string) ($settings['output_language'] ?? ''));
+        if ($language === '') {
+            $language = 'ar';
+        }
+        $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
+        $productInstructions = trim((string) ($settings['product_description_instructions'] ?? ''));
+        $metaTitleInstructions = trim((string) ($settings['meta_title_instructions'] ?? ''));
+        $metaDescriptionInstructions = trim((string) ($settings['meta_description_instructions'] ?? ''));
 
         $productSummary = [
             'id' => $product['id'] ?? null,
@@ -377,11 +405,26 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => "Generate improved product content in language={$language} with tone={$tone}. {$modeInstruction} Return JSON only.\n\nProduct:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+                        'text' => "Generate improved product content in language={$language}. {$modeInstruction} Return JSON only.\n"
+                            . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
+                            . $this->buildInstructionBlock('Product description instructions', $productInstructions)
+                            . $this->buildInstructionBlock('Meta title instructions', $metaTitleInstructions)
+                            . $this->buildInstructionBlock('Meta description instructions', $metaDescriptionInstructions)
+                            . "\nProduct:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
                     ],
                 ],
             ],
         ];
+    }
+
+    private function buildInstructionBlock(string $label, string $instructions): string
+    {
+        $instructions = trim($instructions);
+        if ($instructions === '') {
+            return '';
+        }
+
+        return "\n{$label}:\n{$instructions}\n";
     }
 
     private function extractText(array $body): string

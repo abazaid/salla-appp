@@ -18,6 +18,8 @@ if ($appBasePath === '/') {
       <button type="button" class="sidebar-link is-active" data-section-target="products">المنتجات</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
+      <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
+      <button type="button" class="sidebar-link" data-section-target="domain-seo">سيو الدومين</button>
       <button type="button" class="sidebar-link" data-section-target="operations">سجل العمليات</button>
       <button type="button" class="sidebar-link" data-section-target="account-settings">الحساب والإعدادات</button>
     </nav>
@@ -39,29 +41,62 @@ if ($appBasePath === '/') {
       <div class="card">
         <div class="section-head">
           <div>
-            <h2 style="margin:0 0 6px;">خيارات التحسين والفلترة</h2>
+            <h2 style="margin:0 0 6px;">خيارات التحسين</h2>
+            <p class="muted" style="margin:0;">إعدادات عامة للتوليد لكل متجر. إذا تركت أي حقل فارغًا سيتم تجاوزه.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="save-optimization-settings" class="btn btn-sky" type="button">حفظ التعليمات</button>
+          </div>
+        </div>
+
+        <div id="optimization-settings-alert"></div>
+
+        <div class="grid" style="margin-top:0;">
+          <div>
+            <label for="setting-output-language"><strong>لغة التوليد الأساسية</strong></label>
+            <select id="setting-output-language">
+              <option value="">بدون تحديد</option>
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="setting-global-instructions"><strong>تعليمات عامة</strong></label>
+            <textarea id="setting-global-instructions" rows="4" placeholder="تعليمات تنطبق على جميع أنواع التوليد..."></textarea>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="setting-product-description-instructions"><strong>تعليمات وصف المنتج</strong></label>
+            <textarea id="setting-product-description-instructions" rows="4" placeholder="تعليمات خاصة بتوليد وصف المنتج..."></textarea>
+          </div>
+          <div>
+            <label for="setting-meta-title-instructions"><strong>تعليمات Meta Title</strong></label>
+            <textarea id="setting-meta-title-instructions" rows="4" placeholder="تعليمات خاصة بعنوان الميتا..."></textarea>
+          </div>
+          <div>
+            <label for="setting-meta-description-instructions"><strong>تعليمات Meta Description</strong></label>
+            <textarea id="setting-meta-description-instructions" rows="4" placeholder="تعليمات خاصة بوصف الميتا..."></textarea>
+          </div>
+          <div>
+            <label for="setting-image-alt-instructions"><strong>تعليمات ALT للصور</strong></label>
+            <textarea id="setting-image-alt-instructions" rows="4" placeholder="اكتب ALT كمحترف سيو: دقيق، طبيعي، وواضح..."></textarea>
+          </div>
+          <div>
+            <label for="setting-store-seo-instructions"><strong>تعليمات سيو المتجر</strong></label>
+            <textarea id="setting-store-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد عنوان/وصف/كلمات سيو المتجر..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2 style="margin:0 0 6px;">خيارات الفلترة</h2>
             <p class="muted" style="margin:0;">فلترة متقدمة + تنقل بالصفحات + تحسين سريع لكل منتج.</p>
           </div>
         </div>
 
         <div class="toolbar">
           <div class="toolbar-row">
-            <div>
-              <label for="tone"><strong>نبرة الوصف</strong></label>
-              <select id="tone">
-                <option value="احترافي مقنع">احترافي مقنع</option>
-                <option value="فاخر أنيق">فاخر أنيق</option>
-                <option value="عملي مباشر">عملي مباشر</option>
-                <option value="ودود بسيط">ودود بسيط</option>
-              </select>
-            </div>
-            <div>
-              <label for="language"><strong>لغة الإخراج</strong></label>
-              <select id="language">
-                <option value="ar">العربية</option>
-                <option value="en">English</option>
-              </select>
-            </div>
             <div>
               <label for="page-size"><strong>عدد المنتجات في الصفحة</strong></label>
               <select id="page-size">
@@ -171,6 +206,37 @@ if ($appBasePath === '/') {
       <div class="card">
         <div class="section-head">
           <div>
+            <h2 style="margin:0 0 6px;">خيارات التحسين</h2>
+            <p class="muted" style="margin:0;">إعدادات عامة خاصة بتوليد ALT في هذا المتجر. يمكنك ترك أي حقل فارغًا.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="save-optimization-settings-alt" class="btn btn-sky" type="button">حفظ التعليمات</button>
+          </div>
+        </div>
+        <div id="optimization-settings-alt-alert"></div>
+        <div class="grid" style="margin-top:0;">
+          <div>
+            <label for="alt-setting-output-language"><strong>لغة التوليد الأساسية</strong></label>
+            <select id="alt-setting-output-language">
+              <option value="">بدون تحديد</option>
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="alt-setting-global-instructions"><strong>تعليمات عامة</strong></label>
+            <textarea id="alt-setting-global-instructions" rows="4" placeholder="تعليمات تنطبق على جميع أنواع التوليد..."></textarea>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="alt-setting-image-alt-instructions"><strong>تعليمات ALT للصور</strong></label>
+            <textarea id="alt-setting-image-alt-instructions" rows="4" placeholder="اكتب ALT كمحترف سيو: دقيق، طبيعي، وواضح..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
             <div class="pill">كاتب ALT للصور</div>
             <h2 style="margin:12px 0 8px;">إدارة النص البديل للصور</h2>
             <p class="muted" style="margin:0;">اختر منتجًا وافتح محرر الصور لكتابة ALT يدويًا أو توليده بالذكاء الاصطناعي بصياغة محترف SEO، ثم احفظ في سلة.</p>
@@ -233,6 +299,109 @@ if ($appBasePath === '/') {
         <div id="alt-products-list" class="products-grid"></div>
         <div style="margin-top:20px;">
           <div id="alt-products-pagination-bottom" class="pagination"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-keywords" data-app-section="keywords" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">الكلمات المفتاحية</div>
+            <h2 style="margin:12px 0 8px;">بحث احترافي عن الكلمات المفتاحية</h2>
+            <p class="muted" style="margin:0;">ابحث بالكلمة المفتاحية داخل السعودية مع اختيار نوع الجهاز، ثم راقب أهم مؤشرات السيو والنتائج الأولى.</p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-row">
+            <div>
+              <label for="keyword-query"><strong>الكلمة المفتاحية</strong></label>
+              <input id="keyword-query" type="text" placeholder="مثال: فساتين نسائية">
+            </div>
+            <div>
+              <label for="keyword-country"><strong>الدولة</strong></label>
+              <select id="keyword-country">
+                <option value="sa">السعودية</option>
+              </select>
+            </div>
+            <div>
+              <label for="keyword-device"><strong>نوع المتصفح</strong></label>
+              <select id="keyword-device">
+                <option value="desktop">متصفح كمبيوتر</option>
+                <option value="mobile">متصفح جوال</option>
+              </select>
+            </div>
+          </div>
+          <div class="toolbar-row">
+            <button id="keyword-search-btn" class="btn btn-sky" type="button">بحث الكلمات المفتاحية</button>
+          </div>
+        </div>
+
+        <div id="keyword-alert"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2 style="margin:0 0 6px;">تقرير الكلمات المفتاحية</h2>
+            <p id="keyword-summary" class="muted" style="margin:0;">أدخل كلمة مفتاحية ثم اضغط بحث.</p>
+          </div>
+        </div>
+        <div id="keyword-results">
+          <div class="empty-state"><p class="muted" style="margin:0;">لم يتم إجراء بحث بعد.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-domain-seo" data-app-section="domain-seo" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">سيو الدومين</div>
+            <h2 style="margin:12px 0 8px;">تحليل الدومين ومنافسين البحث</h2>
+            <p class="muted" style="margin:0;">احفظ الدومين مرة واحدة، ثم حدّث البيانات في أي وقت. ستبقى النتائج محفوظة لكل متجر.</p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-row">
+            <div>
+              <label for="domain-seo-domain"><strong>الدومين</strong></label>
+              <input id="domain-seo-domain" type="text" placeholder="example.com">
+            </div>
+            <div>
+              <label for="domain-seo-country"><strong>الدولة</strong></label>
+              <select id="domain-seo-country">
+                <option value="sa">السعودية</option>
+              </select>
+            </div>
+            <div>
+              <label for="domain-seo-device"><strong>نوع المتصفح</strong></label>
+              <select id="domain-seo-device">
+                <option value="desktop">متصفح كمبيوتر</option>
+                <option value="mobile">متصفح جوال</option>
+              </select>
+            </div>
+          </div>
+          <div class="toolbar-row">
+            <button id="domain-seo-save-btn" class="btn btn-sky" type="button">حفظ الدومين</button>
+            <button id="domain-seo-refresh-btn" class="btn" type="button">تحديث البيانات</button>
+          </div>
+        </div>
+
+        <div id="domain-seo-alert"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2 style="margin:0 0 6px;">تقرير سيو الدومين</h2>
+            <p id="domain-seo-summary" class="muted" style="margin:0;">احفظ الدومين واضغط تحديث البيانات.</p>
+          </div>
+        </div>
+        <div id="domain-seo-results">
+          <div class="empty-state"><p class="muted" style="margin:0;">لا توجد بيانات محفوظة بعد.</p></div>
         </div>
       </div>
     </section>
@@ -360,8 +529,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v17',
-      base + '/assets/client-dashboard.js?v=products-v17'
+      base + '/public/assets/client-dashboard.js?v=products-v21',
+      base + '/assets/client-dashboard.js?v=products-v21'
     ];
     var index = 0;
 

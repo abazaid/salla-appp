@@ -9,6 +9,7 @@ use App\Repositories\StoreRepository;
 use App\Services\OpenAICostCalculator;
 use App\Services\OpenAIClient;
 use App\Services\ProductContentOptimizer;
+use App\Services\DataForSeoClient;
 use App\Services\SallaApiClient;
 use App\Services\SubscriptionManager;
 use App\Support\Database;
@@ -95,11 +96,6 @@ final class ProductController
             $client = new SallaApiClient();
             $productPayload = $client->productDetails($accessToken, $productId);
             $product = $productPayload['data'] ?? [];
-
-            $settings = array_merge($settings, array_filter([
-                'tone' => $input['tone'] ?? null,
-                'language' => $input['language'] ?? null,
-            ]));
 
             $optimized = (new ProductContentOptimizer())->optimize($product, $settings, $mode);
 
@@ -264,6 +260,59 @@ final class ProductController
         ]);
     }
 
+    public function optimizationSettings(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        Response::json([
+            'success' => true,
+            'merchant_id' => $store['merchant_id'] ?? null,
+            'settings' => $this->normalizeOptimizationSettings((array) ($store['settings'] ?? [])),
+        ]);
+    }
+
+    public function saveOptimizationSettings(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $normalized = $this->normalizeOptimizationSettings([
+            'output_language' => Request::input()['output_language'] ?? '',
+            'global_instructions' => Request::input()['global_instructions'] ?? '',
+            'product_description_instructions' => Request::input()['product_description_instructions'] ?? '',
+            'meta_title_instructions' => Request::input()['meta_title_instructions'] ?? '',
+            'meta_description_instructions' => Request::input()['meta_description_instructions'] ?? '',
+            'image_alt_instructions' => Request::input()['image_alt_instructions'] ?? '',
+            'store_seo_instructions' => Request::input()['store_seo_instructions'] ?? '',
+        ]);
+
+        $mergedSettings = array_merge((array) ($store['settings'] ?? []), $normalized);
+        (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
+            'settings' => $mergedSettings,
+        ]);
+
+        Response::json([
+            'success' => true,
+            'message' => 'Optimization settings saved.',
+            'settings' => $normalized,
+        ]);
+    }
+
     public function operations(): void
     {
         $store = $this->resolveStore();
@@ -355,6 +404,208 @@ final class ProductController
         }
     }
 
+    public function keywordResearch(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $input = Request::input();
+        $keyword = trim((string) ($input['keyword'] ?? ''));
+        $country = strtolower(trim((string) ($input['country'] ?? 'sa')));
+        $device = strtolower(trim((string) ($input['device'] ?? 'desktop')));
+
+        if ($keyword === '') {
+            Response::json([
+                'success' => false,
+                'message' => 'أدخل الكلمة المفتاحية أولًا.',
+            ], 422);
+            return;
+        }
+
+        if ($country !== 'sa') {
+            Response::json([
+                'success' => false,
+                'message' => 'الدولة المتاحة حاليًا هي السعودية فقط.',
+            ], 422);
+            return;
+        }
+
+        if (!in_array($device, ['desktop', 'mobile'], true)) {
+            $device = 'desktop';
+        }
+
+        try {
+            $result = (new DataForSeoClient())->keywordOverview($keyword, $device);
+
+            Response::json([
+                'success' => true,
+                'merchant_id' => $store['merchant_id'] ?? null,
+                'keyword_data' => $result,
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => $this->humanizeProviderError($exception->getMessage()),
+            ], 500);
+        }
+    }
+
+    public function domainSeo(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $domainSeo = $this->normalizeDomainSeoSettings((array) (($store['settings'] ?? [])['domain_seo'] ?? []));
+
+        Response::json([
+            'success' => true,
+            'merchant_id' => $store['merchant_id'] ?? null,
+            'domain_seo' => $domainSeo,
+        ]);
+    }
+
+    public function saveDomainSeo(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $input = Request::input();
+        $domain = $this->normalizeDomainInput((string) ($input['domain'] ?? ''));
+        $country = strtolower(trim((string) ($input['country'] ?? 'sa')));
+        $device = strtolower(trim((string) ($input['device'] ?? 'desktop')));
+
+        if ($domain === '') {
+            Response::json([
+                'success' => false,
+                'message' => 'أدخل الدومين أولًا.',
+            ], 422);
+            return;
+        }
+
+        if ($country !== 'sa') {
+            Response::json([
+                'success' => false,
+                'message' => 'الدولة المتاحة حاليًا هي السعودية فقط.',
+            ], 422);
+            return;
+        }
+
+        if (!in_array($device, ['desktop', 'mobile'], true)) {
+            $device = 'desktop';
+        }
+
+        $settings = (array) ($store['settings'] ?? []);
+        $existing = $this->normalizeDomainSeoSettings((array) ($settings['domain_seo'] ?? []));
+
+        $settings['domain_seo'] = array_merge($existing, [
+            'domain' => $domain,
+            'country' => $country,
+            'device' => $device,
+            'saved_at' => date(DATE_ATOM),
+        ]);
+
+        (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
+            'settings' => $settings,
+        ]);
+
+        Response::json([
+            'success' => true,
+            'message' => 'تم حفظ إعدادات سيو الدومين.',
+            'domain_seo' => $settings['domain_seo'],
+        ]);
+    }
+
+    public function refreshDomainSeo(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $input = Request::input();
+        $settings = (array) ($store['settings'] ?? []);
+        $existing = $this->normalizeDomainSeoSettings((array) ($settings['domain_seo'] ?? []));
+
+        $domain = $this->normalizeDomainInput((string) ($input['domain'] ?? ($existing['domain'] ?? '')));
+        $country = strtolower(trim((string) ($input['country'] ?? ($existing['country'] ?? 'sa'))));
+        $device = strtolower(trim((string) ($input['device'] ?? ($existing['device'] ?? 'desktop'))));
+
+        if ($domain === '') {
+            Response::json([
+                'success' => false,
+                'message' => 'احفظ الدومين أولًا ثم حدّث البيانات.',
+            ], 422);
+            return;
+        }
+
+        if ($country !== 'sa') {
+            Response::json([
+                'success' => false,
+                'message' => 'الدولة المتاحة حاليًا هي السعودية فقط.',
+            ], 422);
+            return;
+        }
+
+        if (!in_array($device, ['desktop', 'mobile'], true)) {
+            $device = 'desktop';
+        }
+
+        try {
+            $result = (new DataForSeoClient())->domainOverview($domain, $device);
+
+            $refreshCount = (int) ($existing['refresh_count'] ?? 0) + 1;
+            $settings['domain_seo'] = array_merge($existing, [
+                'domain' => $domain,
+                'country' => $country,
+                'device' => $device,
+                'refresh_count' => $refreshCount,
+                'refreshed_at' => date(DATE_ATOM),
+                'last_data' => $result,
+            ]);
+
+            (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
+                'settings' => $settings,
+            ]);
+
+            Response::json([
+                'success' => true,
+                'message' => 'تم تحديث بيانات سيو الدومين.',
+                'domain_seo' => $settings['domain_seo'],
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => $this->humanizeProviderError($exception->getMessage()),
+            ], 500);
+        }
+    }
+
     public function optimizeStoreSeo(): void
     {
         $store = $this->resolveStore();
@@ -380,11 +631,7 @@ final class ProductController
         }
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
-        $input = Request::input();
-        $settings = array_merge($store['settings'] ?? [], array_filter([
-            'tone' => $input['tone'] ?? null,
-            'language' => $input['language'] ?? null,
-        ]));
+        $settings = $store['settings'] ?? [];
 
         if (!$accessToken) {
             Response::json([
@@ -430,9 +677,9 @@ final class ProductController
                 'current_title' => (string) ($currentSeo['title'] ?? ''),
                 'current_description' => (string) ($currentSeo['description'] ?? ''),
                 'current_keywords' => (string) ($currentSeo['keywords'] ?? ''),
-                'optimized_title' => $generated['title'] ?? '',
-                'optimized_description' => $generated['description'] ?? '',
-                'optimized_keywords' => $generated['keywords'] ?? '',
+                'optimized_title' => $this->normalizeStoreSeoTitle((string) ($generated['title'] ?? '')),
+                'optimized_description' => $this->normalizeStoreSeoDescription((string) ($generated['description'] ?? '')),
+                'optimized_keywords' => $this->normalizeStoreSeoKeywords((string) ($generated['keywords'] ?? '')),
                 'subscription' => $subscriptionManager->summary($store),
             ]);
         } catch (\Throwable $exception) {
@@ -469,9 +716,9 @@ final class ProductController
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
         $input = Request::input();
-        $title = trim((string) ($input['title'] ?? ''));
-        $description = trim((string) ($input['description'] ?? ''));
-        $keywords = trim((string) ($input['keywords'] ?? ''));
+        $title = $this->normalizeStoreSeoTitle((string) ($input['title'] ?? ''));
+        $description = $this->normalizeStoreSeoDescription((string) ($input['description'] ?? ''));
+        $keywords = $this->normalizeStoreSeoKeywords((string) ($input['keywords'] ?? ''));
 
         if (!$accessToken) {
             Response::json([
@@ -522,10 +769,7 @@ final class ProductController
         }
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
-        $input = Request::input();
-        $settings = array_merge($store['settings'] ?? [], array_filter([
-            'language' => $input['language'] ?? null,
-        ]));
+        $settings = $store['settings'] ?? [];
 
         if (!$accessToken) {
             Response::json(['success' => false, 'message' => 'Missing access token.'], 400);
@@ -667,9 +911,7 @@ final class ProductController
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
         $input = Request::input();
-        $settings = array_merge($store['settings'] ?? [], array_filter([
-            'language' => $input['language'] ?? null,
-        ]));
+        $settings = $store['settings'] ?? [];
 
         if (!$accessToken) {
             Response::json(['success' => false, 'message' => 'Missing access token.'], 400);
@@ -831,9 +1073,7 @@ final class ProductController
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
         $accessToken = $store['token_payload']['access_token'] ?? null;
-        $settings = array_merge($store['settings'] ?? [], array_filter([
-            'language' => $input['language'] ?? null,
-        ]));
+        $settings = $store['settings'] ?? [];
 
         if (!$accessToken) {
             Response::json(['success' => false, 'message' => 'Missing access token.'], 400);
@@ -913,6 +1153,82 @@ final class ProductController
         return in_array($mode, ['description', 'seo', 'all'], true) ? $mode : 'all';
     }
 
+    private function normalizeOptimizationSettings(array $settings): array
+    {
+        return [
+            'output_language' => $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? '')),
+            'global_instructions' => $this->normalizeOptimizationText((string) ($settings['global_instructions'] ?? ''), 5000),
+            'product_description_instructions' => $this->normalizeOptimizationText((string) ($settings['product_description_instructions'] ?? ''), 5000),
+            'meta_title_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_title_instructions'] ?? ''), 3000),
+            'meta_description_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_description_instructions'] ?? ''), 3000),
+            'image_alt_instructions' => $this->normalizeOptimizationText((string) ($settings['image_alt_instructions'] ?? ''), 3000),
+            'store_seo_instructions' => $this->normalizeOptimizationText((string) ($settings['store_seo_instructions'] ?? ''), 5000),
+        ];
+    }
+
+    private function normalizeOutputLanguage(string $value): string
+    {
+        $value = trim(strtolower($value));
+        if ($value === '') {
+            return '';
+        }
+
+        return in_array($value, ['ar', 'en'], true) ? $value : '';
+    }
+
+    private function normalizeDomainSeoSettings(array $settings): array
+    {
+        $device = (string) ($settings['device'] ?? '');
+        if (!in_array($device, ['desktop', 'mobile'], true)) {
+            $device = 'desktop';
+        }
+
+        return [
+            'domain' => $this->normalizeDomainInput((string) ($settings['domain'] ?? '')),
+            'country' => 'sa',
+            'device' => $device,
+            'saved_at' => (string) ($settings['saved_at'] ?? ''),
+            'refreshed_at' => (string) ($settings['refreshed_at'] ?? ''),
+            'refresh_count' => (int) ($settings['refresh_count'] ?? 0),
+            'last_data' => is_array($settings['last_data'] ?? null) ? $settings['last_data'] : null,
+        ];
+    }
+
+    private function normalizeDomainInput(string $domain): string
+    {
+        $value = trim($domain);
+        if ($value === '') {
+            return '';
+        }
+
+        if (!str_contains($value, '://')) {
+            $value = 'https://' . $value;
+        }
+
+        $host = (string) parse_url($value, PHP_URL_HOST);
+        $host = strtolower(trim($host));
+        $host = preg_replace('/^www\./', '', $host) ?? $host;
+        $host = trim($host, '.');
+
+        if ($host === '' || !str_contains($host, '.')) {
+            return '';
+        }
+
+        return $host;
+    }
+
+    private function normalizeOptimizationText(string $value, int $maxLength): string
+    {
+        $value = str_replace("\r\n", "\n", $value);
+        $value = str_replace("\r", "\n", $value);
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        return $this->limitText($value, $maxLength);
+    }
+
     private function normalizeMetadataTitle(string $value): string
     {
         return trim($value);
@@ -947,6 +1263,57 @@ final class ProductController
         }
 
         return rtrim(substr($value, 0, $maxLength));
+    }
+
+    private function normalizeStoreSeoTitle(string $value): string
+    {
+        return $this->normalizeStoreSeoText($value, 70, false);
+    }
+
+    private function normalizeStoreSeoDescription(string $value): string
+    {
+        return $this->normalizeStoreSeoText($value, 300, false);
+    }
+
+    private function normalizeStoreSeoKeywords(string $value): string
+    {
+        $normalized = $this->normalizeStoreSeoText($value, 300, true);
+        if ($normalized === '') {
+            return '';
+        }
+
+        $parts = preg_split('/\s*[,،]\s*/u', $normalized) ?: [];
+        $parts = array_values(array_filter(array_map(static function (string $item): string {
+            return trim($item);
+        }, $parts), static function (string $item): bool {
+            return $item !== '';
+        }));
+
+        if ($parts === []) {
+            return '';
+        }
+
+        return implode(', ', array_slice(array_values(array_unique($parts)), 0, 25));
+    }
+
+    private function normalizeStoreSeoText(string $value, int $maxLength, bool $allowComma): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $value = preg_replace('/[\r\n\t]+/u', ' ', $value) ?? $value;
+        $value = str_replace(['-', '_', '@'], ' ', $value);
+
+        $pattern = $allowComma
+            ? '/[^\p{L}\p{N}\s,،]/u'
+            : '/[^\p{L}\p{N}\s]/u';
+        $value = preg_replace($pattern, ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+        $value = trim($value);
+
+        return $this->limitText($value, $maxLength);
     }
 
     private function findProductImage(array $product, int $imageId): ?array
