@@ -420,6 +420,7 @@ final class ProductController
         $keyword = trim((string) ($input['keyword'] ?? ''));
         $country = strtolower(trim((string) ($input['country'] ?? 'sa')));
         $device = strtolower(trim((string) ($input['device'] ?? 'desktop')));
+        $language = strtolower(trim((string) ($input['language'] ?? 'auto')));
 
         if ($keyword === '') {
             Response::json([
@@ -441,8 +442,17 @@ final class ProductController
             $device = 'desktop';
         }
 
+        if (!in_array($language, ['auto', 'ar', 'en'], true)) {
+            $language = 'auto';
+        }
+
         try {
-            $result = (new DataForSeoClient())->keywordOverview($keyword, $device);
+            $result = (new DataForSeoClient())->keywordOverview(
+                $keyword,
+                $device,
+                $country,
+                $language === 'auto' ? null : $language
+            );
 
             Response::json([
                 'success' => true,

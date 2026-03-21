@@ -22,7 +22,7 @@ final class DataForSeoClient
         $this->password = (string) Config::get('DATAFORSEO_PASSWORD', '');
     }
 
-    public function keywordOverview(string $keyword, string $device = 'desktop'): array
+    public function keywordOverview(string $keyword, string $device = 'desktop', string $country = 'sa', ?string $language = null): array
     {
         $this->assertCredentials();
 
@@ -32,31 +32,36 @@ final class DataForSeoClient
         }
 
         $normalizedDevice = $this->normalizeDevice($device);
+        $normalizedCountry = $this->normalizeCountry($country);
+        $normalizedLanguage = $this->normalizeKeywordLanguage($language);
+        $targetingOptions = $this->buildKeywordTargetingOptions($normalizedCountry, $normalizedLanguage);
 
-        $volumeTask = $this->post('/keywords_data/google_ads/search_volume/live', [[
+        $volumeTaskPayload = [[
             'keywords' => [$normalizedKeyword],
-            'location_name' => 'Saudi Arabia',
-            'language_name' => 'Arabic',
             'search_partners' => false,
-        ]]);
+        ]];
+        $volumeTaskPayload[0] = array_merge($volumeTaskPayload[0], $targetingOptions);
+        $volumeTask = $this->post('/keywords_data/google_ads/search_volume/live', $volumeTaskPayload);
 
         $keywordMetrics = $this->extractKeywordMetrics($volumeTask, $normalizedKeyword);
 
-        $serpTask = $this->post('/serp/google/organic/live/advanced', [[
+        $serpTaskPayload = [[
             'keyword' => $normalizedKeyword,
-            'location_name' => 'Saudi Arabia',
-            'language_name' => 'Arabic',
             'device' => $normalizedDevice,
             'os' => $normalizedDevice === 'mobile' ? 'android' : 'windows',
             'depth' => 10,
-        ]]);
+        ]];
+        $serpTaskPayload[0] = array_merge($serpTaskPayload[0], $targetingOptions);
+        $serpTask = $this->post('/serp/google/organic/live/advanced', $serpTaskPayload);
 
         $serp = $this->extractSerp($serpTask);
 
         return [
             'keyword' => $normalizedKeyword,
-            'country' => 'sa',
-            'country_name' => 'السعودية',
+            'country' => $normalizedCountry,
+            'country_name' => $this->countryLabel($normalizedCountry),
+            'language' => $normalizedLanguage,
+            'language_name' => $this->languageLabel($normalizedLanguage),
             'device' => $normalizedDevice,
             'metrics' => $keywordMetrics['metrics'],
             'trend' => $keywordMetrics['trend'],
@@ -108,7 +113,7 @@ final class DataForSeoClient
         return [
             'domain' => $normalizedDomain,
             'country' => 'sa',
-            'country_name' => 'السعودية',
+            'country_name' => 'Saudi Arabia',
             'device' => $normalizedDevice,
             'overview' => $this->extractDomainOverview($overviewTask),
             'competitors' => $this->extractDomainCompetitors($competitorsTask),
@@ -152,6 +157,57 @@ final class DataForSeoClient
     private function normalizeDevice(string $device): string
     {
         return $device === 'mobile' ? 'mobile' : 'desktop';
+    }
+
+    private function normalizeCountry(string $country): string
+    {
+        return strtolower(trim($country)) === 'sa' ? 'sa' : 'sa';
+    }
+
+    private function normalizeKeywordLanguage(?string $language): ?string
+    {
+        if ($language === null) {
+            return null;
+        }
+
+        $value = strtolower(trim($language));
+        if ($value === '' || $value === 'auto') {
+            return null;
+        }
+
+        return in_array($value, ['ar', 'en'], true) ? $value : null;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function buildKeywordTargetingOptions(string $country, ?string $language): array
+    {
+        $payload = [
+            'location_name' => $country === 'sa' ? 'Saudi Arabia' : 'Saudi Arabia',
+        ];
+
+        if ($language === 'ar') {
+            $payload['language_name'] = 'Arabic';
+        } elseif ($language === 'en') {
+            $payload['language_name'] = 'English';
+        }
+
+        return $payload;
+    }
+
+    private function countryLabel(string $country): string
+    {
+        return $country === 'sa' ? 'Saudi Arabia' : strtoupper($country);
+    }
+
+    private function languageLabel(?string $language): string
+    {
+        return match ($language) {
+            'ar' => 'Arabic',
+            'en' => 'English',
+            default => 'Auto',
+        };
     }
 
     private function normalizeDomain(string $domain): string
@@ -253,7 +309,7 @@ final class DataForSeoClient
         return [
             'se_type' => (string) ($firstResult['se_type'] ?? 'google'),
             'location_name' => (string) ($firstResult['location_name'] ?? 'Saudi Arabia'),
-            'language_name' => (string) ($firstResult['language_name'] ?? 'Arabic'),
+            'language_name' => (string) ($firstResult['language_name'] ?? ''),
             'total_count' => (int) ($firstResult['items_count'] ?? count($mapped)),
             'items' => array_slice($mapped, 0, 10),
         ];
@@ -367,4 +423,3 @@ final class DataForSeoClient
         return array_slice($mapped, 0, 12);
     }
 }
-

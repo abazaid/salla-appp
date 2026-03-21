@@ -1420,6 +1420,7 @@
   async function searchKeywordResearch() {
     const keyword = document.getElementById('keyword-query')?.value.trim() || '';
     const country = document.getElementById('keyword-country')?.value || 'sa';
+    const language = document.getElementById('keyword-language')?.value || 'auto';
     const device = document.getElementById('keyword-device')?.value || 'desktop';
     const button = document.getElementById('keyword-search-btn');
     const oldText = button?.textContent || 'بحث الكلمات المفتاحية';
@@ -1440,7 +1441,7 @@
       const data = await apiFetch('/keywords/research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword, country, device }),
+        body: JSON.stringify({ keyword, country, language, device }),
       }).then((response) => response.json());
 
       if (!data.success) {

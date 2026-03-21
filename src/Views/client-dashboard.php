@@ -326,6 +326,14 @@ if ($appBasePath === '/') {
               </select>
             </div>
             <div>
+              <label for="keyword-language"><strong>لغة البحث</strong></label>
+              <select id="keyword-language">
+                <option value="auto">تلقائي (بدون تحديد)</option>
+                <option value="ar">العربية</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div>
               <label for="keyword-device"><strong>نوع المتصفح</strong></label>
               <select id="keyword-device">
                 <option value="desktop">متصفح كمبيوتر</option>
@@ -529,8 +537,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v21',
-      base + '/assets/client-dashboard.js?v=products-v21'
+      base + '/public/assets/client-dashboard.js?v=products-v22',
+      base + '/assets/client-dashboard.js?v=products-v22'
     ];
     var index = 0;
 
