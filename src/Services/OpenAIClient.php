@@ -36,7 +36,7 @@ final class OpenAIClient
         ], [
             'Authorization' => 'Bearer ' . $apiKey,
             'Accept' => 'application/json',
-        ]);
+        ], 90);
 
         $body = $response['body'];
         $text = $this->extractText($body);
@@ -69,7 +69,7 @@ final class OpenAIClient
         ], [
             'Authorization' => 'Bearer ' . $apiKey,
             'Accept' => 'application/json',
-        ]);
+        ], 90);
 
         $body = $response['body'];
         $text = $this->extractText($body);
@@ -165,7 +165,7 @@ final class OpenAIClient
         ], [
             'Authorization' => 'Bearer ' . $apiKey,
             'Accept' => 'application/json',
-        ]);
+        ], 90);
 
         $body = $response['body'];
         $text = trim($this->extractText($body));
@@ -243,7 +243,7 @@ final class OpenAIClient
         ], [
             'Authorization' => 'Bearer ' . $apiKey,
             'Accept' => 'application/json',
-        ]);
+        ], 90);
 
         $body = $response['body'];
         $text = $this->extractText($body);
