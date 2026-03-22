@@ -302,6 +302,7 @@ final class ProductController
         $existingSitemapUrl = $this->normalizeSitemapUrl((string) ($currentSettings['sitemap_url'] ?? ''));
         $newSitemapUrl = (string) ($normalized['sitemap_url'] ?? '');
         $sitemapWasTouched = is_array($input) && array_key_exists('sitemap_url', $input);
+        $sitemapRefreshRequested = is_array($input) && (bool) ($input['refresh_sitemap_url'] ?? false);
         $sitemapUrlChanged = $newSitemapUrl !== $existingSitemapUrl;
         $sitemapInfoMessage = '';
 
@@ -316,9 +317,11 @@ final class ProductController
             $cachedLinks = is_array($currentSettings['sitemap_links_cache'] ?? null)
                 ? (array) $currentSettings['sitemap_links_cache']
                 : [];
-            // Only fetch sitemap links when URL changed, or when no cache exists yet.
-            // This avoids re-fetching sitemap on unrelated settings saves.
-            $shouldFetch = $sitemapUrlChanged || $cachedLinks === [];
+            // Fetch sitemap links only when sitemap URL is explicitly changed,
+            // or when the client explicitly asks to refresh sitemap cache.
+            // This prevents unrelated settings saves (e.g., store SEO instructions)
+            // from failing بسبب مشاكل قراءة السايت ماب.
+            $shouldFetch = ($sitemapWasTouched && $sitemapUrlChanged) || $sitemapRefreshRequested;
 
             if ($shouldFetch) {
                 try {
