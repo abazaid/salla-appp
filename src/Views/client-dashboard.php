@@ -282,6 +282,7 @@ if ($appBasePath === '/') {
             <p class="muted" style="margin:0;">عدّل عنوان ووصف المتجر يدويًا أو أنشئهما بالذكاء الاصطناعي ثم احفظ مباشرة في سلة.</p>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="save-store-seo-instructions" class="btn btn-secondary" type="button">حفظ تعليمات سيو المتجر</button>
             <button id="generate-store-seo" class="btn btn-sky" type="button">إنشاء بالذكاء الاصطناعي</button>
             <button id="save-store-seo" class="btn" type="button">حفظ في المتجر</button>
           </div>
@@ -648,7 +649,7 @@ if ($appBasePath === '/') {
       <div>
         <div class="pill">ALT الصور</div>
         <h2 id="image-alt-title" style="margin:10px 0 6px;">كاتب النص البديل</h2>
-        <p id="image-alt-subtitle" class="muted" style="margin:0;">اكتب وصف ALT كمحترف سيو: وصف واضح ودقيق (بحد أقصى 60 حرفًا) ثم احفظه في المتجر.</p>
+        <p id="image-alt-subtitle" class="muted" style="margin:0;">اكتب وصف ALT كمحترف سيو: وصف واضح ودقيق (بحد أقصى 70 حرفًا) ثم احفظه في المتجر.</p>
       </div>
       <button id="close-image-alt" class="btn btn-secondary" type="button">إغلاق</button>
     </div>

@@ -150,7 +150,7 @@ final class OpenAIClient
                     'content' => [
                         [
                             'type' => 'input_text',
-                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Maximum length: 60 characters.\n- Mention the product clearly and naturally.\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n"
+                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Length target: 55-70 characters.\n- Mention the product clearly and naturally.\n- Must be a complete, readable phrase (not cut off).\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n"
                                 . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
                                 . $this->buildInstructionBlock('Image ALT instructions', $imageAltInstructions)
                                 . "\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
@@ -174,7 +174,7 @@ final class OpenAIClient
             throw new RuntimeException('OpenAI returned an empty image alt text.');
         }
 
-        $text = $this->limitText($text, 60);
+        $text = $this->limitAtWordBoundary($text, 70);
 
         $usage = is_array($body['usage'] ?? null) ? $body['usage'] : [];
 
@@ -362,6 +362,29 @@ final class OpenAIClient
         }
 
         return rtrim(substr($value, 0, $maxLength));
+    }
+
+    private function limitAtWordBoundary(string $value, int $maxLength): string
+    {
+        $value = trim($value);
+        if ($value === '' || $maxLength <= 0) {
+            return '';
+        }
+
+        $limited = $this->limitText($value, $maxLength);
+        if ($limited === $value) {
+            return $limited;
+        }
+
+        $chunks = preg_split('/\s+/u', $limited) ?: [];
+        if (count($chunks) <= 1) {
+            return $limited;
+        }
+
+        array_pop($chunks);
+        $wordSafe = trim(implode(' ', $chunks));
+
+        return $wordSafe !== '' ? $wordSafe : $limited;
     }
 
     private function buildContentPrompt(array $product, array $settings, string $mode): array

@@ -302,6 +302,7 @@ final class ProductController
         $existingSitemapUrl = $this->normalizeSitemapUrl((string) ($currentSettings['sitemap_url'] ?? ''));
         $newSitemapUrl = (string) ($normalized['sitemap_url'] ?? '');
         $sitemapWasTouched = is_array($input) && array_key_exists('sitemap_url', $input);
+        $sitemapUrlChanged = $newSitemapUrl !== $existingSitemapUrl;
         $sitemapInfoMessage = '';
 
         if ($newSitemapUrl === '') {
@@ -315,7 +316,9 @@ final class ProductController
             $cachedLinks = is_array($currentSettings['sitemap_links_cache'] ?? null)
                 ? (array) $currentSettings['sitemap_links_cache']
                 : [];
-            $shouldFetch = $sitemapWasTouched || $newSitemapUrl !== $existingSitemapUrl || $cachedLinks === [];
+            // Only fetch sitemap links when URL changed, or when no cache exists yet.
+            // This avoids re-fetching sitemap on unrelated settings saves.
+            $shouldFetch = $sitemapUrlChanged || $cachedLinks === [];
 
             if ($shouldFetch) {
                 try {
@@ -428,13 +431,20 @@ final class ProductController
             return;
         }
 
+        $settings = is_array($store['settings'] ?? null) ? (array) $store['settings'] : [];
+        $languageCode = $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? ''));
+        if ($languageCode === '') {
+            $languageCode = 'ar';
+        }
+
         try {
-            $seoResponse = (new SallaApiClient())->getSeoSettings($accessToken);
+            $seoResponse = (new SallaApiClient())->getSeoSettings($accessToken, $languageCode);
             $seo = $this->extractStoreSeoFields($seoResponse);
             Response::json([
                 'success' => true,
                 'merchant_id' => $store['merchant_id'] ?? null,
                 'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
+                'language_code' => $languageCode,
                 'seo' => $seo,
                 'raw' => $seoResponse,
             ]);
@@ -751,6 +761,10 @@ final class ProductController
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
         $settings = $store['settings'] ?? [];
+        $languageCode = $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? ''));
+        if ($languageCode === '') {
+            $languageCode = 'ar';
+        }
 
         if (!$accessToken) {
             Response::json([
@@ -762,7 +776,7 @@ final class ProductController
 
         try {
             $client = new SallaApiClient();
-            $seoResponse = $client->getSeoSettings($accessToken);
+            $seoResponse = $client->getSeoSettings($accessToken, $languageCode);
             $currentSeo = $this->extractStoreSeoFields($seoResponse);
             $productsResponse = $client->listProducts($accessToken);
             $products = is_array($productsResponse['data'] ?? null) ? $productsResponse['data'] : [];
@@ -799,6 +813,7 @@ final class ProductController
                 'optimized_title' => $this->normalizeStoreSeoTitle((string) ($generated['title'] ?? '')),
                 'optimized_description' => $this->normalizeStoreSeoDescription((string) ($generated['description'] ?? '')),
                 'optimized_keywords' => $this->normalizeStoreSeoKeywords((string) ($generated['keywords'] ?? '')),
+                'language_code' => $languageCode,
                 'subscription' => $subscriptionManager->summary($store),
             ]);
         } catch (\Throwable $exception) {
@@ -834,6 +849,12 @@ final class ProductController
         }
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
+        $settings = is_array($store['settings'] ?? null) ? (array) $store['settings'] : [];
+        $languageCode = $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? ''));
+        if ($languageCode === '') {
+            $languageCode = 'ar';
+        }
+
         $input = Request::input();
         $title = $this->normalizeStoreSeoTitle((string) ($input['title'] ?? ''));
         $description = $this->normalizeStoreSeoDescription((string) ($input['description'] ?? ''));
@@ -857,8 +878,29 @@ final class ProductController
 
         try {
             $client = new SallaApiClient();
-            $updateResponse = $client->updateSeoSettings($accessToken, $title, $description, $keywords);
-            $fetchedResponse = $client->getSeoSettings($accessToken);
+            $updateResponse = $client->updateSeoSettings($accessToken, $title, $description, $keywords, null, $languageCode);
+
+            $refreshSitemapUrl = '';
+            $updateData = is_array($updateResponse['data'] ?? null) ? (array) $updateResponse['data'] : [];
+            foreach (['refersh_sitemap', 'refresh_sitemap', 'refresh_sitemap_url'] as $refreshKey) {
+                $candidate = trim((string) ($updateData[$refreshKey] ?? ''));
+                if ($candidate !== '') {
+                    $refreshSitemapUrl = $candidate;
+                    break;
+                }
+            }
+
+            $refreshTriggered = false;
+            if ($refreshSitemapUrl !== '') {
+                try {
+                    $client->triggerSeoSitemapRefresh($accessToken, $refreshSitemapUrl, $languageCode);
+                    $refreshTriggered = true;
+                } catch (\Throwable) {
+                    $refreshTriggered = false;
+                }
+            }
+
+            $fetchedResponse = $client->getSeoSettings($accessToken, $languageCode);
             $appliedSeo = $this->extractStoreSeoFields($fetchedResponse);
 
             $titleConfirmed = $this->normalizeStoreSeoTitle((string) ($appliedSeo['title'] ?? '')) === $title;
@@ -876,6 +918,9 @@ final class ProductController
                     ],
                     'applied_seo' => $appliedSeo,
                     'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
+                    'language_code' => $languageCode,
+                    'refresh_sitemap_url' => $refreshSitemapUrl !== '' ? $refreshSitemapUrl : null,
+                    'refresh_triggered' => $refreshTriggered,
                     'update_response' => $updateResponse,
                     'fetch_response' => $fetchedResponse,
                     'subscription' => $subscriptionManager->summary($store),
@@ -892,6 +937,9 @@ final class ProductController
                 'keywords' => (string) ($appliedSeo['keywords'] ?? ''),
                 'applied_seo' => $appliedSeo,
                 'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
+                'language_code' => $languageCode,
+                'refresh_sitemap_url' => $refreshSitemapUrl !== '' ? $refreshSitemapUrl : null,
+                'refresh_triggered' => $refreshTriggered,
                 'salla_response' => $updateResponse,
                 'subscription' => $subscriptionManager->summary($store),
             ]);

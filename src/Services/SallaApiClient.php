@@ -154,9 +154,9 @@ final class SallaApiClient
         return $this->normalizeAltForSalla($fallback);
     }
 
-    public function getSeoSettings(string $accessToken): array
+    public function getSeoSettings(string $accessToken, string $languageCode = 'ar'): array
     {
-        $response = $this->httpClient->get(self::API_BASE . '/seo', $this->headers($accessToken));
+        $response = $this->httpClient->get(self::API_BASE . '/seo', $this->headers($accessToken, $languageCode));
         return $response['body'];
     }
 
@@ -165,7 +165,8 @@ final class SallaApiClient
         string $title,
         string $description,
         string $keywords = '',
-        ?bool $friendlyUrlsStatus = null
+        ?bool $friendlyUrlsStatus = null,
+        string $languageCode = 'ar'
     ): array {
         $payload = [
             'title' => $title,
@@ -177,15 +178,32 @@ final class SallaApiClient
             $payload['friendly_urls_status'] = $friendlyUrlsStatus;
         }
 
-        $response = $this->httpClient->put(self::API_BASE . '/seo', $payload, $this->headers($accessToken));
+        $response = $this->httpClient->put(self::API_BASE . '/seo', $payload, $this->headers($accessToken, $languageCode));
         return $response['body'];
     }
 
-    private function headers(string $accessToken): array
+    public function triggerSeoSitemapRefresh(string $accessToken, string $refreshUrl, string $languageCode = 'ar'): array
     {
+        $refreshUrl = trim($refreshUrl);
+        if ($refreshUrl === '' || !str_contains($refreshUrl, '://')) {
+            return [];
+        }
+
+        $response = $this->httpClient->get($refreshUrl, $this->headers($accessToken, $languageCode));
+        return is_array($response['body'] ?? null) ? (array) $response['body'] : [];
+    }
+
+    private function headers(string $accessToken, string $languageCode = 'ar'): array
+    {
+        $languageCode = in_array(strtolower(trim($languageCode)), ['ar', 'en'], true)
+            ? strtolower(trim($languageCode))
+            : 'ar';
+
         return [
             'Authorization' => 'Bearer ' . $accessToken,
             'Accept' => 'application/json',
+            'Accept-Language' => $languageCode,
+            'Content-Language' => $languageCode,
         ];
     }
 
@@ -203,12 +221,11 @@ final class SallaApiClient
             return '';
         }
 
-        // Hard cap for both character-count and UTF-8 byte-count to avoid provider-side validation mismatch.
+        // Salla validation is effectively character-based for ALT (up to 70 chars).
+        // Avoid byte-based truncation because it over-shortens Arabic text.
         while ($value !== '') {
             $charsOk = function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') <= 70 : strlen($value) <= 70;
-            $bytesOk = strlen($value) <= 70;
-
-            if ($charsOk && $bytesOk) {
+            if ($charsOk) {
                 break;
             }
 
@@ -231,8 +248,9 @@ final class SallaApiClient
         }
 
         $candidates = [];
-        foreach ([60, 50, 35, 25] as $maxBytes) {
-            $candidate = $this->limitByUtf8Bytes($clean, $maxBytes);
+        // Keep retries near the accepted ceiling without collapsing Arabic length.
+        foreach ([70, 65, 60, 55, 50] as $maxChars) {
+            $candidate = $this->limitByChars($clean, $maxChars);
             $candidate = $this->normalizeAltForSalla($candidate);
             if ($candidate !== '') {
                 $candidates[] = $candidate;
@@ -242,23 +260,26 @@ final class SallaApiClient
         return array_values(array_unique($candidates));
     }
 
-    private function limitByUtf8Bytes(string $value, int $maxBytes): string
+    private function limitByChars(string $value, int $maxChars): string
     {
         $value = trim($value);
-        if ($value === '' || $maxBytes <= 0) {
+        if ($value === '' || $maxChars <= 0) {
             return '';
         }
 
-        while ($value !== '' && strlen($value) > $maxBytes) {
-            if (function_exists('mb_substr') && function_exists('mb_strlen')) {
-                $len = mb_strlen($value, 'UTF-8');
-                $value = rtrim(mb_substr($value, 0, max(0, $len - 1), 'UTF-8'));
-            } else {
-                $value = rtrim(substr($value, 0, max(0, strlen($value) - 1)));
+        if (function_exists('mb_substr') && function_exists('mb_strlen')) {
+            if (mb_strlen($value, 'UTF-8') <= $maxChars) {
+                return $value;
             }
+
+            return trim(mb_substr($value, 0, $maxChars, 'UTF-8'));
         }
 
-        return trim($value);
+        if (strlen($value) <= $maxChars) {
+            return $value;
+        }
+
+        return trim(substr($value, 0, $maxChars));
     }
 
     private function isSallaAltValidationError(string $message): bool

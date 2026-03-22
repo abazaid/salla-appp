@@ -681,7 +681,7 @@
     }
 
     title.textContent = editor.productName || 'كاتب ALT';
-    subtitle.textContent = 'اكتب وصف ALT كمحترف سيو: وصف واضح، طبيعي، ودقيق (حتى 60 حرفًا).';
+    subtitle.textContent = 'اكتب وصف ALT كمحترف سيو: وصف واضح، طبيعي، ودقيق (حتى 70 حرفًا).';
     alert.innerHTML = editor.notice ? `<div class="notice ${editor.notice.type}">${escapeHtml(editor.notice.message)}</div>` : '';
 
     const rows = editor.images.map((image) => {
@@ -702,7 +702,7 @@
             <label><strong>ALT الحالي</strong></label>
             <textarea readonly rows="2">${escapeHtml(image.current_alt || '')}</textarea>
             <label><strong>ALT بعد التحسين</strong></label>
-            <textarea rows="2" maxlength="60" placeholder="اكتب وصف ALT كمحترف سيو (حتى 60 حرفًا)" data-alt-image-value="${image.image_id}">${escapeHtml(image.optimized_alt || '')}</textarea>
+            <textarea rows="2" maxlength="70" placeholder="اكتب وصف ALT كمحترف سيو (حتى 70 حرفًا)" data-alt-image-value="${image.image_id}">${escapeHtml(image.optimized_alt || '')}</textarea>
           </div>
         </div>
       </div>
@@ -1129,6 +1129,70 @@
     if (document.getElementById('store-seo-keywords-count')) document.getElementById('store-seo-keywords-count').textContent = `${keywords.length} حرف`;
   }
 
+  async function persistStoreSeoInstructions(options = {}) {
+    const {
+      showSuccess = true,
+      showProgress = true,
+      button = null
+    } = options;
+
+    const oldText = button?.textContent || 'حفظ تعليمات سيو المتجر';
+    const payload = {
+      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || '',
+      output_language: getOutputLanguage('products') || ''
+    };
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+
+    if (showProgress) {
+      setStoreSeoAlert('success', 'جاري حفظ تعليمات سيو المتجر...');
+    }
+
+    try {
+      const response = await apiFetch('/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ تعليمات سيو المتجر.'));
+        return false;
+      }
+
+      if (data.settings) {
+        fillOptimizationSettings(data.settings);
+      }
+
+      if (showSuccess) {
+        setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ تعليمات سيو المتجر.'));
+      }
+
+      return true;
+    } catch (error) {
+      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ تعليمات سيو المتجر.');
+      return false;
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  async function saveStoreSeoInstructions() {
+    const button = document.getElementById('save-store-seo-instructions');
+    await persistStoreSeoInstructions({
+      showSuccess: true,
+      showProgress: true,
+      button
+    });
+  }
+
   function setOptimizationSettingsAlert(type, message, source = 'products') {
     const root = source === 'alt'
       ? document.getElementById('optimization-settings-alt-alert')
@@ -1254,6 +1318,18 @@
     if (button) {
       button.disabled = true;
       button.textContent = 'جاري التوليد...';
+    }
+
+    const saved = await persistStoreSeoInstructions({
+      showSuccess: false,
+      showProgress: false
+    });
+    if (!saved) {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+      return;
     }
 
     setStoreSeoAlert('success', 'جاري إنشاء سيو المتجر...');
@@ -2673,6 +2749,7 @@
     });
     document.getElementById('generate-store-seo')?.addEventListener('click', optimizeStoreSeo);
     document.getElementById('save-store-seo')?.addEventListener('click', saveStoreSeo);
+    document.getElementById('save-store-seo-instructions')?.addEventListener('click', saveStoreSeoInstructions);
     document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
