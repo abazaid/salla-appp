@@ -358,6 +358,44 @@ final class ProductController
         ]);
     }
 
+    public function saveStoreSeoInstructions(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $input = Request::input();
+        $currentSettings = (array) ($store['settings'] ?? []);
+        $updatedSettings = $currentSettings;
+
+        $updatedSettings['store_seo_instructions'] = $this->normalizeOptimizationText(
+            (string) ($input['store_seo_instructions'] ?? ($currentSettings['store_seo_instructions'] ?? '')),
+            5000
+        );
+
+        if (is_array($input) && array_key_exists('output_language', $input)) {
+            $updatedSettings['output_language'] = $this->normalizeOutputLanguage((string) ($input['output_language'] ?? ''));
+        } elseif (!array_key_exists('output_language', $updatedSettings)) {
+            $updatedSettings['output_language'] = '';
+        }
+
+        (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
+            'settings' => $updatedSettings,
+        ]);
+
+        Response::json([
+            'success' => true,
+            'message' => 'تم حفظ تعليمات سيو المتجر.',
+            'settings' => $this->normalizeOptimizationSettings($updatedSettings),
+        ]);
+    }
+
     public function operations(): void
     {
         $store = $this->resolveStore();

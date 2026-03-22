@@ -1152,7 +1152,7 @@
     }
 
     try {
-      const response = await apiFetch('/settings/save', {
+      const response = await apiFetch('/store-seo/instructions/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

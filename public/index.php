@@ -50,6 +50,7 @@ $router->post('/api/domain-seo/refresh', [ProductController::class, 'refreshDoma
 $router->get('/api/domain-seo/history', [ProductController::class, 'domainSeoHistory']);
 $router->get('/api/store-seo', [ProductController::class, 'storeSeo']);
 $router->post('/api/store-seo/optimize', [ProductController::class, 'optimizeStoreSeo']);
+$router->post('/api/store-seo/instructions/save', [ProductController::class, 'saveStoreSeoInstructions']);
 $router->post('/api/store-seo/save', [ProductController::class, 'saveStoreSeo']);
 $router->post('/api/products/alt/bulk', [ProductController::class, 'bulkOptimizeVisibleImagesAlt']);
 $router->post('/api/products/{id}/optimize', [ProductController::class, 'optimize']);
