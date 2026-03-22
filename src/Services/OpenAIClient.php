@@ -477,7 +477,7 @@ final class OpenAIClient
 
             foreach ($tokens as $token) {
                 $token = is_string($token) ? trim($token) : (string) $token;
-                if ($token !== '' && str_contains($haystack, $token)) {
+                if ($token !== '' && $this->containsText($haystack, $token)) {
                     $length = function_exists('mb_strlen') ? mb_strlen($token, 'UTF-8') : strlen($token);
                     $score += $length >= 5 ? 8 : 4;
                 }
@@ -679,5 +679,16 @@ final class OpenAIClient
     private function escapeHtml(string $value): string
     {
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function containsText(mixed $haystack, mixed $needle): bool
+    {
+        $haystackText = is_string($haystack) ? $haystack : (string) $haystack;
+        $needleText = is_string($needle) ? $needle : (string) $needle;
+        if ($needleText === '') {
+            return false;
+        }
+
+        return strpos($haystackText, $needleText) !== false;
     }
 }
