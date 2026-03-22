@@ -476,6 +476,7 @@ final class OpenAIClient
             }
 
             foreach ($tokens as $token) {
+                $token = is_string($token) ? trim($token) : (string) $token;
                 if ($token !== '' && str_contains($haystack, $token)) {
                     $length = function_exists('mb_strlen') ? mb_strlen($token, 'UTF-8') : strlen($token);
                     $score += $length >= 5 ? 8 : 4;
@@ -546,6 +547,10 @@ final class OpenAIClient
             $token = trim($part);
             $length = function_exists('mb_strlen') ? mb_strlen($token, 'UTF-8') : strlen($token);
             if ($token === '' || $length < 3) {
+                continue;
+            }
+            // Skip pure numeric tokens (e.g. sizes like 36/110) to avoid noisy matching.
+            if (preg_match('/^\d+$/', $token) === 1) {
                 continue;
             }
             if (isset($stop[$token])) {
