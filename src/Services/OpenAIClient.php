@@ -93,10 +93,13 @@ final class OpenAIClient
         $metadataDescription = trim((string) ($decoded['metadata_description'] ?? ''));
 
         if ($mode === 'description') {
+            $description = $this->ensureSallaHtmlDescription($description);
             $metadataTitle = $currentMetadataTitle;
             $metadataDescription = $currentMetadataDescription;
         } elseif ($mode === 'seo') {
             $description = $currentDescription;
+        } else {
+            $description = $this->ensureSallaHtmlDescription($description);
         }
 
         $usage = is_array($body['usage'] ?? null) ? $body['usage'] : [];
@@ -319,7 +322,7 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => 'You write ecommerce product descriptions for Salla merchants. Keep the copy accurate, persuasive, concise, and free of fabricated claims. Return only the final product description text without headings, JSON, or markdown fences.',
+                        'text' => 'You write ecommerce product descriptions for Salla merchants. Keep the copy accurate and factual. Return only clean HTML that can be pasted directly into Salla editor. Use only tags: <h2>, <p>, <ul>, <li>, <strong>, <a>. Never use markdown, never write "H2:" labels.',
                     ],
                 ],
             ],
@@ -328,7 +331,8 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => "Generate an improved product description in language={$language}. Focus on benefits, clarity, and conversion while staying faithful to the provided product data.\n"
+                            'text' => "Generate an improved product description in language={$language}. Focus on benefits, clarity, and conversion while staying faithful to the provided product data.\nRules:\n- Output must be valid HTML sections for Salla editor.\n- Use <h2> for section titles, <p> for paragraphs, and <ul><li> for feature lists.\n- Use <a href=\"...\">...</a> only for internal links if provided.\n- No markdown, no plain labels like H2:, no fabricated specs.\n"
+                            . $this->buildInstructionBlock('Internal links rule', $this->buildInternalLinksPromptBlock($product, $settings, true))
                             . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
                             . $this->buildInstructionBlock('Product description instructions', $productInstructions)
                             . "\nProduct:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
@@ -396,7 +400,7 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => 'You write ecommerce product copy for Salla merchants. Return valid JSON only with keys: description, metadata_title, metadata_description. Keep claims accurate, make metadata_title concise, and keep metadata_description SEO-friendly within about 160 characters.',
+                        'text' => 'You write ecommerce product copy for Salla merchants. Return valid JSON only with keys: description, metadata_title, metadata_description. Keep claims accurate. Description must be clean Salla-ready HTML (only <h2>, <p>, <ul>, <li>, <strong>, <a>) with no markdown and no plain "H2:" labels. metadata_title concise. metadata_description SEO-friendly within about 160 characters.',
                     ],
                 ],
             ],
@@ -405,7 +409,8 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => "Generate improved product content in language={$language}. {$modeInstruction} Return JSON only.\n"
+                            'text' => "Generate improved product content in language={$language}. {$modeInstruction} Return JSON only.\nRules for description field (if generated):\n- Must be valid HTML sections.\n- Use <h2> titles, <p> paragraphs, <ul><li> for bullets.\n- Use <a href=\"...\">...</a> only for internal links if provided.\n- Do not return markdown, do not use plain labels like H2:.\n"
+                            . $this->buildInstructionBlock('Internal links rule', $this->buildInternalLinksPromptBlock($product, $settings, $mode !== 'seo'))
                             . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
                             . $this->buildInstructionBlock('Product description instructions', $productInstructions)
                             . $this->buildInstructionBlock('Meta title instructions', $metaTitleInstructions)
@@ -427,6 +432,168 @@ final class OpenAIClient
         return "\n{$label}:\n{$instructions}\n";
     }
 
+    /**
+     * @return array<int, array{url:string,title:string,type:string,score:int}>
+     */
+    private function pickRelevantSitemapLinks(array $product, array $settings, int $max = 3): array
+    {
+        $rows = is_array($settings['sitemap_links_cache'] ?? null)
+            ? (array) $settings['sitemap_links_cache']
+            : [];
+
+        if ($rows === [] || $max <= 0) {
+            return [];
+        }
+
+        $tokens = $this->extractKeywordsFromProduct($product);
+        $currentUrl = trim((string) ($product['url'] ?? ($product['urls']['customer'] ?? '')));
+        $scored = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $url = trim((string) ($row['url'] ?? ''));
+            if ($url === '' || ($currentUrl !== '' && strcasecmp($currentUrl, $url) === 0)) {
+                continue;
+            }
+
+            $type = trim((string) ($row['type'] ?? 'page'));
+            if (!in_array($type, ['product', 'category', 'page'], true)) {
+                $type = 'page';
+            }
+            $title = trim((string) ($row['title'] ?? ''));
+            $haystack = $this->normalizeComparableText($title . ' ' . $url);
+
+            $score = 0;
+            if ($type === 'category') {
+                $score += 20;
+            } elseif ($type === 'product') {
+                $score += 12;
+            } else {
+                $score += 6;
+            }
+
+            foreach ($tokens as $token) {
+                if ($token !== '' && str_contains($haystack, $token)) {
+                    $length = function_exists('mb_strlen') ? mb_strlen($token, 'UTF-8') : strlen($token);
+                    $score += $length >= 5 ? 8 : 4;
+                }
+            }
+
+            if ($score <= 6) {
+                continue;
+            }
+
+            $scored[] = [
+                'url' => $url,
+                'title' => $title,
+                'type' => $type,
+                'score' => $score,
+            ];
+        }
+
+        if ($scored === []) {
+            return [];
+        }
+
+        usort($scored, static fn (array $a, array $b): int => $b['score'] <=> $a['score']);
+
+        $deduped = [];
+        $seen = [];
+        foreach ($scored as $row) {
+            $key = strtolower($row['url']);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $deduped[] = $row;
+            if (count($deduped) >= $max) {
+                break;
+            }
+        }
+
+        return $deduped;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractKeywordsFromProduct(array $product): array
+    {
+        $source = trim(implode(' ', [
+            (string) ($product['name'] ?? ''),
+            strip_tags((string) ($product['description'] ?? '')),
+            (string) ($product['metadata']['title'] ?? ''),
+            (string) ($product['metadata']['description'] ?? ''),
+        ]));
+
+        if ($source === '') {
+            return [];
+        }
+
+        $source = $this->normalizeComparableText($source);
+        $parts = preg_split('/\s+/u', $source) ?: [];
+        $stopWords = [
+            'the', 'and', 'for', 'with', 'this', 'that', 'from', 'your',
+            'على', 'من', 'إلى', 'في', 'عن', 'هذا', 'هذه', 'مع', 'أو', 'و', 'ثم', 'الى'
+        ];
+        $stop = array_fill_keys($stopWords, true);
+        $tokens = [];
+
+        foreach ($parts as $part) {
+            $token = trim($part);
+            $length = function_exists('mb_strlen') ? mb_strlen($token, 'UTF-8') : strlen($token);
+            if ($token === '' || $length < 3) {
+                continue;
+            }
+            if (isset($stop[$token])) {
+                continue;
+            }
+            $tokens[$token] = true;
+            if (count($tokens) >= 18) {
+                break;
+            }
+        }
+
+        return array_keys($tokens);
+    }
+
+    private function normalizeComparableText(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            $value = mb_strtolower($value, 'UTF-8');
+        } else {
+            $value = strtolower($value);
+        }
+        $value = preg_replace('/[^\p{L}\p{N}\s\-\/]/u', ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+        return trim($value);
+    }
+
+    private function buildInternalLinksPromptBlock(array $product, array $settings, bool $descriptionMode): string
+    {
+        if (!$descriptionMode) {
+            return '';
+        }
+
+        $links = $this->pickRelevantSitemapLinks($product, $settings, 3);
+        if ($links === []) {
+            return 'If no internal links list is provided, skip internal links and continue normally.';
+        }
+
+        $rows = [];
+        foreach ($links as $index => $link) {
+            $label = $link['title'] !== '' ? $link['title'] : ('Link ' . ($index + 1));
+            $rows[] = '- ' . $label . ' | ' . $link['url'] . ' | type=' . $link['type'];
+        }
+
+        return "Use exactly 2-3 relevant internal links from this list inside the description body (never external links, never the same link repeated):\n"
+            . implode("\n", $rows)
+            . "\nPlace links naturally in suitable sections using HTML anchor tags.";
+    }
+
     private function extractText(array $body): string
     {
         if (isset($body['output_text']) && is_string($body['output_text'])) {
@@ -444,5 +611,68 @@ final class OpenAIClient
         }
 
         return trim(implode("\n", $chunks));
+    }
+
+    private function ensureSallaHtmlDescription(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/<(h2|p|ul|li|strong)\b/i', $value) === 1) {
+            return $value;
+        }
+
+        $lines = preg_split('/\R/u', $value) ?: [];
+        $html = [];
+        $inList = false;
+
+        foreach ($lines as $line) {
+            $line = trim((string) $line);
+            if ($line === '') {
+                if ($inList) {
+                    $html[] = '</ul>';
+                    $inList = false;
+                }
+                continue;
+            }
+
+            if (preg_match('/^H2\s*[:\-]\s*(.+)$/iu', $line, $matches) === 1 || preg_match('/^##\s*(.+)$/u', $line, $matches) === 1) {
+                if ($inList) {
+                    $html[] = '</ul>';
+                    $inList = false;
+                }
+                $html[] = '<h2>' . $this->escapeHtml(trim((string) $matches[1])) . '</h2>';
+                continue;
+            }
+
+            if (preg_match('/^[-*•]\s+(.+)$/u', $line, $matches) === 1 || preg_match('/^\d+[\.\)\-]\s+(.+)$/u', $line, $matches) === 1) {
+                if (!$inList) {
+                    $html[] = '<ul>';
+                    $inList = true;
+                }
+                $html[] = '<li>' . $this->escapeHtml(trim((string) $matches[1])) . '</li>';
+                continue;
+            }
+
+            if ($inList) {
+                $html[] = '</ul>';
+                $inList = false;
+            }
+
+            $html[] = '<p>' . $this->escapeHtml($line) . '</p>';
+        }
+
+        if ($inList) {
+            $html[] = '</ul>';
+        }
+
+        return trim(implode("\n", $html));
+    }
+
+    private function escapeHtml(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }

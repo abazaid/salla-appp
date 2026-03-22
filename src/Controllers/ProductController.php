@@ -11,6 +11,7 @@ use App\Services\OpenAIClient;
 use App\Services\ProductContentOptimizer;
 use App\Services\DataForSeoClient;
 use App\Services\SallaApiClient;
+use App\Services\SitemapService;
 use App\Services\SubscriptionManager;
 use App\Support\Database;
 use App\Support\Request;
@@ -195,9 +196,10 @@ final class ProductController
             $metadataDescriptionToSave = null;
 
             if ($mode === 'description') {
-                // Preserve SEO metadata exactly as-is when user requested description-only optimization.
-                $metadataTitleToSave = (string) ($product['metadata']['title'] ?? '');
-                $metadataDescriptionToSave = (string) ($product['metadata']['description'] ?? '');
+                // Do not send SEO metadata fields at all in description-only mode.
+                // This guarantees Salla won't mutate metadata based on description updates.
+                $metadataTitleToSave = null;
+                $metadataDescriptionToSave = null;
             } elseif (in_array($mode, ['seo', 'all'], true)) {
                 $metadataTitleToSave = $finalMetadataTitle !== '' ? $finalMetadataTitle : null;
                 $metadataDescriptionToSave = $finalMetadataDescription !== '' ? $finalMetadataDescription : null;
@@ -291,25 +293,62 @@ final class ProductController
             return;
         }
 
-        $normalized = $this->normalizeOptimizationSettings([
-            'output_language' => Request::input()['output_language'] ?? '',
-            'global_instructions' => Request::input()['global_instructions'] ?? '',
-            'product_description_instructions' => Request::input()['product_description_instructions'] ?? '',
-            'meta_title_instructions' => Request::input()['meta_title_instructions'] ?? '',
-            'meta_description_instructions' => Request::input()['meta_description_instructions'] ?? '',
-            'image_alt_instructions' => Request::input()['image_alt_instructions'] ?? '',
-            'store_seo_instructions' => Request::input()['store_seo_instructions'] ?? '',
-        ]);
+        $currentSettings = (array) ($store['settings'] ?? []);
+        $input = Request::input();
+        $mergedInput = array_merge($currentSettings, is_array($input) ? $input : []);
+        $normalized = $this->normalizeOptimizationSettings($mergedInput);
+        $mergedSettings = array_merge($currentSettings, $normalized);
 
-        $mergedSettings = array_merge((array) ($store['settings'] ?? []), $normalized);
+        $existingSitemapUrl = $this->normalizeSitemapUrl((string) ($currentSettings['sitemap_url'] ?? ''));
+        $newSitemapUrl = (string) ($normalized['sitemap_url'] ?? '');
+        $sitemapWasTouched = is_array($input) && array_key_exists('sitemap_url', $input);
+        $sitemapInfoMessage = '';
+
+        if ($newSitemapUrl === '') {
+            $mergedSettings['sitemap_links_cache'] = [];
+            $mergedSettings['sitemap_links_count'] = 0;
+            $mergedSettings['sitemap_last_fetched_at'] = '';
+            if ($sitemapWasTouched) {
+                $sitemapInfoMessage = 'تم حذف ربط السايت ماب.';
+            }
+        } else {
+            $cachedLinks = is_array($currentSettings['sitemap_links_cache'] ?? null)
+                ? (array) $currentSettings['sitemap_links_cache']
+                : [];
+            $shouldFetch = $sitemapWasTouched || $newSitemapUrl !== $existingSitemapUrl || $cachedLinks === [];
+
+            if ($shouldFetch) {
+                try {
+                    $sitemap = (new SitemapService())->fetchAndParse($newSitemapUrl);
+                    $mergedSettings['sitemap_links_cache'] = $sitemap['links'];
+                    $mergedSettings['sitemap_links_count'] = (int) ($sitemap['links_count'] ?? 0);
+                    $mergedSettings['sitemap_last_fetched_at'] = (string) ($sitemap['fetched_at'] ?? date(DATE_ATOM));
+                    $sitemapInfoMessage = 'تم جلب روابط السايت ماب بنجاح: ' . ((int) ($sitemap['links_count'] ?? 0)) . ' رابط.';
+                } catch (\Throwable $exception) {
+                    Response::json([
+                        'success' => false,
+                        'message' => 'تعذر قراءة السايت ماب: ' . $this->humanizeProviderError($exception->getMessage()),
+                    ], 422);
+                    return;
+                }
+            } else {
+                $mergedSettings['sitemap_links_cache'] = $cachedLinks;
+                $mergedSettings['sitemap_links_count'] = (int) ($currentSettings['sitemap_links_count'] ?? count($cachedLinks));
+                $mergedSettings['sitemap_last_fetched_at'] = (string) ($currentSettings['sitemap_last_fetched_at'] ?? '');
+            }
+        }
+
         (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
             'settings' => $mergedSettings,
         ]);
 
+        $responseSettings = $this->normalizeOptimizationSettings($mergedSettings);
         Response::json([
             'success' => true,
-            'message' => 'Optimization settings saved.',
-            'settings' => $normalized,
+            'message' => $sitemapInfoMessage !== ''
+                ? ('Optimization settings saved. ' . $sitemapInfoMessage)
+                : 'Optimization settings saved.',
+            'settings' => $responseSettings,
         ]);
     }
 
@@ -390,11 +429,14 @@ final class ProductController
         }
 
         try {
-            $seo = (new SallaApiClient())->getSeoSettings($accessToken);
+            $seoResponse = (new SallaApiClient())->getSeoSettings($accessToken);
+            $seo = $this->extractStoreSeoFields($seoResponse);
             Response::json([
                 'success' => true,
                 'merchant_id' => $store['merchant_id'] ?? null,
-                'seo' => $seo['data'] ?? $seo,
+                'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
+                'seo' => $seo,
+                'raw' => $seoResponse,
             ]);
         } catch (\Throwable $exception) {
             Response::json([
@@ -721,7 +763,7 @@ final class ProductController
         try {
             $client = new SallaApiClient();
             $seoResponse = $client->getSeoSettings($accessToken);
-            $currentSeo = $seoResponse['data'] ?? $seoResponse;
+            $currentSeo = $this->extractStoreSeoFields($seoResponse);
             $productsResponse = $client->listProducts($accessToken);
             $products = is_array($productsResponse['data'] ?? null) ? $productsResponse['data'] : [];
             $productsContext = $this->buildStoreProductsContext($products);
@@ -814,16 +856,43 @@ final class ProductController
         }
 
         try {
-            $response = (new SallaApiClient())->updateSeoSettings($accessToken, $title, $description, $keywords);
+            $client = new SallaApiClient();
+            $updateResponse = $client->updateSeoSettings($accessToken, $title, $description, $keywords);
+            $fetchedResponse = $client->getSeoSettings($accessToken);
+            $appliedSeo = $this->extractStoreSeoFields($fetchedResponse);
+
+            $titleConfirmed = $this->normalizeStoreSeoTitle((string) ($appliedSeo['title'] ?? '')) === $title;
+            $descriptionConfirmed = $this->normalizeStoreSeoDescription((string) ($appliedSeo['description'] ?? '')) === $description;
+            $keywordsConfirmed = $this->storeSeoKeywordsEquivalent((string) ($appliedSeo['keywords'] ?? ''), $keywords);
+
+            if (!$titleConfirmed || !$descriptionConfirmed || !$keywordsConfirmed) {
+                Response::json([
+                    'success' => false,
+                    'message' => 'لم يتم تأكيد حفظ سيو المتجر داخل سلة. راجع الصلاحيات أو المتجر المرتبط ثم أعد المحاولة.',
+                    'expected_seo' => [
+                        'title' => $title,
+                        'description' => $description,
+                        'keywords' => $keywords,
+                    ],
+                    'applied_seo' => $appliedSeo,
+                    'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
+                    'update_response' => $updateResponse,
+                    'fetch_response' => $fetchedResponse,
+                    'subscription' => $subscriptionManager->summary($store),
+                ], 409);
+                return;
+            }
             $store = $subscriptionManager->recordOptimization($store, 0, 'SEO المتجر', 'store_seo', 'completed');
 
             Response::json([
                 'success' => true,
                 'message' => 'Store SEO saved successfully.',
-                'title' => $title,
-                'description' => $description,
-                'keywords' => $keywords,
-                'salla_response' => $response,
+                'title' => (string) ($appliedSeo['title'] ?? ''),
+                'description' => (string) ($appliedSeo['description'] ?? ''),
+                'keywords' => (string) ($appliedSeo['keywords'] ?? ''),
+                'applied_seo' => $appliedSeo,
+                'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
+                'salla_response' => $updateResponse,
                 'subscription' => $subscriptionManager->summary($store),
             ]);
         } catch (\Throwable $exception) {
@@ -1232,6 +1301,8 @@ final class ProductController
 
     private function normalizeOptimizationSettings(array $settings): array
     {
+        $sitemapLinksCache = is_array($settings['sitemap_links_cache'] ?? null) ? (array) $settings['sitemap_links_cache'] : [];
+
         return [
             'output_language' => $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? '')),
             'global_instructions' => $this->normalizeOptimizationText((string) ($settings['global_instructions'] ?? ''), 5000),
@@ -1240,7 +1311,70 @@ final class ProductController
             'meta_description_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_description_instructions'] ?? ''), 3000),
             'image_alt_instructions' => $this->normalizeOptimizationText((string) ($settings['image_alt_instructions'] ?? ''), 3000),
             'store_seo_instructions' => $this->normalizeOptimizationText((string) ($settings['store_seo_instructions'] ?? ''), 5000),
+            'sitemap_url' => $this->normalizeSitemapUrl((string) ($settings['sitemap_url'] ?? '')),
+            'sitemap_links_count' => (int) ($settings['sitemap_links_count'] ?? count($sitemapLinksCache)),
+            'sitemap_last_fetched_at' => (string) ($settings['sitemap_last_fetched_at'] ?? ''),
         ];
+    }
+
+    private function normalizeSitemapUrl(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        if (!str_contains($value, '://')) {
+            $value = 'https://' . $value;
+        }
+
+        $parts = parse_url($value);
+        if (!is_array($parts)) {
+            return '';
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? 'https'));
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return '';
+        }
+
+        $host = strtolower(trim((string) ($parts['host'] ?? '')));
+        if ($host === '') {
+            return '';
+        }
+
+        $path = (string) ($parts['path'] ?? '');
+        if ($path === '') {
+            $path = '/sitemap.xml';
+        }
+
+        $query = isset($parts['query']) && $parts['query'] !== '' ? ('?' . $parts['query']) : '';
+        return $scheme . '://' . $host . $path . $query;
+    }
+
+    private function normalizeSitemapLinksCache(array $items): array
+    {
+        $rows = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $url = trim((string) ($item['url'] ?? ''));
+            if ($url === '') {
+                continue;
+            }
+            $title = trim((string) ($item['title'] ?? ''));
+            $type = trim((string) ($item['type'] ?? 'page'));
+            if (!in_array($type, ['product', 'category', 'page'], true)) {
+                $type = 'page';
+            }
+            $rows[] = [
+                'url' => $url,
+                'title' => $this->limitText($title, 180),
+                'type' => $type,
+            ];
+        }
+
+        return array_slice($rows, 0, 1500);
     }
 
     private function normalizeOutputLanguage(string $value): string
@@ -1459,6 +1593,73 @@ final class ProductController
         $value = trim($value);
 
         return $this->limitText($value, $maxLength);
+    }
+
+    private function extractStoreSeoFields(array $response): array
+    {
+        $payload = $response['data'] ?? $response;
+        if (is_array($payload) && isset($payload['data']) && is_array($payload['data'])) {
+            $payload = $payload['data'];
+        }
+        if (!is_array($payload)) {
+            $payload = [];
+        }
+
+        $title = (string) (
+            $payload['title']
+            ?? $payload['meta_title']
+            ?? $payload['metadata_title']
+            ?? $payload['homepage_title']
+            ?? ''
+        );
+
+        $description = (string) (
+            $payload['description']
+            ?? $payload['meta_description']
+            ?? $payload['metadata_description']
+            ?? $payload['homepage_description']
+            ?? ''
+        );
+
+        $keywordsRaw = $payload['keywords'] ?? '';
+        if (is_array($keywordsRaw)) {
+            $keywordsRaw = implode(', ', array_map(static function ($item): string {
+                return trim((string) $item);
+            }, $keywordsRaw));
+        }
+
+        return [
+            'title' => $this->normalizeStoreSeoTitle($title),
+            'description' => $this->normalizeStoreSeoDescription($description),
+            'keywords' => $this->normalizeStoreSeoKeywords((string) $keywordsRaw),
+            'friendly_urls_status' => (bool) ($payload['friendly_urls_status'] ?? false),
+            'url' => (string) ($payload['url'] ?? ''),
+        ];
+    }
+
+    private function storeSeoKeywordsEquivalent(string $a, string $b): bool
+    {
+        $normalize = function (string $value): array {
+            $value = $this->normalizeStoreSeoKeywords($value);
+            if ($value === '') {
+                return [];
+            }
+
+            $parts = preg_split('/\s*[,،]\s*/u', $value) ?: [];
+            $parts = array_values(array_filter(array_map(function (string $item): string {
+                $item = trim($item);
+                if (function_exists('mb_strtolower')) {
+                    return mb_strtolower($item, 'UTF-8');
+                }
+                return strtolower($item);
+            }, $parts), static function (string $item): bool {
+                return $item !== '';
+            }));
+            sort($parts);
+            return $parts;
+        };
+
+        return $normalize($a) === $normalize($b);
     }
 
     private function findProductImage(array $product, int $imageId): ?array

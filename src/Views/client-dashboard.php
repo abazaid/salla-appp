@@ -15,7 +15,8 @@ if ($appBasePath === '/') {
     </div>
 
     <nav class="sidebar-nav">
-      <button type="button" class="sidebar-link is-active" data-section-target="products">المنتجات</button>
+      <button type="button" class="sidebar-link is-active" data-section-target="home">الرئيسية</button>
+      <button type="button" class="sidebar-link" data-section-target="products">المنتجات</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
@@ -27,6 +28,102 @@ if ($appBasePath === '/') {
   </aside>
 
   <main class="panel-stack">
+    <section id="section-home" data-app-section="home" class="panel-stack">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">لوحة العميل</div>
+            <h1 style="margin:14px 0 10px;">مرحبًا بك في RankX SEO</h1>
+            <p class="muted" style="margin:0;max-width:980px;">
+              هذه الصفحة هي نقطة البداية: ستتعرف منها على كل أقسام المنصة، وكيف تستفيد منها خطوة بخطوة.
+              اختر القسم المناسب، نفّذ التحسين، راجع النتائج، ثم احفظ مباشرة داخل سلة.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card surface-soft stat" style="min-height:auto;">
+          <span class="stat-label">اسم المتجر</span>
+          <span class="stat-value" style="font-size:24px;line-height:1.4;"><?= htmlspecialchars($storeName, ENT_QUOTES, 'UTF-8') ?></span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;">
+          <span class="stat-label">Merchant ID</span>
+          <span class="stat-value" style="font-size:22px;"><?= htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') ?></span>
+        </div>
+        <div class="card surface-soft stat" style="min-height:auto;">
+          <span class="stat-label">الحساب</span>
+          <span class="stat-value" style="font-size:16px;line-height:1.6;"><?= htmlspecialchars($ownerEmail, ENT_QUOTES, 'UTF-8') ?></span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 8px;">قسم المنتجات</h3>
+          <p class="muted" style="margin:0 0 12px;">تحسين وصف المنتج أو سيو المنتج أو الاثنين معًا مع مراجعة قبل الحفظ.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>بحث وفلاتر متقدمة</li>
+            <li>تحسين فردي وجماعي</li>
+            <li>عرض قبل/بعد ثم حفظ في سلة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" data-home-go="products">الانتقال إلى المنتجات</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 8px;">قسم سيو المتجر</h3>
+          <p class="muted" style="margin:0 0 12px;">توليد أو تعديل عنوان المتجر، الوصف، والكلمات المفتاحية للموقع بالكامل.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>قراءة البيانات الحالية</li>
+            <li>إنشاء ذكي حسب تعليماتك</li>
+            <li>حفظ مباشر في إعدادات سلة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" data-home-go="store-seo">الانتقال إلى سيو المتجر</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 8px;">قسم كاتب ALT للصور</h3>
+          <p class="muted" style="margin:0 0 12px;">كتابة نص بديل احترافي للصور لتحسين الظهور في محركات البحث وتجربة المستخدم.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>تحسين صورة واحدة أو كل صور المنتج</li>
+            <li>حالات واضحة: محسّن/غير محسّن</li>
+            <li>حفظ ALT مباشرة داخل سلة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" data-home-go="alt-images">الانتقال إلى كاتب ALT</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 8px;">قسم الكلمات المفتاحية</h3>
+          <p class="muted" style="margin:0 0 12px;">تحليل الكلمة المستهدفة (حجم البحث، المنافسة، كلمات ذات صلة، اقتراحات).</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>اختيار الدولة واللغة ونوع المتصفح</li>
+            <li>قراءة مؤشرات البحث بسرعة</li>
+            <li>سجل بحث للرجوع للنتائج السابقة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" data-home-go="keywords">الانتقال إلى الكلمات المفتاحية</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 8px;">قسم سيو الدومين</h3>
+          <p class="muted" style="margin:0 0 12px;">تحليل دومين المتجر ومنافسيه لفهم ترتيب الكلمات وفرص النمو.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>حفظ الدومين بشكل دائم</li>
+            <li>تحديث البيانات عند الطلب</li>
+            <li>عرض المنافسين وأهم المؤشرات</li>
+          </ul>
+          <button class="btn btn-sky" type="button" data-home-go="domain-seo">الانتقال إلى سيو الدومين</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 8px;">المتابعة والإدارة</h3>
+          <p class="muted" style="margin:0 0 12px;">تابع كل العمليات المنفذة، وادخل على الحساب والاشتراك والإعدادات من مكان واحد.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" type="button" data-home-go="operations">سجل العمليات</button>
+            <button class="btn btn-secondary" type="button" data-home-go="account-settings">الحساب والإعدادات</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="section-products" data-app-section="products" class="panel-stack">
       <div class="card">
         <div class="section-head">
@@ -83,6 +180,14 @@ if ($appBasePath === '/') {
           <div>
             <label for="setting-store-seo-instructions"><strong>تعليمات سيو المتجر</strong></label>
             <textarea id="setting-store-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد عنوان/وصف/كلمات سيو المتجر..."></textarea>
+          </div>
+          <div>
+            <label for="setting-sitemap-url"><strong>رابط السايت ماب للروابط الداخلية</strong></label>
+            <input id="setting-sitemap-url" type="url" placeholder="https://your-store.com/sitemap.xml">
+            <div class="helper-row">
+              <span id="setting-sitemap-links-count">0 روابط</span>
+              <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
+            </div>
           </div>
         </div>
       </div>
@@ -560,8 +665,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v28',
-      base + '/assets/client-dashboard.js?v=products-v28'
+      base + '/public/assets/client-dashboard.js?v=products-v29',
+      base + '/assets/client-dashboard.js?v=products-v29'
     ];
     var index = 0;
 

@@ -48,21 +48,6 @@ final class SallaApiClient
 
     public function updateProductContent(string $accessToken, int $productId, array $product, string $description, ?string $metadataTitle = null, ?string $metadataDescription = null): array
     {
-        $resolvedMetadataTitle = $metadataTitle;
-        if ($resolvedMetadataTitle === null || trim($resolvedMetadataTitle) === '') {
-            $resolvedMetadataTitle = (string) ($product['metadata']['title'] ?? ($product['name'] ?? 'Product'));
-        }
-        $resolvedMetadataTitle = trim($resolvedMetadataTitle);
-
-        $resolvedMetadataDescription = $metadataDescription;
-        if ($resolvedMetadataDescription === null || trim($resolvedMetadataDescription) === '') {
-            $resolvedMetadataDescription = (string) ($product['metadata']['description'] ?? '');
-        }
-        if (trim($resolvedMetadataDescription) === '') {
-            $resolvedMetadataDescription = strip_tags($description);
-        }
-        $resolvedMetadataDescription = $this->limitText(trim((string) $resolvedMetadataDescription), 300);
-
         $payload = [
             'name' => $product['name'] ?? 'Product',
             'price' => $product['price']['amount'] ?? $product['price'] ?? 0,
@@ -72,9 +57,26 @@ final class SallaApiClient
             'require_shipping' => $product['require_shipping'] ?? true,
             'weight' => $product['weight'] ?? 0,
             'weight_type' => $product['weight_type'] ?? 'kg',
-            'metadata_title' => $resolvedMetadataTitle,
-            'metadata_description' => $resolvedMetadataDescription,
         ];
+
+        if ($metadataTitle !== null) {
+            $resolvedMetadataTitle = trim($metadataTitle);
+            if ($resolvedMetadataTitle === '') {
+                $resolvedMetadataTitle = (string) ($product['metadata']['title'] ?? ($product['name'] ?? 'Product'));
+            }
+            $payload['metadata_title'] = $resolvedMetadataTitle;
+        }
+
+        if ($metadataDescription !== null) {
+            $resolvedMetadataDescription = trim($metadataDescription);
+            if ($resolvedMetadataDescription === '') {
+                $resolvedMetadataDescription = (string) ($product['metadata']['description'] ?? '');
+            }
+            if (trim($resolvedMetadataDescription) === '') {
+                $resolvedMetadataDescription = strip_tags($description);
+            }
+            $payload['metadata_description'] = $this->limitText(trim((string) $resolvedMetadataDescription), 300);
+        }
 
         if (isset($product['quantity']) && $product['quantity'] !== null) {
             $payload['quantity'] = $product['quantity'];

@@ -101,6 +101,7 @@ HTML));
     <div class="card"><h2>AI Runs</h2><p>{$aiUsage['runs_count']}</p></div>
   </div>
   {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI حسب نوع التوليد')}
+  {$this->renderAiPricingTypeSummaryCard($aiUsageByMode, 'ملخص التسعير لكل نوع')}
   {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية AI')}
   <div class="card" style="margin-top:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -228,6 +229,7 @@ HTML));
     <div class="card"><h2>تكلفة OpenAI</h2><p>$ {$aiUsage['total_cost_usd']}</p></div>
   </div>
   {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI لهذا المتجر حسب النوع')}
+  {$this->renderAiPricingTypeSummaryCard($aiUsageByMode, 'ملخص التسعير لهذا المتجر حسب النوع')}
   {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية لهذا المتجر')}
   <div class="card" style="margin-top:16px;">
     <h2>تعديل الاشتراك</h2>
@@ -503,6 +505,46 @@ HTML));
             . '</tr></thead>'
             . '<tbody>' . $tableRows . '</tbody>'
             . '</table>'
+            . '</div>';
+    }
+
+    private function renderAiPricingTypeSummaryCard(array $rows, string $title): string
+    {
+        if ($rows === []) {
+            return '<div class="card" style="margin-top:16px;"><h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2><p class="muted">لا توجد بيانات كافية للتسعير بعد.</p></div>';
+        }
+
+        usort($rows, static function (array $a, array $b): int {
+            return ((float) ($b['total_cost_usd'] ?? 0)) <=> ((float) ($a['total_cost_usd'] ?? 0));
+        });
+
+        $cards = '';
+        foreach ($rows as $row) {
+            $runs = (int) ($row['runs_count'] ?? 0);
+            if ($runs <= 0) {
+                continue;
+            }
+
+            $label = htmlspecialchars((string) ($row['label'] ?? $row['mode'] ?? '-'), ENT_QUOTES, 'UTF-8');
+            $totalCost = (float) ($row['total_cost_usd'] ?? 0);
+            $avgCost = $totalCost / $runs;
+
+            $cards .= '<div class="card" style="margin:0;">'
+                . '<h3 style="margin:0 0 10px 0;">' . $label . '</h3>'
+                . '<p style="margin:0 0 6px 0;">عدد العمليات: <strong>' . number_format($runs) . '</strong></p>'
+                . '<p style="margin:0 0 6px 0;">إجمالي التكلفة: <strong>$ ' . $this->formatUsd($totalCost) . '</strong></p>'
+                . '<p style="margin:0;">متوسط تكلفة العملية: <strong>$ ' . $this->formatUsd($avgCost) . '</strong></p>'
+                . '</div>';
+        }
+
+        if ($cards === '') {
+            return '<div class="card" style="margin-top:16px;"><h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2><p class="muted">لا توجد عمليات مولدة حتى الآن.</p></div>';
+        }
+
+        return '<div class="card" style="margin-top:16px;">'
+            . '<h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2>'
+            . '<p class="muted">هذا الملخص يساعدك في التسعير لاحقًا بحسب كل نوع توليد.</p>'
+            . '<div class="grid" style="margin-top:12px;">' . $cards . '</div>'
             . '</div>';
     }
 

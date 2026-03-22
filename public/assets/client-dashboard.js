@@ -1148,6 +1148,22 @@
     if (document.getElementById('setting-image-alt-instructions')) document.getElementById('setting-image-alt-instructions').value = settings.image_alt_instructions || '';
     if (document.getElementById('alt-setting-image-alt-instructions')) document.getElementById('alt-setting-image-alt-instructions').value = settings.image_alt_instructions || '';
     if (document.getElementById('setting-store-seo-instructions')) document.getElementById('setting-store-seo-instructions').value = settings.store_seo_instructions || '';
+    if (document.getElementById('setting-sitemap-url')) document.getElementById('setting-sitemap-url').value = settings.sitemap_url || '';
+    if (document.getElementById('setting-sitemap-links-count')) {
+      const count = Number(settings.sitemap_links_count || 0);
+      document.getElementById('setting-sitemap-links-count').textContent = `${count} روابط`;
+    }
+    if (document.getElementById('setting-sitemap-last-fetched')) {
+      const raw = String(settings.sitemap_last_fetched_at || '').trim();
+      if (!raw) {
+        document.getElementById('setting-sitemap-last-fetched').textContent = 'لم يتم الجلب بعد';
+      } else {
+        const date = new Date(raw);
+        document.getElementById('setting-sitemap-last-fetched').textContent = Number.isNaN(date.getTime())
+          ? raw
+          : date.toLocaleString('ar-SA');
+      }
+    }
   }
 
   async function loadOptimizationSettings() {
@@ -1174,7 +1190,8 @@
       meta_title_instructions: document.getElementById('setting-meta-title-instructions')?.value || '',
       meta_description_instructions: document.getElementById('setting-meta-description-instructions')?.value || '',
       image_alt_instructions: document.getElementById('setting-image-alt-instructions')?.value || '',
-      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || ''
+      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || '',
+      sitemap_url: document.getElementById('setting-sitemap-url')?.value || ''
     };
 
     if (button) {
@@ -1216,9 +1233,14 @@
       }
 
       const seo = data.seo || {};
-      if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = seo.title || '';
-      if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = seo.description || '';
-      if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = seo.keywords || '';
+      const title = String(seo.title || seo.meta_title || seo.metadata_title || seo.homepage_title || '').trim();
+      const description = String(seo.description || seo.meta_description || seo.metadata_description || seo.homepage_description || '').trim();
+      const keywords = Array.isArray(seo.keywords)
+        ? seo.keywords.map((item) => String(item || '').trim()).filter(Boolean).join(', ')
+        : String(seo.keywords || '').trim();
+      if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = title;
+      if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = description;
+      if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = keywords;
       setStoreSeoAlert('', '');
       updateStoreSeoCounters();
     } catch (error) {
@@ -1295,6 +1317,62 @@
       }
 
       setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
+      await loadOperations();
+      await loadUsage();
+    } catch (error) {
+      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  async function saveStoreSeo() {
+    const button = document.getElementById('save-store-seo');
+    const oldText = button?.textContent || 'حفظ في المتجر';
+    const title = document.getElementById('store-seo-title')?.value.trim() || '';
+    const description = document.getElementById('store-seo-description')?.value.trim() || '';
+    const keywords = document.getElementById('store-seo-keywords')?.value.trim() || '';
+
+    if (!title || !description) {
+      setStoreSeoAlert('error', 'أدخل عنوان ووصف المتجر قبل الحفظ.');
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+
+    setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
+    try {
+      const data = await apiFetch('/store-seo/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, keywords })
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ سيو المتجر.'));
+        if (data.applied_seo) {
+          if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.applied_seo.title || '';
+          if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.applied_seo.description || '';
+          if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.applied_seo.keywords || '';
+          updateStoreSeoCounters();
+        }
+        return;
+      }
+
+      if (data.applied_seo) {
+        if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.applied_seo.title || '';
+        if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.applied_seo.description || '';
+        if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.applied_seo.keywords || '';
+      }
+      updateStoreSeoCounters();
+      setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
+      await loadStoreSeo();
       await loadOperations();
       await loadUsage();
     } catch (error) {
@@ -1418,7 +1496,7 @@
     const serpRows = serpItems.length
       ? serpItems.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
             <td>${escapeHtml(item.title || '-')}</td>
             <td>${escapeHtml(item.domain || '-')}</td>
             <td><a href="${escapeHtml(item.url || '#')}" target="_blank" rel="noopener">فتح</a></td>
@@ -1450,7 +1528,8 @@
       <div class="grid" style="margin-top:16px;">
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">الاتجاه الشهري</h3>
-          <table>
+          <div style="overflow:auto;border:1px solid rgba(202,177,149,.35);border-radius:14px;">
+          <table style="margin:0;">
             <thead>
               <tr>
                 <th>الشهر</th>
@@ -1459,10 +1538,12 @@
             </thead>
             <tbody>${trendRows}</tbody>
           </table>
+          </div>
         </div>
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">أفضل نتائج البحث (SERP)</h3>
-          <table>
+          <div style="overflow:auto;border:1px solid rgba(202,177,149,.35);border-radius:14px;">
+          <table style="margin:0;">
             <thead>
               <tr>
                 <th>#</th>
@@ -1473,6 +1554,7 @@
             </thead>
             <tbody>${serpRows}</tbody>
           </table>
+          </div>
         </div>
       </div>
     `;
@@ -1606,8 +1688,8 @@
     const keywordsRows = topKeywords.length
       ? topKeywords.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
+            <td style="min-width:240px;max-width:340px;white-space:normal;line-height:1.55;">${escapeHtml(item.keyword || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
             <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
             <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
@@ -1619,8 +1701,8 @@
     const allKeywordsRows = allKeywords.length
       ? allKeywords.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
+            <td style="min-width:240px;max-width:340px;white-space:normal;line-height:1.55;">${escapeHtml(item.keyword || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
             <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
             <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
@@ -1632,7 +1714,7 @@
     const competitorsRows = competitors.length
       ? competitors.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
             <td>${escapeHtml(item.domain || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.intersections || 0))}</td>
             <td>${escapeHtml(formatKeywordNumber(item.avg_position || 0))}</td>
@@ -1674,7 +1756,8 @@
       <div class="grid" style="margin-top:16px;">
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">ملخص ترتيب الكلمات المفتاحية</h3>
-          <table>
+          <div style="overflow:auto;border:1px solid rgba(202,177,149,.35);border-radius:14px;">
+            <table style="margin:0;">
             <tbody>
               <tr><th>Top 3</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_3 || 0))}</td></tr>
               <tr><th>Top 10</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_10 || 0))}</td></tr>
@@ -1685,11 +1768,11 @@
               <tr><th>هابط</th><td>${escapeHtml(formatKeywordNumber(organic.down || 0))}</td></tr>
               <tr><th>مفقود</th><td>${escapeHtml(formatKeywordNumber(organic.lost || 0))}</td></tr>
             </tbody>
-          </table>
+            </table>
           <details style="margin-top:12px;">
             <summary class="btn btn-sky" style="display:inline-flex;cursor:pointer;">استعراض جميع الكلمات (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
-            <div style="margin-top:12px;">
-              <table>
+            <div style="margin-top:6px;border:1px solid rgba(202,177,149,.35);border-radius:14px;overflow:auto;max-height:460px;">
+              <table style="margin:0;min-width:820px;">
                 <thead>
                   <tr>
                     <th>#</th>
@@ -1709,7 +1792,8 @@
 
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">اهم الكلمات المفتاحية</h3>
-          <table>
+          <div style="overflow:auto;border:1px solid rgba(202,177,149,.35);border-radius:14px;">
+          <table style="margin:0;">
             <thead>
               <tr>
                 <th>#</th>
@@ -1722,6 +1806,7 @@
             </thead>
             <tbody>${keywordsRows}</tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -2176,8 +2261,9 @@
       meta_description_instructions: document.getElementById('setting-meta-description-instructions')?.value || '',
       image_alt_instructions: source === 'alt'
         ? readSettingValue('alt-setting-image-alt-instructions', 'setting-image-alt-instructions', '')
-        : readSettingValue('setting-image-alt-instructions', 'alt-setting-image-alt-instructions', ''),
-      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || ''
+        : undefined,
+      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || '',
+      sitemap_url: document.getElementById('setting-sitemap-url')?.value || ''
     };
 
     if (button) {
@@ -2243,7 +2329,7 @@
     const serpRows = serpItems.length
       ? serpItems.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
             <td>${escapeHtml(item.title || '-')}</td>
             <td>${escapeHtml(item.domain || '-')}</td>
             <td><a href="${escapeHtml(item.url || '#')}" target="_blank" rel="noopener">فتح</a></td>
@@ -2254,8 +2340,8 @@
     const relatedRows = relatedKeywords.length
       ? relatedKeywords.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
+            <td style="min-width:240px;max-width:340px;white-space:normal;line-height:1.55;">${escapeHtml(item.keyword || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
             <td>${escapeHtml(item.competition_level || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.competition || 0))}</td>
@@ -2267,8 +2353,8 @@
     const suggestionRows = keywordSuggestions.length
       ? keywordSuggestions.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
+            <td style="min-width:240px;max-width:340px;white-space:normal;line-height:1.55;">${escapeHtml(item.keyword || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
             <td>${escapeHtml(item.competition_level || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.competition || 0))}</td>
@@ -2301,7 +2387,8 @@
       <div class="grid" style="margin-top:16px;">
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">الاتجاه الشهري</h3>
-          <table>
+          <div style="overflow:auto;border:1px solid rgba(202,177,149,.35);border-radius:14px;">
+            <table style="margin:0;">
             <thead>
               <tr>
                 <th>الشهر</th>
@@ -2310,10 +2397,12 @@
             </thead>
             <tbody>${trendRows}</tbody>
           </table>
+          </div>
         </div>
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">أفضل نتائج البحث (SERP)</h3>
-          <table>
+          <div style="overflow:auto;border:1px solid rgba(202,177,149,.35);border-radius:14px;">
+            <table style="margin:0;">
             <thead>
               <tr>
                 <th>#</th>
@@ -2324,6 +2413,7 @@
             </thead>
             <tbody>${serpRows}</tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -2404,21 +2494,21 @@
     const keywordsRows = topKeywords.length
       ? topKeywords.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
+            <td style="min-width:240px;max-width:340px;white-space:normal;line-height:1.55;">${escapeHtml(item.keyword || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
             <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
             <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
             <td>${escapeHtml(item.intent || '-')}</td>
           </tr>
         `).join('')
-      : '<tr><td colspan="6" class="muted">لا توجد كلمات مرتبة حالياً.</td></tr>';
+      : '<tr><td colspan="6" class="muted">لا توجد كلمات مرتبة حاليًا.</td></tr>';
 
     const allKeywordsRows = allKeywords.length
       ? allKeywords.map((item, index) => `
           <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td style="width:56px;text-align:center;">${index + 1}</td>
+            <td style="min-width:260px;max-width:380px;white-space:normal;line-height:1.55;">${escapeHtml(item.keyword || '-')}</td>
             <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
             <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
             <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
@@ -2472,8 +2562,9 @@
       <div class="grid" style="margin-top:16px;">
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">ملخص ترتيب الكلمات المفتاحية</h3>
-          <table>
-            <tbody>
+          <div style="border:1px solid rgba(202,177,149,.35);border-radius:14px;overflow:auto;max-height:420px;">
+            <table style="margin:0;min-width:760px;">
+              <tbody>
               <tr><th>Top 3</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_3 || 0))}</td></tr>
               <tr><th>Top 10</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_10 || 0))}</td></tr>
               <tr><th>Top 20</th><td>${escapeHtml(formatKeywordNumber((organic.positions || {}).top_20 || 0))}</td></tr>
@@ -2482,14 +2573,16 @@
               <tr><th>صاعد</th><td>${escapeHtml(formatKeywordNumber(organic.up || 0))}</td></tr>
               <tr><th>هابط</th><td>${escapeHtml(formatKeywordNumber(organic.down || 0))}</td></tr>
               <tr><th>مفقود</th><td>${escapeHtml(formatKeywordNumber(organic.lost || 0))}</td></tr>
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
           <p class="muted" style="margin:10px 0 0;">تاريخ الجلب من DataForSEO: ${escapeHtml(fetchedAt)}</p>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
           <h3 style="margin:0 0 10px;">أهم الكلمات المفتاحية</h3>
-          <table>
+          <div style="border:1px solid rgba(202,177,149,.35);border-radius:14px;overflow:auto;max-height:420px;">
+            <table style="margin:0;min-width:760px;">
             <thead>
               <tr>
                 <th>#</th>
@@ -2500,12 +2593,13 @@
                 <th>النية</th>
               </tr>
             </thead>
-            <tbody>${keywordsRows}</tbody>
-          </table>
-          <details style="margin-top:12px;">
+              <tbody>${keywordsRows}</tbody>
+            </table>
+          </div>
+          <details style="margin-top:14px;border:1px dashed rgba(202,177,149,.5);border-radius:14px;padding:12px 12px 8px;">
             <summary class="btn btn-sky" style="display:inline-flex;cursor:pointer;">استعراض الجميع (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
-            <div style="margin-top:12px;">
-              <table>
+            <div style="margin-top:6px;border:1px solid rgba(202,177,149,.35);border-radius:14px;overflow:auto;max-height:460px;">
+              <table style="margin:0;min-width:820px;">
                 <thead>
                   <tr>
                     <th>#</th>
@@ -2546,6 +2640,9 @@
   function bindEvents() {
     document.querySelectorAll('[data-section-target]').forEach((button) => {
       button.addEventListener('click', () => switchSection(button.getAttribute('data-section-target') || 'products'));
+    });
+    document.querySelectorAll('[data-home-go]').forEach((button) => {
+      button.addEventListener('click', () => switchSection(button.getAttribute('data-home-go') || 'products'));
     });
 
     document.getElementById('page-size')?.addEventListener('change', (event) => {
@@ -2614,8 +2711,51 @@
     });
   }
 
+  function removeAltGeneralInstructionsField() {
+    const input = document.getElementById('alt-setting-global-instructions');
+    if (!input) return;
+    const wrapper = input.closest('div');
+    if (wrapper) {
+      wrapper.remove();
+    } else {
+      input.remove();
+    }
+  }
+
+  function removeProductsAltInstructionsField() {
+    const input = document.getElementById('setting-image-alt-instructions');
+    if (!input) return;
+    const wrapper = input.closest('div');
+    if (wrapper) {
+      wrapper.remove();
+    } else {
+      input.remove();
+    }
+  }
+
+  function moveStoreSeoInstructionsFieldToStoreSeoSection() {
+    const input = document.getElementById('setting-store-seo-instructions');
+    if (!input) return;
+
+    const fieldWrapper = input.closest('div');
+    if (!fieldWrapper) return;
+
+    const storeSeoGrid = document.querySelector('#section-store-seo .grid');
+    if (!storeSeoGrid) return;
+
+    if (fieldWrapper.parentElement === storeSeoGrid) {
+      return;
+    }
+
+    fieldWrapper.style.gridColumn = '1 / -1';
+    storeSeoGrid.insertBefore(fieldWrapper, storeSeoGrid.firstChild);
+  }
+
+  removeAltGeneralInstructionsField();
+  removeProductsAltInstructionsField();
+  moveStoreSeoInstructionsFieldToStoreSeoSection();
   bindEvents();
-  switchSection('products');
+  switchSection('home');
   renderEditorBody();
   renderImageAltBody();
   renderKeywordResults(null);
