@@ -454,10 +454,21 @@ final class ProductController
                 $language
             );
 
+            $historyEntry = [
+                'searched_at' => date(DATE_ATOM),
+                'keyword' => $keyword,
+                'country' => $country,
+                'language' => $language,
+                'device' => $device,
+                'result' => $result,
+            ];
+            $this->appendKeywordHistory($store, $historyEntry);
+
             Response::json([
                 'success' => true,
                 'merchant_id' => $store['merchant_id'] ?? null,
                 'keyword_data' => $result,
+                'history_entry' => $historyEntry,
             ]);
         } catch (\Throwable $exception) {
             Response::json([
@@ -485,6 +496,28 @@ final class ProductController
             'success' => true,
             'merchant_id' => $store['merchant_id'] ?? null,
             'domain_seo' => $domainSeo,
+        ]);
+    }
+
+    public function keywordHistory(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $limit = max(1, min(50, (int) Request::query('limit', '15')));
+        $history = $this->normalizeKeywordHistory((array) (($store['settings'] ?? [])['keyword_history'] ?? []));
+
+        Response::json([
+            'success' => true,
+            'merchant_id' => $store['merchant_id'] ?? null,
+            'history' => array_slice(array_reverse($history), 0, $limit),
         ]);
     }
 
@@ -598,6 +631,17 @@ final class ProductController
                 'refreshed_at' => date(DATE_ATOM),
                 'last_data' => $result,
             ]);
+            $historyEntry = [
+                'searched_at' => date(DATE_ATOM),
+                'domain' => $domain,
+                'country' => $country,
+                'device' => $device,
+                'result' => $result,
+            ];
+            $settings['domain_seo_history'] = $this->appendHistoryRow(
+                (array) ($settings['domain_seo_history'] ?? []),
+                $historyEntry
+            );
 
             (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
                 'settings' => $settings,
@@ -607,6 +651,7 @@ final class ProductController
                 'success' => true,
                 'message' => 'تم تحديث بيانات سيو الدومين.',
                 'domain_seo' => $settings['domain_seo'],
+                'history_entry' => $historyEntry,
             ]);
         } catch (\Throwable $exception) {
             Response::json([
@@ -614,6 +659,28 @@ final class ProductController
                 'message' => $this->humanizeProviderError($exception->getMessage()),
             ], 500);
         }
+    }
+
+    public function domainSeoHistory(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'No connected store found.',
+            ], 404);
+            return;
+        }
+
+        $limit = max(1, min(50, (int) Request::query('limit', '15')));
+        $history = $this->normalizeDomainSeoHistory((array) (($store['settings'] ?? [])['domain_seo_history'] ?? []));
+
+        Response::json([
+            'success' => true,
+            'merchant_id' => $store['merchant_id'] ?? null,
+            'history' => array_slice(array_reverse($history), 0, $limit),
+        ]);
     }
 
     public function optimizeStoreSeo(): void
@@ -1202,6 +1269,74 @@ final class ProductController
             'refresh_count' => (int) ($settings['refresh_count'] ?? 0),
             'last_data' => is_array($settings['last_data'] ?? null) ? $settings['last_data'] : null,
         ];
+    }
+
+    private function normalizeKeywordHistory(array $items): array
+    {
+        $rows = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $result = is_array($item['result'] ?? null) ? $item['result'] : null;
+            if ($result === null) {
+                continue;
+            }
+            $rows[] = [
+                'searched_at' => (string) ($item['searched_at'] ?? ''),
+                'keyword' => trim((string) ($item['keyword'] ?? '')),
+                'country' => strtolower(trim((string) ($item['country'] ?? 'sa'))),
+                'language' => in_array((string) ($item['language'] ?? 'ar'), ['ar', 'en'], true) ? (string) $item['language'] : 'ar',
+                'device' => in_array((string) ($item['device'] ?? 'desktop'), ['desktop', 'mobile'], true) ? (string) $item['device'] : 'desktop',
+                'result' => $result,
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function normalizeDomainSeoHistory(array $items): array
+    {
+        $rows = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $result = is_array($item['result'] ?? null) ? $item['result'] : null;
+            if ($result === null) {
+                continue;
+            }
+            $rows[] = [
+                'searched_at' => (string) ($item['searched_at'] ?? ''),
+                'domain' => $this->normalizeDomainInput((string) ($item['domain'] ?? '')),
+                'country' => 'sa',
+                'device' => in_array((string) ($item['device'] ?? 'desktop'), ['desktop', 'mobile'], true) ? (string) $item['device'] : 'desktop',
+                'result' => $result,
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function appendKeywordHistory(array $store, array $row): void
+    {
+        $settings = (array) ($store['settings'] ?? []);
+        $history = $this->normalizeKeywordHistory((array) ($settings['keyword_history'] ?? []));
+        $settings['keyword_history'] = $this->appendHistoryRow($history, $row);
+
+        (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
+            'settings' => $settings,
+        ]);
+    }
+
+    private function appendHistoryRow(array $history, array $row, int $maxItems = 25): array
+    {
+        $history[] = $row;
+        if (count($history) > $maxItems) {
+            $history = array_slice($history, -1 * $maxItems);
+        }
+
+        return array_values($history);
     }
 
     private function normalizeDomainInput(string $domain): string

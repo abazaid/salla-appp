@@ -131,12 +131,14 @@
     altEditor: null,
     keywords: {
       loading: false,
-      lastResult: null
+      lastResult: null,
+      history: []
     },
     domainSeo: {
       loading: false,
       initialized: false,
       data: null,
+      history: [],
       config: {
         domain: '',
         country: 'sa',
@@ -706,19 +708,6 @@
       </div>
       `;
     }).join('');
-
-    const suggestionRows = keywordSuggestions.length
-      ? keywordSuggestions.map((item, index) => `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.keyword || '-')}</td>
-            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
-            <td>${escapeHtml(item.competition_level || '-')}</td>
-            <td>${escapeHtml(formatKeywordNumber(item.competition || 0))}</td>
-            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
-          </tr>
-        `).join('')
-      : '<tr><td colspan="6" class="muted">لا توجد اقتراحات كلمات رئيسية متاحة.</td></tr>';
 
     root.innerHTML = `
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">
@@ -1324,6 +1313,65 @@
     root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
   }
 
+  function renderKeywordHistory() {
+    const root = document.getElementById('keyword-history-list');
+    if (!root) return;
+
+    const rows = Array.isArray(state.keywords.history) ? state.keywords.history : [];
+    if (!rows.length) {
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لا يوجد سجل بحث حتى الآن.</p></div>';
+      return;
+    }
+
+    root.innerHTML = rows.map((row, index) => `
+      <div class="card surface-soft" style="box-shadow:none;">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div>
+            <strong>${escapeHtml(row.keyword || '-')}</strong>
+            <p class="muted" style="margin:6px 0 0;">
+              ${escapeHtml(row.country === 'sa' ? 'السعودية' : (row.country || '-'))}
+              • ${escapeHtml(row.language === 'en' ? 'English' : 'العربية')}
+              • ${escapeHtml(getKeywordDeviceLabel(row.device || 'desktop'))}
+              • ${escapeHtml(formatDate(row.searched_at || ''))}
+            </p>
+          </div>
+          <button class="btn btn-sky" type="button" data-keyword-history-index="${index}">استعراض</button>
+        </div>
+      </div>
+    `).join('');
+
+    root.querySelectorAll('[data-keyword-history-index]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const idx = Number(button.getAttribute('data-keyword-history-index'));
+        const item = rows[idx];
+        if (!item || !item.result) return;
+        if (document.getElementById('keyword-query')) document.getElementById('keyword-query').value = item.keyword || '';
+        if (document.getElementById('keyword-country')) document.getElementById('keyword-country').value = item.country || 'sa';
+        if (document.getElementById('keyword-language')) document.getElementById('keyword-language').value = item.language || 'ar';
+        if (document.getElementById('keyword-device')) document.getElementById('keyword-device').value = item.device || 'desktop';
+        state.keywords.lastResult = item.result;
+        renderKeywordResults(state.keywords.lastResult);
+        setKeywordAlert('success', 'تم استعراض نتيجة محفوظة بدون إجراء بحث جديد.');
+      });
+    });
+  }
+
+  async function loadKeywordHistory() {
+    try {
+      const data = await apiFetch('/keywords/history?limit=15').then((response) => response.json());
+      if (!data.success) {
+        state.keywords.history = [];
+        renderKeywordHistory();
+        return;
+      }
+      state.keywords.history = Array.isArray(data.history) ? data.history : [];
+      renderKeywordHistory();
+    } catch (error) {
+      state.keywords.history = [];
+      renderKeywordHistory();
+    }
+  }
+
   function formatKeywordNumber(value) {
     const numeric = Number(value || 0);
     if (!Number.isFinite(numeric)) return '0';
@@ -1451,11 +1499,19 @@
     setKeywordAlert('success', 'جاري جلب بيانات الكلمة المفتاحية...');
 
     try {
-      const data = await apiFetch('/keywords/research', {
+      const response = await apiFetch('/keywords/research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword, country, language, device }),
-      }).then((response) => response.json());
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const raw = await response.text();
+        throw new Error(raw || `HTTP ${response.status}`);
+      }
 
       if (!data.success) {
         setKeywordAlert('error', normalizeApiMessage(data.message, 'تعذر جلب بيانات الكلمة المفتاحية.'));
@@ -1463,7 +1519,24 @@
       }
 
       state.keywords.lastResult = data.keyword_data || null;
-      renderKeywordResults(state.keywords.lastResult);
+      try {
+        renderKeywordResults(state.keywords.lastResult);
+      } catch (renderError) {
+        console.error('Keyword render error:', renderError);
+        setKeywordAlert('error', 'تم جلب البيانات لكن حدث خطأ في عرض النتائج. حدّث الصفحة وحاول مرة أخرى.');
+        return;
+      }
+
+      try {
+        if (data.history_entry) {
+          state.keywords.history = [data.history_entry, ...(state.keywords.history || [])].slice(0, 15);
+          renderKeywordHistory();
+        } else {
+          await loadKeywordHistory();
+        }
+      } catch (historyError) {
+        console.error('Keyword history error:', historyError);
+      }
       setKeywordAlert('success', 'تم جلب بيانات الكلمة المفتاحية بنجاح.');
     } catch (error) {
       setKeywordAlert('error', 'حدث خطأ أثناء جلب بيانات الكلمات المفتاحية.');
@@ -1510,6 +1583,7 @@
     const organic = overview.organic || {};
     const paid = overview.paid || {};
     const topKeywords = Array.isArray(data.top_keywords) ? data.top_keywords : [];
+    const allKeywords = Array.isArray(data.all_keywords) ? data.all_keywords : topKeywords;
     const normalizeDomain = (value) => String(value || '')
       .toLowerCase()
       .replace(/^www\./, '')
@@ -1541,6 +1615,19 @@
           </tr>
         `).join('')
       : '<tr><td colspan="6" class="muted">لا توجد كلمات مرتبة حاليًا.</td></tr>';
+
+    const allKeywordsRows = allKeywords.length
+      ? allKeywords.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.position || 0))}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
+            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
+            <td>${escapeHtml(item.intent || '-')}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="muted">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ© Ù„Ø¹Ø±Ø¶Ù‡Ø§.</td></tr>';
 
     const competitorsRows = competitors.length
       ? competitors.map((item, index) => `
@@ -1599,6 +1686,24 @@
               <tr><th>مفقود</th><td>${escapeHtml(formatKeywordNumber(organic.lost || 0))}</td></tr>
             </tbody>
           </table>
+          <details style="margin-top:12px;">
+            <summary class="btn btn-sky" style="display:inline-flex;cursor:pointer;">استعراض جميع الكلمات (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
+            <div style="margin-top:12px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>الكلمة</th>
+                    <th>الترتيب</th>
+                    <th>الحجم</th>
+                    <th>CPC</th>
+                    <th>النية</th>
+                  </tr>
+                </thead>
+                <tbody>${allKeywordsRows}</tbody>
+              </table>
+            </div>
+          </details>
           <p class="muted" style="margin:10px 0 0;">تاريخ الجلب من DataForSEO: ${escapeHtml(fetchedAt)}</p>
         </div>
 
@@ -1658,9 +1763,77 @@
       };
       fillDomainSeoForm(state.domainSeo.config);
       renderDomainSeoResults(payload);
+      await loadDomainSeoHistory();
       setDomainSeoAlert('', '');
     } catch (error) {
       setDomainSeoAlert('error', 'تعذّر تحميل قسم سيو الدومين.');
+    }
+  }
+
+  function renderDomainSeoHistory() {
+    const root = document.getElementById('domain-seo-history-list');
+    if (!root) return;
+
+    const rows = Array.isArray(state.domainSeo.history) ? state.domainSeo.history : [];
+    if (!rows.length) {
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لا يوجد سجل تحديث للدومين حتى الآن.</p></div>';
+      return;
+    }
+
+    root.innerHTML = rows.map((row, index) => `
+      <div class="card surface-soft" style="box-shadow:none;">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div>
+            <strong>${escapeHtml(row.domain || '-')}</strong>
+            <p class="muted" style="margin:6px 0 0;">
+              ${escapeHtml(row.country === 'sa' ? 'السعودية' : (row.country || '-'))}
+              • ${escapeHtml(getKeywordDeviceLabel(row.device || 'desktop'))}
+              • ${escapeHtml(formatDate(row.searched_at || ''))}
+            </p>
+          </div>
+          <button class="btn btn-sky" type="button" data-domain-history-index="${index}">استعراض</button>
+        </div>
+      </div>
+    `).join('');
+
+    root.querySelectorAll('[data-domain-history-index]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const idx = Number(button.getAttribute('data-domain-history-index'));
+        const item = rows[idx];
+        if (!item || !item.result) return;
+        const payload = {
+          domain: item.domain || '',
+          country: item.country || 'sa',
+          device: item.device || 'desktop',
+          refreshed_at: item.searched_at || '',
+          last_data: item.result,
+        };
+        state.domainSeo.data = payload;
+        state.domainSeo.config = {
+          domain: payload.domain,
+          country: payload.country,
+          device: payload.device,
+        };
+        fillDomainSeoForm(state.domainSeo.config);
+        renderDomainSeoResults(payload);
+        setDomainSeoAlert('success', 'تم استعراض نتيجة محفوظة بدون تحديث جديد.');
+      });
+    });
+  }
+
+  async function loadDomainSeoHistory() {
+    try {
+      const data = await apiFetch('/domain-seo/history?limit=15').then((response) => response.json());
+      if (!data.success) {
+        state.domainSeo.history = [];
+        renderDomainSeoHistory();
+        return;
+      }
+      state.domainSeo.history = Array.isArray(data.history) ? data.history : [];
+      renderDomainSeoHistory();
+    } catch (error) {
+      state.domainSeo.history = [];
+      renderDomainSeoHistory();
     }
   }
 
@@ -1753,6 +1926,12 @@
       };
       fillDomainSeoForm(state.domainSeo.config);
       renderDomainSeoResults(payload);
+      if (data.history_entry) {
+        state.domainSeo.history = [data.history_entry, ...(state.domainSeo.history || [])].slice(0, 15);
+        renderDomainSeoHistory();
+      } else {
+        await loadDomainSeoHistory();
+      }
       setDomainSeoAlert('success', normalizeApiMessage(data.message, 'تم تحديث بيانات سيو الدومين.'));
     } catch (error) {
       setDomainSeoAlert('error', 'حدث خطأ أثناء تحديث بيانات الدومين.');
@@ -1946,6 +2125,7 @@
     }
     if (section === 'keywords') {
       renderKeywordResults(state.keywords.lastResult);
+      loadKeywordHistory();
     }
     if (section === 'domain-seo') {
       if (!state.domainSeo.initialized) {
@@ -1953,6 +2133,7 @@
       } else {
         fillDomainSeoForm(state.domainSeo.config);
         renderDomainSeoResults(state.domainSeo.data);
+        loadDomainSeoHistory();
       }
     }
     if (section === 'operations') {
@@ -2082,6 +2263,19 @@
           </tr>
         `).join('')
       : '<tr><td colspan="6" class="muted">لا توجد كلمات مشابهة متاحة.</td></tr>';
+
+    const suggestionRows = keywordSuggestions.length
+      ? keywordSuggestions.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.keyword || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.search_volume || 0))}</td>
+            <td>${escapeHtml(item.competition_level || '-')}</td>
+            <td>${escapeHtml(formatKeywordNumber(item.competition || 0))}</td>
+            <td>${escapeHtml(formatKeywordCurrency(item.cpc || 0))}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="6" class="muted">لا توجد اقتراحات كلمات رئيسية متاحة.</td></tr>';
 
     root.innerHTML = `
       <div class="grid" style="margin-top:0;">

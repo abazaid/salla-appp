@@ -43,9 +43,11 @@ $router->get('/api/settings', [ProductController::class, 'optimizationSettings']
 $router->post('/api/settings/save', [ProductController::class, 'saveOptimizationSettings']);
 $router->get('/api/operations', [ProductController::class, 'operations']);
 $router->post('/api/keywords/research', [ProductController::class, 'keywordResearch']);
+$router->get('/api/keywords/history', [ProductController::class, 'keywordHistory']);
 $router->get('/api/domain-seo', [ProductController::class, 'domainSeo']);
 $router->post('/api/domain-seo/save', [ProductController::class, 'saveDomainSeo']);
 $router->post('/api/domain-seo/refresh', [ProductController::class, 'refreshDomainSeo']);
+$router->get('/api/domain-seo/history', [ProductController::class, 'domainSeoHistory']);
 $router->get('/api/store-seo', [ProductController::class, 'storeSeo']);
 $router->post('/api/store-seo/optimize', [ProductController::class, 'optimizeStoreSeo']);
 $router->post('/api/store-seo/save', [ProductController::class, 'saveStoreSeo']);

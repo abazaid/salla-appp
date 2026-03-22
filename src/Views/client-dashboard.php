@@ -359,6 +359,18 @@ if ($appBasePath === '/') {
           <div class="empty-state"><p class="muted" style="margin:0;">لم يتم إجراء بحث بعد.</p></div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2 style="margin:0 0 6px;">سجل بحث الكلمات المفتاحية</h2>
+            <p class="muted" style="margin:0;">استعرض النتائج السابقة بدون بحث جديد وبدون استهلاك إضافي.</p>
+          </div>
+        </div>
+        <div id="keyword-history-list" class="panel-stack">
+          <div class="empty-state"><p class="muted" style="margin:0;">لا يوجد سجل بحث حتى الآن.</p></div>
+        </div>
+      </div>
     </section>
 
     <section id="section-domain-seo" data-app-section="domain-seo" class="panel-stack" style="display:none;">
@@ -409,6 +421,18 @@ if ($appBasePath === '/') {
         </div>
         <div id="domain-seo-results">
           <div class="empty-state"><p class="muted" style="margin:0;">لا توجد بيانات محفوظة بعد.</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2 style="margin:0 0 6px;">سجل تحليل الدومين</h2>
+            <p class="muted" style="margin:0;">النتائج المحفوظة لكل تحديث سابق، ويمكن استعراضها مباشرة.</p>
+          </div>
+        </div>
+        <div id="domain-seo-history-list" class="panel-stack">
+          <div class="empty-state"><p class="muted" style="margin:0;">لا يوجد سجل تحديث للدومين حتى الآن.</p></div>
         </div>
       </div>
     </section>
@@ -536,8 +560,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v27',
-      base + '/assets/client-dashboard.js?v=products-v27'
+      base + '/public/assets/client-dashboard.js?v=products-v28',
+      base + '/assets/client-dashboard.js?v=products-v28'
     ];
     var index = 0;
 
