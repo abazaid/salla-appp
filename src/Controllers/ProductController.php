@@ -361,9 +361,7 @@ final class ProductController
 
     public function saveSitemapSettings(): void
     {
-        error_log('saveSitemapSettings called');
         $store = $this->resolveStore();
-        error_log('Store resolved: ' . ($store === null ? 'null' : 'found'));
 
         if ($store === null) {
             Response::json([
@@ -374,11 +372,8 @@ final class ProductController
         }
 
         $input = Request::input();
-        error_log('Input: ' . json_encode($input));
-        
         $currentSettings = (array) ($store['settings'] ?? []);
         $sitemapUrl = $this->normalizeSitemapUrl(trim((string) ($input['sitemap_url'] ?? '')));
-        error_log('Sitemap URL: ' . $sitemapUrl);
         
         $mergedSettings = $currentSettings;
         $mergedSettings['sitemap_url'] = $sitemapUrl;

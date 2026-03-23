@@ -1212,11 +1212,9 @@
   }
 
   async function saveSitemapSettings() {
-    console.log('saveSitemapSettings called');
     const button = document.getElementById('save-sitemap-settings');
     const oldText = button?.textContent || 'حفظ روابط السايت ماب';
     const sitemapUrl = document.getElementById('setting-sitemap-url')?.value.trim() || '';
-    console.log('Sitemap URL:', sitemapUrl);
 
     if (button) {
       button.disabled = true;
@@ -1225,41 +1223,30 @@
     setSitemapAlert('success', 'جاري حفظ رابط السايت ماب...');
 
     try {
-      console.log('Calling API...');
-      const data = await apiFetch('/sitemap/save', {
+      const response = await apiFetch('/sitemap/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sitemap_url: sitemapUrl })
-      }).then((response) => {
-        console.log('Response status:', response.status);
-        return response.json();
       });
+      const data = await response.json();
 
-      console.log('API Response:', data);
       if (!data.success) {
         setSitemapAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ رابط السايت ماب.'));
         return;
       }
 
       const count = Number(data.links_count || 0);
-      if (document.getElementById('setting-sitemap-links-count')) {
-        document.getElementById('setting-sitemap-links-count').textContent = `${count} رابط`;
-      }
-      if (document.getElementById('setting-sitemap-last-fetched')) {
+      const linksCountEl = document.getElementById('setting-sitemap-links-count');
+      if (linksCountEl) linksCountEl.textContent = `${count} رابط`;
+      
+      const lastFetchedEl = document.getElementById('setting-sitemap-last-fetched');
+      if (lastFetchedEl) {
         const raw = String(data.last_fetched || '').trim();
-        if (!raw) {
-          document.getElementById('setting-sitemap-last-fetched').textContent = 'لم يتم الجلب بعد';
-        } else {
-          const date = new Date(raw);
-          document.getElementById('setting-sitemap-last-fetched').textContent = Number.isNaN(date.getTime())
-            ? raw
-            : date.toLocaleString('ar-SA');
-        }
+        lastFetchedEl.textContent = raw ? formatDate(raw) : 'لم يتم الجلب بعد';
       }
 
       setSitemapAlert('success', normalizeApiMessage(data.message, 'تم حفظ رابط السايت ماب بنجاح.'));
     } catch (error) {
-      console.error('Error:', error);
       setSitemapAlert('error', 'حدث خطأ أثناء حفظ رابط السايت ماب.');
     } finally {
       if (button) {
@@ -2554,10 +2541,7 @@
     });
     document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
-    document.getElementById('save-sitemap-settings')?.addEventListener('click', () => {
-      console.log('Button clicked!');
-      saveSitemapSettings();
-    });
+    document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
     document.getElementById('alt-clear-selection')?.addEventListener('click', () => {
       state.altSelectedProductIds = new Set();
