@@ -2064,62 +2064,6 @@
     }
   }
 
-  function setSitemapAlert(type, message) {
-    const root = document.getElementById('sitemap-alert');
-    if (!root) return;
-    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
-  }
-
-  async function saveSitemapSettings() {
-    const button = document.getElementById('save-sitemap-settings');
-    const oldText = button?.textContent || 'حفظ روابط السايت ماب';
-    const sitemapUrl = document.getElementById('setting-sitemap-url')?.value.trim() || '';
-
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'جاري الحفظ...';
-    }
-    setSitemapAlert('success', 'جاري حفظ رابط السايت ماب...');
-
-    try {
-      const data = await apiFetch('/sitemap/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sitemap_url: sitemapUrl })
-      }).then((response) => response.json());
-
-      if (!data.success) {
-        setSitemapAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ رابط السايت ماب.'));
-        return;
-      }
-
-      const count = Number(data.links_count || 0);
-      if (document.getElementById('setting-sitemap-links-count')) {
-        document.getElementById('setting-sitemap-links-count').textContent = `${count} رابط`;
-      }
-      if (document.getElementById('setting-sitemap-last-fetched')) {
-        const raw = String(data.last_fetched || '').trim();
-        if (!raw) {
-          document.getElementById('setting-sitemap-last-fetched').textContent = 'لم يتم الجلب بعد';
-        } else {
-          const date = new Date(raw);
-          document.getElementById('setting-sitemap-last-fetched').textContent = Number.isNaN(date.getTime())
-            ? raw
-            : date.toLocaleString('ar-SA');
-        }
-      }
-
-      setSitemapAlert('success', normalizeApiMessage(data.message, 'تم حفظ رابط السايت ماب بنجاح.'));
-    } catch (error) {
-      setSitemapAlert('error', 'حدث خطأ أثناء حفظ رابط السايت ماب.');
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = oldText;
-      }
-    }
-  }
-
   async function saveOptimizationSettings(source = 'products') {
     const button = source === 'alt'
       ? document.getElementById('save-optimization-settings-alt')
@@ -2546,7 +2490,6 @@
     });
     document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
-    document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
     document.getElementById('alt-clear-selection')?.addEventListener('click', () => {
       state.altSelectedProductIds = new Set();

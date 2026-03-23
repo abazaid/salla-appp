@@ -47,7 +47,6 @@ $router->get('/api/products', [ProductController::class, 'index']);
 $router->get('/api/subscription', [ProductController::class, 'subscription']);
 $router->get('/api/settings', [ProductController::class, 'optimizationSettings']);
 $router->post('/api/settings/save', [ProductController::class, 'saveOptimizationSettings']);
-$router->post('/api/sitemap/save', [ProductController::class, 'saveSitemapSettings']);
 $router->get('/api/operations', [ProductController::class, 'operations']);
 $router->post('/api/keywords/research', [ProductController::class, 'keywordResearch']);
 $router->get('/api/keywords/history', [ProductController::class, 'keywordHistory']);
