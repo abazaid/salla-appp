@@ -38,38 +38,37 @@ final class HomeController
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root{
-      --bg:#f5f1e6;
-      --surface:#fffdf8;
-      --ink:#1e1b17;
-      --muted:#6f665a;
-      --border:rgba(202,177,149,.55);
-      --teal:#0f7b66;
-      --teal-strong:#0a5a4b;
-      --sky:#2ea9d6;
-      --sky-strong:#1d8eb6;
-      --warm:#7a4e1f;
-      --chip:#f2e7d8;
-      --shadow:0 22px 60px rgba(62,43,21,.10);
-      --shadow-soft:0 12px 28px rgba(62,43,21,.08);
+      --primary-1:#3B82F6;
+      --primary-2:#6366F1;
+      --primary-3:#8B5CF6;
+      --gradient-main:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+      --bg:#F8FAFC;
+      --surface:#FFFFFF;
+      --ink:#0F172A;
+      --muted:#64748B;
+      --border:#E2E8F0;
+      --success:#10B981;
+      --success-soft:#D1FAE5;
+      --danger:#EF4444;
+      --danger-soft:#FEE2E2;
+      --glow-primary:0 0 20px rgba(99, 102, 241, 0.35);
+      --shadow:0 22px 60px rgba(15,23,42,.08);
+      --shadow-soft:0 12px 28px rgba(15,23,42,.04);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:"Tajawal","Segoe UI",sans-serif;
       color:var(--ink);
-      background:
-        radial-gradient(circle at 8% 10%, rgba(15,123,102,.15), transparent 22%),
-        radial-gradient(circle at 90% 14%, rgba(46,169,214,.12), transparent 20%),
-        var(--bg);
+      background:var(--bg);
       min-height:100vh;
     }
     .wrap{width:min(1180px,100% - 28px);margin:22px auto 42px}
     .surface{
-      background:rgba(255,253,248,.86);
+      background:var(--surface);
       border:1px solid var(--border);
-      border-radius:30px;
+      border-radius:16px;
       box-shadow:var(--shadow);
-      backdrop-filter:blur(6px);
       padding:24px;
     }
     .top{
@@ -86,14 +85,14 @@ final class HomeController
       gap:14px;
       flex-wrap:wrap;
     }
-    .brand img{width:min(280px,70vw);height:auto;display:block}
+    .brand img{width:min(280px,70vw);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))}
     .pill{
       display:inline-flex;
       align-items:center;
       padding:7px 12px;
       border-radius:999px;
-      background:var(--chip);
-      color:var(--warm);
+      background:#EEF2FF;
+      color:var(--primary-2);
       font-size:13px;
       font-weight:700;
       white-space:nowrap;
@@ -124,7 +123,7 @@ final class HomeController
       align-items:center;
       min-width:170px;
       border:none;
-      border-radius:14px;
+      border-radius:12px;
       padding:13px 20px;
       font:700 18px/1 "Tajawal","Segoe UI",sans-serif;
       text-decoration:none;
@@ -133,19 +132,19 @@ final class HomeController
     }
     .btn-primary{
       color:#fff;
-      background:var(--teal);
-      box-shadow:0 10px 24px rgba(15,123,102,.24);
+      background:var(--gradient-main);
+      box-shadow:var(--glow-primary);
     }
-    .btn-primary:hover{background:var(--teal-strong);transform:translateY(-1px)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(99, 102, 241, 0.45)}
     .btn-secondary{
       color:#fff;
-      background:var(--sky);
-      box-shadow:0 10px 24px rgba(46,169,214,.22);
+      background:var(--primary-1);
+      box-shadow:0 0 10px rgba(59, 130, 246, 0.2);
     }
-    .btn-secondary:hover{background:var(--sky-strong);transform:translateY(-1px)}
+    .btn-secondary:hover{background:#2563EB;transform:translateY(-1px)}
     .btn-disabled{
-      background:#d8d2c8;
-      color:#5f5a52;
+      background:#E2E8F0;
+      color:#94A3B8;
       cursor:not-allowed;
       box-shadow:none;
       pointer-events:none;
@@ -162,7 +161,7 @@ final class HomeController
     .card{
       border:1px solid var(--border);
       background:var(--surface);
-      border-radius:22px;
+      border-radius:16px;
       padding:18px;
       box-shadow:var(--shadow-soft);
     }
@@ -170,7 +169,7 @@ final class HomeController
     .list{
       margin:12px 0 0;
       padding:0 18px 0 0;
-      color:#3f3a34;
+      color:#475569;
       line-height:2;
       font-size:17px;
     }
@@ -183,7 +182,7 @@ final class HomeController
     .kpi{
       text-align:center;
       border:1px solid var(--border);
-      border-radius:18px;
+      border-radius:16px;
       background:var(--surface);
       padding:14px 10px;
     }
@@ -191,7 +190,9 @@ final class HomeController
       display:block;
       margin-top:6px;
       font-size:30px;
-      color:var(--teal-strong);
+      background:var(--gradient-main);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
       line-height:1;
     }
     .steps{
@@ -203,7 +204,7 @@ final class HomeController
     }
     .step{
       border:1px solid var(--border);
-      border-radius:18px;
+      border-radius:16px;
       background:var(--surface);
       padding:14px;
       position:relative;
@@ -219,7 +220,7 @@ final class HomeController
       display:grid;place-items:center;
       font-weight:800;
       color:#fff;
-      background:linear-gradient(135deg,var(--sky),var(--teal));
+      background:var(--gradient-main);
     }
     .step h4{margin:36px 0 8px;font-size:21px}
     .step p{margin:0;color:var(--muted);font-size:16px;line-height:1.8}
@@ -238,7 +239,7 @@ final class HomeController
       cursor:pointer;
       font-size:19px;
       font-weight:700;
-      color:#2f2a24;
+      color:#0F172A;
     }
     details p{margin:8px 0 0;color:var(--muted);font-size:16px;line-height:1.9}
     .foot{
@@ -252,7 +253,7 @@ final class HomeController
     }
     @media (max-width:700px){
       .wrap{width:min(100% - 14px,1180px);margin:12px auto 28px}
-      .surface{border-radius:22px;padding:14px}
+      .surface{border-radius:16px;padding:14px}
       .hero{padding:12px 6px}
       h1{font-size:clamp(30px,9vw,44px)}
       .lead{font-size:17px}

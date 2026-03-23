@@ -54,7 +54,7 @@ final class EmbeddedController
     <div class="grid">
       <div>
         <label for="tone"><strong>نبرة الوصف</strong></label>
-        <select id="tone" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid #d8c7b4;background:#fffaf3;">
+        <select id="tone" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">
           <option value="احترافي مقنع">احترافي مقنع</option>
           <option value="فاخر أنيق">فاخر أنيق</option>
           <option value="عملي مباشر">عملي مباشر</option>
@@ -63,7 +63,7 @@ final class EmbeddedController
       </div>
       <div>
         <label for="language"><strong>لغة الإخراج</strong></label>
-        <select id="language" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid #d8c7b4;background:#fffaf3;">
+        <select id="language" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">
           <option value="ar">العربية</option>
           <option value="en">English</option>
         </select>
@@ -155,40 +155,40 @@ function renderProducts() {
     const loadingLabel = state.loadingProductId === product.id ? 'جاري التحسين...' : 'تحسين الوصف';
     const draft = state.drafts[product.id];
     const draftHtml = draft ? `
-      <div class="card" style="margin-top:16px;background:#fcf8f2;">
+      <div class="card" style="margin-top:16px;background:#EEF2FF;">
         <div class="grid">
           <div>
             <strong>الوصف الحالي</strong>
-            <textarea readonly style="width:100%;min-height:220px;margin-top:10px;padding:14px;border-radius:14px;border:1px solid #d8c7b4;background:#f9f2e8;">\${escapeHtml(draft.current_description)}</textarea>
+            <textarea readonly style="width:100%;min-height:220px;margin-top:10px;padding:14px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">\${escapeHtml(draft.current_description)}</textarea>
           </div>
           <div>
             <strong>الوصف بعد التحسين</strong>
-            <textarea id="edited-\${Number(product.id)}" style="width:100%;min-height:220px;margin-top:10px;padding:14px;border-radius:14px;border:1px solid #d8c7b4;background:#fff;">\${escapeHtml(draft.optimized_description)}</textarea>
+            <textarea id="edited-\${Number(product.id)}" style="width:100%;min-height:220px;margin-top:10px;padding:14px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">\${escapeHtml(draft.optimized_description)}</textarea>
           </div>
         </div>
         <div class="grid" style="margin-top:12px;">
           <div>
             <strong>Meta Title الحالي</strong>
-            <textarea readonly style="width:100%;min-height:90px;margin-top:10px;padding:14px;border-radius:14px;border:1px solid #d8c7b4;background:#f9f2e8;">\${escapeHtml(draft.current_metadata_title)}</textarea>
+            <textarea readonly style="width:100%;min-height:90px;margin-top:10px;padding:14px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">\${escapeHtml(draft.current_metadata_title)}</textarea>
           </div>
           <div>
             <strong>Meta Title بعد التحسين</strong>
-            <textarea id="meta-title-\${Number(product.id)}" style="width:100%;min-height:90px;margin-top:10px;padding:14px;border-radius:14px;border:1px solid #d8c7b4;background:#fff;">\${escapeHtml(draft.optimized_metadata_title)}</textarea>
+            <textarea id="meta-title-\${Number(product.id)}" style="width:100%;min-height:90px;margin-top:10px;padding:14px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">\${escapeHtml(draft.optimized_metadata_title)}</textarea>
           </div>
         </div>
         <div class="grid" style="margin-top:12px;">
           <div>
             <strong>Meta Description الحالية</strong>
-            <textarea readonly style="width:100%;min-height:130px;margin-top:10px;padding:14px;border-radius:14px;border:1px solid #d8c7b4;background:#f9f2e8;">\${escapeHtml(draft.current_metadata_description)}</textarea>
+            <textarea readonly style="width:100%;min-height:130px;margin-top:10px;padding:14px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">\${escapeHtml(draft.current_metadata_description)}</textarea>
           </div>
           <div>
             <strong>Meta Description بعد التحسين</strong>
-            <textarea id="meta-description-\${Number(product.id)}" style="width:100%;min-height:130px;margin-top:10px;padding:14px;border-radius:14px;border:1px solid #d8c7b4;background:#fff;">\${escapeHtml(draft.optimized_metadata_description)}</textarea>
+            <textarea id="meta-description-\${Number(product.id)}" style="width:100%;min-height:130px;margin-top:10px;padding:14px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;">\${escapeHtml(draft.optimized_metadata_description)}</textarea>
           </div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-          <button onclick="saveDescription(\${Number(product.id)})" style="background:#0d7a5f;color:#fff;border:none;padding:12px 16px;border-radius:12px;cursor:pointer;">حفظ في المتجر</button>
-          <button onclick="cancelDraft(\${Number(product.id)})" style="background:#efe5d7;color:#6e4721;border:none;padding:12px 16px;border-radius:12px;cursor:pointer;">إلغاء</button>
+          <button onclick="saveDescription(\${Number(product.id)})" style="background:linear-gradient(135deg, #3B82F6, #6366F1);color:#fff;border:none;padding:12px 16px;border-radius:12px;cursor:pointer;box-shadow:0 0 20px rgba(99, 102, 241, 0.35);">حفظ في المتجر</button>
+          <button onclick="cancelDraft(\${Number(product.id)})" style="background:#F1F5F9;color:#0F172A;border:none;padding:12px 16px;border-radius:12px;cursor:pointer;">إلغاء</button>
         </div>
       </div>
     ` : '';
@@ -196,14 +196,14 @@ function renderProducts() {
     return `
       <div class="card" style="margin-top:14px;">
         <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-          <img src="\${escapeHtml(product.thumbnail || product.main_image || '')}" alt="\${escapeHtml(product.name)}" style="width:110px;height:110px;object-fit:cover;border-radius:16px;border:1px solid #e8d9c8;background:#fff;">
+          <img src="\${escapeHtml(product.thumbnail || product.main_image || '')}" alt="\${escapeHtml(product.name)}" style="width:110px;height:110px;object-fit:cover;border-radius:16px;border:1px solid #E2E8F0;background:#fff;">
           <div style="flex:1;min-width:260px;">
             <h3 style="margin-bottom:8px;">\${escapeHtml(product.name)}</h3>
             <p class="muted" style="margin:0 0 8px;">ID: <code>\${escapeHtml(product.id)}</code> | السعر: <code>\${escapeHtml(price)} \${escapeHtml(currency)}</code></p>
             <p style="margin:0 0 14px;">\${escapeHtml(plainDescription)}</p>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <button \${disabled} onclick="optimizeProduct(\${Number(product.id)})" style="background:#0d7a5f;color:#fff;border:none;padding:12px 16px;border-radius:12px;cursor:pointer;">\${state.loadingProductId === product.id ? 'جاري التحسين...' : 'تحسين المحتوى'}</button>
-              <a href="\${escapeHtml(product.urls?.admin || '#')}" target="_blank" style="display:inline-block;text-decoration:none;background:#efe5d7;color:#6e4721;padding:12px 16px;border-radius:12px;">فتح في لوحة سلة</a>
+              <button \${disabled} onclick="optimizeProduct(\${Number(product.id)})" style="background:linear-gradient(135deg, #3B82F6, #6366F1);color:#fff;border:none;padding:12px 16px;border-radius:12px;cursor:pointer;box-shadow:0 0 20px rgba(99, 102, 241, 0.35);">\${state.loadingProductId === product.id ? 'جاري التحسين...' : 'تحسين المحتوى'}</button>
+              <a href="\${escapeHtml(product.urls?.admin || '#')}" target="_blank" style="display:inline-block;text-decoration:none;background:#F1F5F9;color:#0F172A;padding:12px 16px;border-radius:12px;">فتح في لوحة سلة</a>
             </div>
             <div id="result-\${Number(product.id)}" style="margin-top:14px;"></div>
             \${draftHtml}
@@ -255,7 +255,7 @@ async function optimizeProduct(productId) {
     const data = await res.json();
 
     if (!data.success) {
-      result.innerHTML = '<p style="color:#a33;">' + escapeHtml(data.message || 'فشل التحسين') + '</p>';
+      result.innerHTML = '<p style="color:#EF4444;">' + escapeHtml(data.message || 'فشل التحسين') + '</p>';
       await loadSubscription();
       return;
     }
@@ -274,7 +274,7 @@ async function optimizeProduct(productId) {
     await loadSubscription();
     renderProducts();
   } catch (error) {
-    result.innerHTML = '<p style="color:#a33;">حدث خطأ أثناء التحسين.</p>';
+    result.innerHTML = '<p style="color:#EF4444;">حدث خطأ أثناء التحسين.</p>';
   } finally {
     state.loadingProductId = null;
     renderProducts();
@@ -296,7 +296,7 @@ async function saveDescription(productId) {
   const metadataDescription = metaDescription ? metaDescription.value.trim() : '';
 
   if (!description) {
-    result.innerHTML = '<p style="color:#a33;">الوصف المعدل فارغ.</p>';
+    result.innerHTML = '<p style="color:#EF4444;">الوصف المعدل فارغ.</p>';
     return;
   }
 
@@ -318,17 +318,17 @@ async function saveDescription(productId) {
     const data = await res.json();
 
     if (!data.success) {
-      result.innerHTML = '<p style="color:#a33;">' + escapeHtml(data.message || 'فشل الحفظ') + '</p>';
+      result.innerHTML = '<p style="color:#EF4444;">' + escapeHtml(data.message || 'فشل الحفظ') + '</p>';
       await loadSubscription();
       return;
     }
 
     delete state.drafts[productId];
-    result.innerHTML = '<p style="color:#0d7a5f;">تم حفظ الوصف في المتجر بنجاح.</p>';
+    result.innerHTML = '<p style="color:#10B981;">تم حفظ الوصف في المتجر بنجاح.</p>';
     await loadSubscription();
     await loadProducts();
   } catch (error) {
-    result.innerHTML = '<p style="color:#a33;">حدث خطأ أثناء الحفظ.</p>';
+    result.innerHTML = '<p style="color:#EF4444;">حدث خطأ أثناء الحفظ.</p>';
   }
 }
 

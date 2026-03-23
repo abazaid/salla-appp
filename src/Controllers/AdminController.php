@@ -21,10 +21,10 @@ final class AdminController
   <p class="muted">تسجيل دخول مدير النظام.</p>
   <form method="post" action="/admin/login">
     <label><strong>البريد الإلكتروني</strong></label>
-    <input name="email" type="email" style="width:100%;padding:12px;margin:8px 0 16px;border-radius:12px;border:1px solid #d8c7b4;" required>
+    <input name="email" type="email" style="width:100%;padding:12px;margin:8px 0 16px;border-radius:12px;border:1px solid #E2E8F0;" required>
     <label><strong>كلمة المرور</strong></label>
-    <input name="password" type="password" style="width:100%;padding:12px;margin:8px 0 16px;border-radius:12px;border:1px solid #d8c7b4;" required>
-    <button style="background:#0d7a5f;color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;">دخول الأدمن</button>
+    <input name="password" type="password" style="width:100%;padding:12px;margin:8px 0 16px;border-radius:12px;border:1px solid #E2E8F0;" required>
+    <button style="background:linear-gradient(135deg, #3B82F6, #6366F1);color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;box-shadow:0 0 20px rgba(99, 102, 241, 0.35);">دخول الأدمن</button>
   </form>
 </div>
 HTML));
@@ -235,21 +235,21 @@ HTML));
     <h2>تعديل الاشتراك</h2>
     <form method="post" action="/admin/stores/{$store['id']}/subscription">
       <div class="grid">
-        <div><label>الحالة</label><input name="status" value="{$status}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #d8c7b4;"></div>
-        <div><label>اسم الباقة</label><input name="plan_name" value="{$planName}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #d8c7b4;"></div>
-        <div><label>إجمالي الحصة</label><input name="product_quota" type="number" value="{$quota}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #d8c7b4;"></div>
-        <div><label>المستخدم</label><input name="used_products" type="number" value="{$used}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #d8c7b4;"></div>
-        <div><label>بداية الفترة</label><input name="period_started_at" value="{$periodStart}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #d8c7b4;"></div>
-        <div><label>نهاية الفترة</label><input name="period_ends_at" value="{$periodEnd}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #d8c7b4;"></div>
+        <div><label>الحالة</label><input name="status" value="{$status}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
+        <div><label>اسم الباقة</label><input name="plan_name" value="{$planName}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
+        <div><label>إجمالي الحصة</label><input name="product_quota" type="number" value="{$quota}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
+        <div><label>المستخدم</label><input name="used_products" type="number" value="{$used}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
+        <div><label>بداية الفترة</label><input name="period_started_at" value="{$periodStart}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
+        <div><label>نهاية الفترة</label><input name="period_ends_at" value="{$periodEnd}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
       </div>
-      <button style="background:#0d7a5f;color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;margin-top:12px;">حفظ التعديلات</button>
+      <button style="background:linear-gradient(135deg, #3B82F6, #6366F1);color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;margin-top:12px;box-shadow:0 0 20px rgba(99, 102, 241, 0.35);">حفظ التعديلات</button>
     </form>
   </div>
-  <div class="card" style="margin-top:16px;border-color:#f0c5c0;">
+  <div class="card danger-zone" style="margin-top:16px;">
     <h2>منطقة خطرة</h2>
     <p class="muted">حذف المتجر سيزيله من قاعدة البيانات ولوحة الأدمن. لا يتم إلغاء تثبيته تلقائيًا من سلة.</p>
     <form method="post" action="/admin/stores/{$store['id']}/delete" onsubmit="return confirm('هل أنت متأكد من حذف هذا المتجر؟');">
-      <button style="background:#b94136;color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;">حذف المتجر</button>
+      <button style="background:#EF4444;color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;box-shadow:0 10px 24px rgba(239, 68, 68, 0.22);">حذف المتجر</button>
     </form>
   </div>
   <div class="card" style="margin-top:16px;">
@@ -430,7 +430,7 @@ HTML));
                 . '</tr>';
         }
 
-        $footer = '<tr style="font-weight:700;background:#f8f3ec;">'
+        $footer = '<tr style="font-weight:700;background:#EEF2FF;">'
             . '<td style="padding:10px;">الإجمالي</td>'
             . '<td style="padding:10px;">' . number_format($totalRuns) . '</td>'
             . '<td style="padding:10px;">$ ' . $this->formatUsd($totalCost) . '</td>'
