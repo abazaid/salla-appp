@@ -243,11 +243,15 @@ final class HomeController
     }
     details p{margin:8px 0 0;color:var(--muted);font-size:16px;line-height:1.9}
     .foot{
-      margin-top:18px;
+      margin-top:32px;
       text-align:center;
       color:var(--muted);
       font-size:14px;
+      padding-top:20px;
+      border-top:1px solid var(--border);
     }
+    .foot a{color:var(--muted);text-decoration:none;transition:color .2s}
+    .foot a:hover{color:var(--primary-2)}
     @media (max-width:1040px){
       .grid,.kpis,.steps{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
@@ -383,7 +387,16 @@ final class HomeController
       </div>
     </section>
 
-    <div class="foot">Powered by RankX SEO</div>
+    <div class="foot">
+      <p style="margin:0 0 10px;">
+        <a href="{$safeAppUrl}/" style="color:var(--muted);text-decoration:none;margin:0 8px;">الرئيسية</a>
+        <a href="{$safeAppUrl}/about" style="color:var(--muted);text-decoration:none;margin:0 8px;">من نحن</a>
+        <a href="{$safeAppUrl}/faq" style="color:var(--muted);text-decoration:none;margin:0 8px;">الأسئلة الشائعة</a>
+        <a href="{$safeAppUrl}/privacy" style="color:var(--muted);text-decoration:none;margin:0 8px;">الخصوصية</a>
+        <a href="{$safeAppUrl}/terms" style="color:var(--muted);text-decoration:none;margin:0 8px;">الشروط</a>
+      </p>
+      <p style="margin:0;">Powered by RankX SEO | <a href="mailto:seo@rankxseo.com" style="color:var(--primary-2);">seo@rankxseo.com</a></p>
+    </div>
   </div>
 </body>
 </html>

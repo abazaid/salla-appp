@@ -11,11 +11,16 @@ use App\Controllers\ProductController;
 use App\Controllers\WebhookController;
 use App\Controllers\AuthController;
 use App\Controllers\AdminController;
+use App\Controllers\PageController;
 use App\Router;
 
 $router = new Router();
 
 $router->get('/', [HomeController::class, 'index']);
+$router->get('/about', [PageController::class, 'about']);
+$router->get('/faq', [PageController::class, 'faq']);
+$router->get('/privacy', [PageController::class, 'privacy']);
+$router->get('/terms', [PageController::class, 'terms']);
 $router->get('/admin/login', [AdminController::class, 'loginForm']);
 $router->post('/admin/login', [AdminController::class, 'loginSubmit']);
 $router->get('/admin/logout', [AdminController::class, 'logout']);

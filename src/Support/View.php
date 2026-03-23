@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Config;
+
 final class View
 {
     public static function render(string $title, string $content): string
     {
+        $safeAppUrl = htmlspecialchars(rtrim((string) Config::get('APP_URL', 'http://localhost:8000'), '/'), ENT_QUOTES, 'UTF-8');
         return <<<HTML
 <!doctype html>
 <html lang="ar" dir="rtl">
@@ -558,8 +561,14 @@ final class View
       </div>
     </div>
     {$content}
-    <div style="margin-top:26px;text-align:center;color:var(--muted);font-size:14px;">
-      <span>Powered by RankX SEO</span>
+    <div style="margin-top:26px;text-align:center;color:var(--muted);font-size:14px;padding-top:20px;border-top:1px solid var(--border-color);">
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/" style="color:var(--muted);text-decoration:none;">الرئيسية</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/about" style="color:var(--muted);text-decoration:none;">من نحن</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/faq" style="color:var(--muted);text-decoration:none;">الأسئلة الشائعة</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/privacy" style="color:var(--muted);text-decoration:none;">الخصوصية</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/terms" style="color:var(--muted);text-decoration:none;">الشروط</a></span>
+      <br><br>
+      <span>Powered by RankX SEO</span> | <a href="mailto:seo@rankxseo.com" style="color:var(--primary-2);text-decoration:none;">seo@rankxseo.com</a>
     </div>
   </div>
 </body>
