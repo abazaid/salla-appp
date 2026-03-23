@@ -1212,9 +1212,11 @@
   }
 
   async function saveSitemapSettings() {
+    console.log('saveSitemapSettings called');
     const button = document.getElementById('save-sitemap-settings');
     const oldText = button?.textContent || 'حفظ روابط السايت ماب';
     const sitemapUrl = document.getElementById('setting-sitemap-url')?.value.trim() || '';
+    console.log('Sitemap URL:', sitemapUrl);
 
     if (button) {
       button.disabled = true;
@@ -1223,12 +1225,17 @@
     setSitemapAlert('success', 'جاري حفظ رابط السايت ماب...');
 
     try {
+      console.log('Calling API...');
       const data = await apiFetch('/sitemap/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sitemap_url: sitemapUrl })
-      }).then((response) => response.json());
+      }).then((response) => {
+        console.log('Response status:', response.status);
+        return response.json();
+      });
 
+      console.log('API Response:', data);
       if (!data.success) {
         setSitemapAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ رابط السايت ماب.'));
         return;
@@ -1252,6 +1259,7 @@
 
       setSitemapAlert('success', normalizeApiMessage(data.message, 'تم حفظ رابط السايت ماب بنجاح.'));
     } catch (error) {
+      console.error('Error:', error);
       setSitemapAlert('error', 'حدث خطأ أثناء حفظ رابط السايت ماب.');
     } finally {
       if (button) {
@@ -2546,7 +2554,10 @@
     });
     document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
-    document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
+    document.getElementById('save-sitemap-settings')?.addEventListener('click', () => {
+      console.log('Button clicked!');
+      saveSitemapSettings();
+    });
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
     document.getElementById('alt-clear-selection')?.addEventListener('click', () => {
       state.altSelectedProductIds = new Set();
