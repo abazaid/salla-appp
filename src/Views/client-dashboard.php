@@ -152,30 +152,74 @@ if ($appBasePath === '/') {
           <div>
             <label for="setting-output-language"><strong>لغة التوليد الأساسية</strong></label>
             <select id="setting-output-language">
-              <option value="">بدون تحديد</option>
-              <option value="ar">العربية</option>
+              <option value="ar" selected>العربية</option>
               <option value="en">English</option>
             </select>
           </div>
           <div style="grid-column:1/-1;">
             <label for="setting-global-instructions"><strong>تعليمات عامة</strong></label>
-            <textarea id="setting-global-instructions" rows="4" placeholder="تعليمات تنطبق على جميع أنواع التوليد..."></textarea>
+            <textarea id="setting-global-instructions" rows="6">اكتب محتوى عربي احترافي موجه للعميل السعودي.
+ركّز على مساعدة العميل في اتخاذ قرار الشراء.
+اجعل النص: واضح، سهل القراءة، عملي.
+القواعد:
+- لا تنسخ من المنافسين
+- لا تخترع معلومات أو مواصفات
+- استخدم اسم المنتج + البراند بشكل طبيعي
+- ركّز على الفوائد (مو الوصف فقط)
+- تجنب الحشو والكلمات الفارغة
+- لا تذكر مواقع أو منافسين
+- لا تضع روابط خارجية (فقط روابط داخلية)
+الهدف: رفع التحويل (Conversion) وتحسين SEO</textarea>
           </div>
           <div style="grid-column:1/-1;">
             <label for="setting-product-description-instructions"><strong>تعليمات وصف المنتج</strong></label>
-            <textarea id="setting-product-description-instructions" rows="4" placeholder="تعليمات خاصة بتوليد وصف المنتج..."></textarea>
+            <textarea id="setting-product-description-instructions" rows="10">الهدف: محتوى مقنع + SEO يساعد العميل يشتري
+الطول: 800 – 1200 كلمة (بدون حشو)
+
+هيكل الوصف:
+1. مقدمة: تعريف بالمنتج + اسم + البراند + أهم ميزة
+2. H2: نظرة عامة على المنتج (الشركة، الفئة، الاستخدام)
+3. H2: أهم المميزات (نقاط Bullet)
+4. H2: المواصفات (معلومات مؤكدة فقط)
+5. H2: التصميم وجودة التصنيع
+6. H2: الأداء وتجربة الاستخدام
+7. H2: تقييمنا للمنتج (رأي واقعي بدون مبالغة)
+8. H2: طريقة الاستخدام
+9. H2: لمن يناسب هذا المنتج
+10. H2: لماذا تشتري من متجرنا
+11. H2: منتجات قد تهمك (2-3 روابط داخلية)
+12. H2: الأسئلة الشائعة (5-7 أسئلة حقيقية)
+
+ملاحظة: حسب نوع المنتج (ملابس/إلكترونيات/تجميلي) تختلف زاوية البيع.</textarea>
           </div>
           <div>
             <label for="setting-meta-title-instructions"><strong>تعليمات Meta Title</strong></label>
-            <textarea id="setting-meta-title-instructions" rows="4" placeholder="تعليمات خاصة بعنوان الميتا..."></textarea>
+            <textarea id="setting-meta-title-instructions" rows="5">50–60 حرف
+يبدأ باسم المنتج
+الصيغة: اسم المنتج + الفئة + ميزة قوية
+
+مثال (ملابس): فستان سهرة ساتان نسائي تصميم أنيق وقصة مريحة
+
+تجنب: التكرار، الكلمات المبالغ فيها، الحشو</textarea>
           </div>
           <div>
             <label for="setting-meta-description-instructions"><strong>تعليمات Meta Description</strong></label>
-            <textarea id="setting-meta-description-instructions" rows="4" placeholder="تعليمات خاصة بوصف الميتا..."></textarea>
+            <textarea id="setting-meta-description-instructions" rows="5">140–155 حرف
+يحتوي اسم المنتج
+يحفّز على الشراء
+
+الصيغة: اشتري + المنتج + ميزة + فائدة + عنصر ثقة
+
+مثال: اشتري فستان ساتان نسائي بتصميم أنيق وخامة ناعمة مريحة. مثالي للمناسبات ويوفر لك إطلالة راقية بجودة عالية.</textarea>
           </div>
           <div>
             <label for="setting-image-alt-instructions"><strong>تعليمات ALT للصور</strong></label>
-            <textarea id="setting-image-alt-instructions" rows="4" placeholder="اكتب ALT كمحترف سيو: دقيق، طبيعي، وواضح..."></textarea>
+            <textarea id="setting-image-alt-instructions" rows="5">اكتب ALT كمحترف SEO:
+- دقيق: يصف الصورة بشكل صحيح
+- طبيعي: يبدو كجملة عادية
+- واضح: يفهم منه محتوى الصورة
+- يتضمن اسم المنتج عند الإمكان
+- 70-125 حرف تقريبًا</textarea>
           </div>
           <div>
 
