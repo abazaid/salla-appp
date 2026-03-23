@@ -18,36 +18,41 @@ final class View
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root {
-      --bg: #f3ecdf;
-      --surface: rgba(255, 251, 245, 0.82);
-      --surface-strong: #fffdf8;
-      --surface-soft: rgba(252, 247, 240, 0.88);
-      --ink: #1c1b18;
-      --muted: #6b6258;
-      --accent: #0f7b66;
-      --accent-strong: #0a5a4b;
-      --sky: #2ea9d6;
-      --sky-strong: #1d8eb6;
-      --warm: #bb6b35;
-      --danger: #b94136;
-      --danger-soft: #fff1ef;
-      --success: #0f7b66;
-      --success-soft: #e9f8f2;
-      --warning: #a66a1a;
-      --warning-soft: #fff7e8;
-      --border: rgba(202, 177, 149, 0.55);
-      --shadow: 0 24px 80px rgba(67, 49, 25, 0.12);
-      --shadow-soft: 0 16px 40px rgba(67, 49, 25, 0.08);
+      --primary-1: #3B82F6;
+      --primary-2: #6366F1;
+      --primary-3: #8B5CF6;
+      --gradient-main: linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+      --bg: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-soft: #EEF2FF;
+      --surface: rgba(255, 255, 255, 0.9);
+      --surface-strong: #FFFFFF;
+      --surface-soft: rgba(238, 242, 255, 0.6);
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --ink: #0F172A;
+      --muted: #64748B;
+      --accent: #3B82F6;
+      --accent-strong: #2563EB;
+      --border-color: #E2E8F0;
+      --border-soft: #EEF2FF;
+      --danger: #EF4444;
+      --danger-soft: #FEE2E2;
+      --success: #10B981;
+      --success-soft: #D1FAE5;
+      --warning: #F59E0B;
+      --warning-soft: #FEF3C7;
+      --glow-primary: 0 0 20px rgba(99, 102, 241, 0.35);
+      --glow-soft: 0 0 10px rgba(59, 130, 246, 0.2);
+      --shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.04);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "Tajawal", "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at 10% 10%, rgba(15, 123, 102, 0.18), transparent 20%),
-        radial-gradient(circle at 90% 15%, rgba(46, 169, 214, 0.15), transparent 22%),
-        radial-gradient(circle at 50% 100%, rgba(128, 93, 52, 0.10), transparent 30%),
-        var(--bg);
+      background: var(--bg);
       color: var(--ink);
       min-height: 100vh;
     }
@@ -57,12 +62,11 @@ final class View
       padding: 28px 20px 72px;
     }
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 26px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
     }
     .surface-soft { background: var(--surface-soft); }
     h1, h2, h3 { margin-top: 0; }
@@ -81,8 +85,8 @@ final class View
       display: inline-block;
       padding: 8px 14px;
       border-radius: 999px;
-      background: rgba(240, 227, 211, 0.96);
-      color: #6e4721;
+      background: var(--bg-soft);
+      color: var(--primary-2);
       font-size: 13px;
       font-weight: 600;
       margin-left: 8px;
@@ -94,20 +98,20 @@ final class View
       justify-content: center;
       gap: 8px;
       text-decoration: none;
-      background: var(--accent);
+      background: var(--gradient-main);
       color: #fff;
       padding: 12px 18px;
-      border-radius: 14px;
+      border-radius: 12px;
       border: none;
       cursor: pointer;
       font: inherit;
-      transition: transform .16s ease, box-shadow .16s ease, background .16s ease, opacity .16s ease;
-      box-shadow: 0 10px 24px rgba(15, 123, 102, 0.24);
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+      box-shadow: var(--glow-primary);
     }
     .btn:hover,
     button.btn:hover {
       transform: translateY(-1px);
-      background: var(--accent-strong);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.45);
     }
     .btn:disabled,
     button.btn:disabled {
@@ -116,25 +120,25 @@ final class View
       transform: none;
     }
     .btn-secondary {
-      background: rgba(239, 229, 215, 0.95);
-      color: #6e4721;
+      background: var(--bg-soft);
+      color: var(--text-primary);
       box-shadow: none;
     }
-    .btn-secondary:hover { background: rgba(230, 216, 197, 1); }
+    .btn-secondary:hover { background: #E2E8F0; }
     .btn-sky {
-      background: var(--sky);
-      box-shadow: 0 10px 24px rgba(46, 169, 214, 0.22);
+      background: var(--primary-1);
+      box-shadow: var(--glow-soft);
     }
-    .btn-sky:hover { background: var(--sky-strong); }
+    .btn-sky:hover { background: var(--accent-strong); }
     .btn-danger {
       background: var(--danger);
-      box-shadow: 0 10px 24px rgba(185, 65, 54, 0.22);
+      box-shadow: 0 10px 24px rgba(239, 68, 68, 0.22);
     }
-    .btn-danger:hover { background: #9b332a; }
+    .btn-danger:hover { background: #DC2626; }
     code, pre {
       font-family: Consolas, monospace;
-      background: #f3eadf;
-      border-radius: 10px;
+      background: var(--bg-soft);
+      border-radius: 8px;
     }
     code { padding: 2px 6px; }
     pre { padding: 14px; overflow: auto; }
@@ -142,17 +146,17 @@ final class View
       width: 100%;
       padding: 13px 14px;
       margin-top: 8px;
-      border-radius: 14px;
-      border: 1px solid rgba(202, 177, 149, 0.75);
-      background: rgba(255,255,255,0.94);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--surface-strong);
       color: var(--ink);
       font: inherit;
       outline: none;
       transition: border-color .16s ease, box-shadow .16s ease;
     }
     input:focus, select:focus, textarea:focus {
-      border-color: rgba(15, 123, 102, 0.65);
-      box-shadow: 0 0 0 4px rgba(15, 123, 102, 0.12);
+      border-color: var(--primary-1);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
     }
     table {
       width: 100%;
@@ -168,8 +172,8 @@ final class View
     }
     th {
       font-size: 14px;
-      color: var(--muted);
-      background: rgba(248, 241, 232, 0.95);
+      color: var(--text-secondary);
+      background: var(--bg-soft);
     }
     tr:last-child td { border-bottom: none; }
     .hero {
@@ -234,14 +238,14 @@ final class View
       font: inherit;
     }
     .sidebar-link:hover {
-      border-color: rgba(46,169,214,.6);
+      border-color: var(--primary-1);
       transform: translateY(-1px);
     }
     .sidebar-link.is-active {
       border-color: transparent;
-      background: linear-gradient(135deg, #2ea9d6 0%, #0f7b66 100%);
+      background: var(--gradient-main);
       color: #fff;
-      box-shadow: var(--shadow-soft);
+      box-shadow: var(--glow-primary);
     }
     .section-head {
       display: flex;
@@ -252,8 +256,8 @@ final class View
       margin-bottom: 14px;
     }
     .danger-zone {
-      border-color: rgba(185, 65, 54, 0.28);
-      background: rgba(255, 245, 244, 0.9);
+      border-color: rgba(239, 68, 68, 0.28);
+      background: rgba(254, 226, 226, 0.5);
     }
     .toolbar {
       display: grid;
@@ -281,9 +285,9 @@ final class View
       gap: 10px;
     }
     .chip {
-      border: 1px solid rgba(46, 169, 214, 0.24);
-      background: rgba(46, 169, 214, 0.12);
-      color: #155f77;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-soft);
+      color: var(--text-secondary);
       padding: 10px 14px;
       border-radius: 999px;
       cursor: pointer;
@@ -291,10 +295,10 @@ final class View
       font: inherit;
     }
     .chip.is-active {
-      background: var(--sky);
+      background: var(--gradient-main);
       color: #fff;
       border-color: transparent;
-      box-shadow: 0 10px 24px rgba(46, 169, 214, 0.22);
+      box-shadow: var(--glow-soft);
     }
     .products-grid {
       display: grid;
@@ -307,9 +311,9 @@ final class View
       flex-direction: column;
       gap: 16px;
       min-height: 100%;
-      background: rgba(255, 253, 248, 0.88);
-      border: 1px solid rgba(202, 177, 149, 0.38);
-      border-radius: 24px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
       padding: 18px;
       box-shadow: var(--shadow-soft);
     }
@@ -343,9 +347,9 @@ final class View
       width: 100%;
       aspect-ratio: 1 / 1;
       object-fit: cover;
-      border-radius: 20px;
-      background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(241, 232, 220, .92));
-      border: 1px solid rgba(202, 177, 149, 0.25);
+      border-radius: 16px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border-color);
     }
     .product-title {
       margin: 0;
@@ -399,21 +403,22 @@ final class View
     .pagination button {
       min-width: 42px;
       padding: 10px 12px;
-      border: 1px solid rgba(202, 177, 149, 0.7);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--surface-strong);
       cursor: pointer;
       font: inherit;
     }
     .pagination button.is-active {
-      background: var(--sky);
+      background: var(--gradient-main);
       color: #fff;
       border-color: transparent;
+      box-shadow: var(--glow-soft);
     }
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(28, 27, 24, 0.46);
+      background: rgba(15, 23, 42, 0.4);
       display: none;
       align-items: center;
       justify-content: center;
@@ -426,11 +431,11 @@ final class View
       width: min(1120px, 100%);
       max-height: 92vh;
       overflow: auto;
-      border-radius: 28px;
-      padding: 26px;
-      background: rgba(255, 252, 247, 0.98);
-      border: 1px solid rgba(202, 177, 149, 0.6);
-      box-shadow: 0 36px 90px rgba(28, 27, 24, 0.26);
+      border-radius: 20px;
+      padding: 24px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 36px 90px rgba(15, 23, 42, 0.12);
     }
     .modal-head {
       display: flex;
@@ -446,9 +451,9 @@ final class View
       gap: 16px;
     }
     .compare-card {
-      background: rgba(252, 247, 240, 0.9);
-      border: 1px solid rgba(202, 177, 149, 0.48);
-      border-radius: 22px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
       padding: 18px;
     }
     .compare-card textarea { min-height: 160px; }
@@ -465,9 +470,9 @@ final class View
     .empty-state {
       text-align: center;
       padding: 36px 18px;
-      border: 1px dashed rgba(202, 177, 149, 0.9);
-      border-radius: 24px;
-      background: rgba(255,255,255,0.45);
+      border: 1px dashed var(--border-color);
+      border-radius: 16px;
+      background: var(--bg-soft);
     }
     .notice {
       margin-top: 12px;
@@ -545,7 +550,7 @@ final class View
   <div class="wrap">
     <div class="section-head" style="margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <img src="/assets/rankxseo-logo.svg" alt="RankX SEO" style="width:min(100%,280px);height:auto;display:block;">
+        <img src="/assets/rankxseo-logo.svg" alt="RankX SEO" style="width:min(100%,280px);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))">
         <div>
           <div class="pill">RankX SEO</div>
           <div class="muted" style="margin-top:10px;">منصة تحسين محتوى منتجات سلة وربطها بلوحة خارجية احترافية.</div>
