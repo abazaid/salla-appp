@@ -116,7 +116,7 @@ final class SubscriptionManager
         return $store;
     }
 
-    public function activateSubscription(array $store, string $planName, string $event): array
+    public function activateSubscription(array $store, string $planName, string $event, int $intervalDays = 30, string $validTill = ''): array
     {
         $plan = Plans::get(Plans::mapFromSalla($planName));
         $planId = $plan !== null ? $plan['id'] : Plans::STARTER;
@@ -140,7 +140,14 @@ final class SubscriptionManager
         $subscription['product_quota'] = array_sum($plan['quotas']);
         $subscription['used_products'] = 0;
         $subscription['period_started_at'] = date('c');
-        $subscription['period_ends_at'] = date('c', strtotime('+30 days'));
+        
+        if ($validTill !== '') {
+            $subscription['period_ends_at'] = $validTill;
+        } else {
+            $subscription['period_ends_at'] = date('c', strtotime('+' . $intervalDays . ' days'));
+        }
+        
+        $subscription['interval_days'] = $intervalDays;
         $subscription['last_event'] = $event;
 
         if (!empty($store['merchant_id']) && Database::isAvailable()) {

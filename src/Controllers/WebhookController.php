@@ -43,7 +43,7 @@ final class WebhookController
         ];
 
         $updates = [
-            'webhook_logs' => array_slice($logs, -25),
+            'webhook_logs' => array_slice($logs, -50),
         ];
 
         $payloadData = $decoded['data'] ?? [];
@@ -92,30 +92,70 @@ final class WebhookController
             }
         }
 
-        if (in_array($event, ['app.trial.started'], true)) {
-            $updates['subscription'] = $subscriptionManager->startTrial($store);
+        $appEvents = [
+            'app.trial.started' => 'trial',
+            'app.trial.ended' => 'trial_ended',
+            'app.subscription.started' => 'subscription_started',
+            'app.subscription.renewed' => 'subscription_renewed',
+            'app.subscription.expired' => 'subscription_expired',
+            'app.subscription.upgraded' => 'subscription_upgraded',
+        ];
+
+        if (isset($appEvents[$event])) {
+            if ($event === 'app.trial.started') {
+                $updates['subscription'] = $subscriptionManager->startTrial($store);
+            } elseif ($event === 'app.trial.ended') {
+                $updates['subscription'] = $subscriptionManager->deactivateSubscription($store, $event);
+            } elseif (in_array($event, ['app.subscription.started', 'app.subscription.renewed', 'app.subscription.upgraded'], true)) {
+                $planSlug = (string) ($payloadData['slug'] ?? '');
+                $planName = (string) ($payloadData['plan_name'] ?? $planSlug);
+                $intervalCount = (int) ($payloadData['interval_count'] ?? 30);
+                $validTill = (string) ($payloadData['valid_till'] ?? '');
+
+                $updates['subscription'] = $subscriptionManager->activateSubscription(
+                    $store,
+                    $planName,
+                    $event,
+                    $intervalCount,
+                    $validTill
+                );
+            } elseif ($event === 'app.subscription.expired') {
+                $updates['subscription'] = $subscriptionManager->deactivateSubscription($store, $event);
+            }
         }
 
-        if (in_array($event, ['app.subscription.started', 'app.subscription.renewed'], true)) {
-            $planName = (string) ($payloadData['plan_name'] ?? '');
-            $updates['subscription'] = $subscriptionManager->activateSubscription(
-                $store,
-                $planName,
-                $event
-            );
-        }
+        $subscriptionEvents = [
+            'subscription.created' => 'subscription_created',
+            'subscription.charge.succeeded' => 'subscription_charged',
+            'subscription.charge.failed' => 'subscription_charge_failed',
+            'subscription.cancelled' => 'subscription_cancelled',
+            'subscription.updated' => 'subscription_updated',
+        ];
 
-        if (in_array($event, ['app.subscription.canceled', 'app.subscription.expired'], true)) {
-            $updates['subscription'] = $subscriptionManager->deactivateSubscription($store, $event);
-        }
+        if (isset($subscriptionEvents[$event])) {
+            $planSlug = (string) ($payloadData['slug'] ?? '');
+            $validTill = (string) ($payloadData['valid_till'] ?? '');
+            $intervalCount = (int) ($payloadData['interval_count'] ?? 30);
 
-        if ($event === 'app.subscription.upgraded') {
-            $planName = (string) ($payloadData['plan_name'] ?? '');
-            $updates['subscription'] = $subscriptionManager->activateSubscription(
-                $store,
-                $planName,
-                $event
-            );
+            if ($event === 'subscription.created' || $event === 'subscription.charge.succeeded') {
+                $updates['subscription'] = $subscriptionManager->activateSubscription(
+                    $store,
+                    $planSlug,
+                    $event,
+                    $intervalCount,
+                    $validTill
+                );
+            } elseif ($event === 'subscription.cancelled') {
+                $updates['subscription'] = $subscriptionManager->deactivateSubscription($store, $event);
+            } elseif ($event === 'subscription.updated') {
+                $updates['subscription'] = $subscriptionManager->activateSubscription(
+                    $store,
+                    $planSlug,
+                    $event,
+                    $intervalCount,
+                    $validTill
+                );
+            }
         }
 
         $repository->save($merchantId, $updates);
