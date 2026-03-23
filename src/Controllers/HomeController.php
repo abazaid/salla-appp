@@ -390,6 +390,7 @@ final class HomeController
     <div class="foot">
       <p style="margin:0 0 10px;">
         <a href="{$safeAppUrl}/" style="color:var(--muted);text-decoration:none;margin:0 8px;">الرئيسية</a>
+        <a href="{$safeAppUrl}/pricing" style="color:var(--muted);text-decoration:none;margin:0 8px;">الباقات</a>
         <a href="{$safeAppUrl}/about" style="color:var(--muted);text-decoration:none;margin:0 8px;">من نحن</a>
         <a href="{$safeAppUrl}/faq" style="color:var(--muted);text-decoration:none;margin:0 8px;">الأسئلة الشائعة</a>
         <a href="{$safeAppUrl}/privacy" style="color:var(--muted);text-decoration:none;margin:0 8px;">الخصوصية</a>

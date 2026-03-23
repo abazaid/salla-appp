@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Repositories\StoreRepository;
 use App\Repositories\SaaSRepository;
 use App\Support\Database;
+use App\Support\Plans;
 
 final class SubscriptionManager
 {
@@ -23,7 +24,15 @@ final class SubscriptionManager
         $status = (string) ($subscription['status'] ?? 'inactive');
 
         if ($endsAt !== false && $endsAt < time() && in_array($status, ['active', 'trial'], true)) {
+            $plan = Plans::get((string) ($subscription['plan_name'] ?? Plans::BUDGET_TRIAL));
+            $totalQuota = $plan !== null ? array_sum($plan['quotas']) : 0;
+
             $subscription['used_products'] = 0;
+            $subscription['used_product_seo'] = 0;
+            $subscription['used_image_alt'] = 0;
+            $subscription['used_keyword_research'] = 0;
+            $subscription['used_domain_seo'] = 0;
+            $subscription['product_quota'] = $totalQuota;
             $subscription['period_started_at'] = date('c');
             $subscription['period_ends_at'] = date('c', strtotime('+30 days'));
             $subscription['last_event'] = 'period.rolled';
@@ -35,20 +44,51 @@ final class SubscriptionManager
         return $store;
     }
 
-    public function canOptimize(array $store): bool
+    public function canOptimize(array $store, string $type = 'product_description'): bool
     {
         $subscription = $store['subscription'] ?? [];
         $status = (string) ($subscription['status'] ?? 'inactive');
-        $quota = (int) ($subscription['product_quota'] ?? 0);
-        $used = (int) ($subscription['used_products'] ?? 0);
 
-        return in_array($status, ['active', 'trial'], true) && $used < $quota;
+        if (!in_array($status, ['active', 'trial'], true)) {
+            return false;
+        }
+
+        $usedKey = 'used_' . $type;
+        $quotaKey = 'quota_' . $type;
+        
+        $used = (int) ($subscription[$usedKey] ?? 0);
+        $quota = (int) ($subscription[$quotaKey] ?? 0);
+
+        if ($quota <= 0) {
+            $plan = Plans::get((string) ($subscription['plan_name'] ?? Plans::BUDGET_TRIAL));
+            if ($plan !== null) {
+                $quota = (int) ($plan['quotas'][$type] ?? 0);
+            }
+        }
+
+        return $used < $quota;
     }
 
     public function recordOptimization(array $store, int $productId, ?string $productName, string $mode = 'all', string $status = 'completed'): array
     {
         $merchantId = (string) ($store['merchant_id'] ?? '');
         $subscription = $store['subscription'] ?? [];
+
+        $modeToQuota = [
+            'description' => 'product_description',
+            'seo' => 'product_seo',
+            'all' => 'product_description',
+            'image_alt' => 'image_alt',
+            'image_alt_bulk' => 'image_alt',
+            'store_seo' => 'product_seo',
+            'keyword_research' => 'keyword_research',
+            'domain_seo' => 'domain_seo',
+        ];
+
+        $quotaType = $modeToQuota[$mode] ?? 'product_description';
+        $usedKey = 'used_' . $quotaType;
+        $subscription[$usedKey] = (int) ($subscription[$usedKey] ?? 0) + 1;
+        
         $subscription['used_products'] = (int) ($subscription['used_products'] ?? 0) + 1;
         $store['subscription'] = $subscription;
 
@@ -76,12 +116,28 @@ final class SubscriptionManager
         return $store;
     }
 
-    public function activateSubscription(array $store, string $planName, int $quota, string $event): array
+    public function activateSubscription(array $store, string $planName, string $event): array
     {
+        $plan = Plans::get(Plans::mapFromSalla($planName));
+        $planId = $plan !== null ? $plan['id'] : Plans::STARTER;
+        
+        if ($plan === null) {
+            $plan = Plans::get(Plans::STARTER);
+        }
+
         $subscription = $store['subscription'] ?? [];
         $subscription['status'] = 'active';
-        $subscription['plan_name'] = $planName;
-        $subscription['product_quota'] = max($quota, 1);
+        $subscription['plan_name'] = $planId;
+        $subscription['plan_name_original'] = $planName;
+        
+        foreach ($plan['quotas'] as $key => $value) {
+            $subscription['quota_' . $key] = $value;
+            if (!isset($subscription['used_' . $key])) {
+                $subscription['used_' . $key] = 0;
+            }
+        }
+        
+        $subscription['product_quota'] = array_sum($plan['quotas']);
         $subscription['used_products'] = 0;
         $subscription['period_started_at'] = date('c');
         $subscription['period_ends_at'] = date('c', strtotime('+30 days'));
@@ -107,18 +163,60 @@ final class SubscriptionManager
         return $subscription;
     }
 
+    public function startTrial(array $store): array
+    {
+        $plan = Plans::get(Plans::BUDGET_TRIAL);
+        
+        $subscription = $store['subscription'] ?? [];
+        $subscription['status'] = 'trial';
+        $subscription['plan_name'] = Plans::BUDGET_TRIAL;
+        
+        foreach ($plan['quotas'] as $key => $value) {
+            $subscription['quota_' . $key] = $value;
+            if (!isset($subscription['used_' . $key])) {
+                $subscription['used_' . $key] = 0;
+            }
+        }
+        
+        $subscription['product_quota'] = array_sum($plan['quotas']);
+        $subscription['used_products'] = 0;
+        $subscription['period_started_at'] = date('c');
+        $subscription['period_ends_at'] = date('c', strtotime('+30 days'));
+        $subscription['last_event'] = 'trial.started';
+
+        return $subscription;
+    }
+
     public function summary(array $store): array
     {
         $subscription = $store['subscription'] ?? [];
-        $quota = (int) ($subscription['product_quota'] ?? 0);
-        $used = (int) ($subscription['used_products'] ?? 0);
+        $planId = (string) ($subscription['plan_name'] ?? Plans::BUDGET_TRIAL);
+        $plan = Plans::get($planId);
+
+        $quotas = [];
+        $used = [];
+        
+        if ($plan !== null) {
+            foreach ($plan['quotas'] as $key => $quota) {
+                $usedKey = 'used_' . $key;
+                $used[$key] = (int) ($subscription[$usedKey] ?? 0);
+                $quotas[$key] = [
+                    'quota' => $quota,
+                    'used' => $used[$key],
+                    'remaining' => max($quota - $used[$key], 0),
+                ];
+            }
+        }
 
         return [
             'status' => $subscription['status'] ?? 'inactive',
-            'plan_name' => $subscription['plan_name'] ?? null,
-            'product_quota' => $quota,
-            'used_products' => $used,
-            'remaining_products' => max($quota - $used, 0),
+            'plan_id' => $planId,
+            'plan_name' => $plan !== null ? $plan['name_ar'] : 'غير محدد',
+            'plan' => $plan,
+            'quotas' => $quotas,
+            'product_quota' => (int) ($subscription['product_quota'] ?? 0),
+            'used_products' => (int) ($subscription['used_products'] ?? 0),
+            'remaining_products' => max((int) ($subscription['product_quota'] ?? 0) - (int) ($subscription['used_products'] ?? 0), 0),
             'period_started_at' => $subscription['period_started_at'] ?? null,
             'period_ends_at' => $subscription['period_ends_at'] ?? null,
             'last_event' => $subscription['last_event'] ?? null,

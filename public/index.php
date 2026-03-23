@@ -19,6 +19,7 @@ $router = new Router();
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/about', [PageController::class, 'about']);
 $router->get('/faq', [PageController::class, 'faq']);
+$router->get('/pricing', [PageController::class, 'pricing']);
 $router->get('/privacy', [PageController::class, 'privacy']);
 $router->get('/terms', [PageController::class, 'terms']);
 $router->get('/admin/login', [AdminController::class, 'loginForm']);

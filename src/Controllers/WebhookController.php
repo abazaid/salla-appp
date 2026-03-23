@@ -11,6 +11,7 @@ use App\Services\SubscriptionManager;
 use App\Services\WebhookVerifier;
 use App\Support\Request;
 use App\Support\Response;
+use App\Support\Plans;
 
 final class WebhookController
 {
@@ -76,15 +77,7 @@ final class WebhookController
             }
 
             if (empty($store['subscription'])) {
-                $updates['subscription'] = [
-                    'status' => 'trial',
-                    'plan_name' => 'starter',
-                    'product_quota' => 20,
-                    'used_products' => 0,
-                    'period_started_at' => date('c'),
-                    'period_ends_at' => date('c', strtotime('+30 days')),
-                    'last_event' => $event,
-                ];
+                $updates['subscription'] = $subscriptionManager->startTrial($store);
             }
 
             $externalAccount = (new AccountProvisioner())->provisionFromStoreAuthorize(
@@ -99,17 +92,30 @@ final class WebhookController
             }
         }
 
+        if (in_array($event, ['app.trial.started'], true)) {
+            $updates['subscription'] = $subscriptionManager->startTrial($store);
+        }
+
         if (in_array($event, ['app.subscription.started', 'app.subscription.renewed'], true)) {
+            $planName = (string) ($payloadData['plan_name'] ?? '');
             $updates['subscription'] = $subscriptionManager->activateSubscription(
                 $store,
-                (string) ($payloadData['plan_name'] ?? 'paid'),
-                (int) ($payloadData['quantity'] ?? 100),
+                $planName,
                 $event
             );
         }
 
         if (in_array($event, ['app.subscription.canceled', 'app.subscription.expired'], true)) {
             $updates['subscription'] = $subscriptionManager->deactivateSubscription($store, $event);
+        }
+
+        if ($event === 'app.subscription.upgraded') {
+            $planName = (string) ($payloadData['plan_name'] ?? '');
+            $updates['subscription'] = $subscriptionManager->activateSubscription(
+                $store,
+                $planName,
+                $event
+            );
         }
 
         $repository->save($merchantId, $updates);

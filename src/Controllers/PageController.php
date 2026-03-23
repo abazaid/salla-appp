@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Config;
 use App\Support\Response;
+use App\Support\Plans;
 
 final class PageController
 {
@@ -909,6 +910,274 @@ HTML;
         <a href="{$safeAppUrl}/about">من نحن</a> · 
         <a href="{$safeAppUrl}/faq">الأسئلة الشائعة</a> · 
         <a href="{$safeAppUrl}/privacy">سياسة الخصوصية</a>
+      </p>
+      <p>© 2024 RankX SEO - جميع الحقوق محفوظة</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+        Response::html($html);
+    }
+
+    public function pricing(): void
+    {
+        $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
+        $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
+        $logoSrc = $safeAppUrl . '/assets/rankxseo-logo.svg';
+        $loginHref = $safeAppUrl . '/login';
+
+        $plans = Plans::all();
+        $plansHtml = '';
+
+        foreach ($plans as $plan) {
+            $isFeatured = $plan['is_featured'];
+            $featuredClass = $isFeatured ? ' featured' : '';
+            $featuredBadge = $isFeatured ? '<span class="featured-badge">⭐ الأكثر شعبية</span>' : '';
+            
+            $colorMap = [
+                'green' => ['bg' => '#D1FAE5', 'text' => '#059669', 'border' => '#A7F3D0'],
+                'blue' => ['bg' => '#DBEAFE', 'text' => '#2563EB', 'border' => '#BFDBFE'],
+                'purple' => ['bg' => '#EDE9FE', 'text' => '#7C3AED', 'border' => '#DDD6FE'],
+                'red' => ['bg' => '#FEE2E2', 'text' => '#DC2626', 'border' => '#FECACA'],
+            ];
+            $colors = $colorMap[$plan['color']] ?? $colorMap['blue'];
+
+            $quotasHtml = '';
+            foreach ($plan['quotas'] as $key => $value) {
+                $quotasHtml .= '<li>' . $value . ' ' . Plans::quotaLabel($key) . '</li>';
+            }
+
+            $extrasHtml = '';
+            if (!empty($plan['extras'])) {
+                $extrasLabels = [
+                    'activity_logs' => 'سجل العمليات والتصدير',
+                    'export' => 'تصدير البيانات',
+                    'faster_performance' => 'أداء أسرع ونتائج أفضل',
+                    'priority_support' => 'أولوية في الدعم',
+                    'higher_bulk_limits' => 'تنفيذ جماعي بحدود أعلى',
+                ];
+                foreach ($plan['extras'] as $extra => $enabled) {
+                    if ($enabled && isset($extrasLabels[$extra])) {
+                        $extrasHtml .= '<li class="extra-feature">' . $extrasLabels[$extra] . '</li>';
+                    }
+                }
+            }
+
+            $plansHtml .= <<<HTML
+        <div class="plan-card{$featuredClass}" style="--plan-bg:{$colors['bg']};--plan-text:{$colors['text']};--plan-border:{$colors['border']};">
+          {$featuredBadge}
+          <div class="plan-header">
+            <span class="plan-icon">{$plan['icon']}</span>
+            <h3 class="plan-name">{$plan['name_ar']}</h3>
+            <p class="plan-description">{$plan['description_ar']}</p>
+          </div>
+          <div class="plan-price">
+            <span class="price-number">{$plan['price_sar']}</span>
+            <span class="price-currency">ر.س / شهر</span>
+          </div>
+          <p class="price-usd">\${$plan['price_usd']} USD / month</p>
+          <ul class="plan-features">
+            {$quotasHtml}
+            {$extrasHtml}
+          </ul>
+          <a href="{$loginHref}" class="plan-cta">ابدأ الآن</a>
+        </div>
+HTML;
+        }
+
+        $html = <<<HTML
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>الباقات والأسعار | RankX SEO</title>
+  <meta name="description" content="اختر الباقة المناسبة لمتجرك - باقات مرنة تبدأ من 5 ر.س فقط لتحسين محتوى متجرك وزيادة المبيعات.">
+  <link rel="canonical" href="{$safeAppUrl}/pricing">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+    :root{
+      --primary-1:#3B82F6;
+      --primary-2:#6366F1;
+      --primary-3:#8B5CF6;
+      --gradient-main:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+      --bg:#F8FAFC;
+      --surface:#FFFFFF;
+      --ink:#0F172A;
+      --muted:#64748B;
+      --border:#E2E8F0;
+      --success:#10B981;
+      --glow-primary:0 0 20px rgba(99, 102, 241, 0.35);
+      --shadow:0 22px 60px rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Tajawal","Segoe UI",sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+    .wrap{width:min(1280px,100% - 28px);margin:22px auto;padding:0 14px 42px}
+    .surface{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:32px;margin-top:22px}
+    .brand{display:flex;align-items:center;gap:14px;margin-bottom:32px}
+    .brand img{width:min(200px,50vw);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))}
+    .hero{text-align:center;margin-bottom:48px}
+    h1{font-size:clamp(28px,4vw,42px);margin:0 0 16px;background:var(--gradient-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .subtitle{font-size:20px;color:var(--muted);margin:0;line-height:1.8}
+    .plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:32px}
+    .plan-card{background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:28px;text-align:center;position:relative;transition:transform .3s,box-shadow .3s}
+    .plan-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(15,23,42,.1)}
+    .plan-card.featured{border-color:var(--primary-2);box-shadow:0 0 30px rgba(99,102,241,.2)}
+    .featured-badge{position:absolute;top:-14px;right:50%;transform:translateX(50%);background:var(--gradient-main);color:#fff;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:700}
+    .plan-icon{font-size:48px;display:block;margin-bottom:12px}
+    .plan-header{margin-bottom:20px}
+    .plan-name{font-size:24px;font-weight:800;margin:0 0 8px;color:var(--ink)}
+    .plan-description{font-size:15px;color:var(--muted);margin:0;line-height:1.6}
+    .plan-price{margin:24px 0 4px}
+    .price-number{font-size:48px;font-weight:900;color:var(--primary-2)}
+    .price-currency{font-size:16px;color:var(--muted);margin-right:4px}
+    .price-usd{font-size:14px;color:var(--muted);margin:0 0 24px}
+    .plan-features{list-style:none;padding:0;margin:0 0 24px;text-align:right}
+    .plan-features li{padding:10px 0;border-bottom:1px solid var(--border);font-size:15px;color:#475569}
+    .plan-features li:last-child{border-bottom:none}
+    .plan-features li::before{content:"✓";color:var(--success);margin-left:8px;font-weight:700}
+    .extra-feature{color:var(--primary-2)!important;font-weight:600}
+    .plan-cta{display:inline-block;width:100%;padding:14px 24px;background:var(--gradient-main);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:var(--glow-primary);transition:transform .2s,box-shadow .2s}
+    .plan-cta:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(99,102,241,.4)}
+    .plan-card:not(.featured) .plan-cta{background:#F1F5F9;color:var(--ink);box-shadow:none}
+    .plan-card:not(.featured) .plan-cta:hover{background:#E2E8F0;box-shadow:none}
+    .compare-section{margin-top:48px;padding-top:48px;border-top:1px solid var(--border)}
+    .compare-section h2{text-align:center;font-size:28px;margin:0 0 32px}
+    .compare-table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:16px;border:1px solid var(--border)}
+    .compare-table th,.compare-table td{padding:14px 16px;text-align:center;border-bottom:1px solid var(--border)}
+    .compare-table th{background:#EEF2FF;font-weight:700;font-size:14px}
+    .compare-table th:first-child,.compare-table td:first-child{text-align:right}
+    .compare-table tr:last-child td{border-bottom:none}
+    .compare-table .check{color:var(--success);font-weight:700;font-size:18px}
+    .compare-table .cross{color:#DC2626;font-size:16px}
+    .compare-table .plan-highlight{background:rgba(99,102,241,.05)}
+    .cta-box{background:var(--gradient-main);border-radius:16px;padding:40px;text-align:center;color:#fff;margin-top:48px}
+    .cta-box h3{font-size:28px;margin:0 0 12px}
+    .cta-box p{opacity:0.9;margin:0 0 24px;font-size:18px}
+    .cta-box a{display:inline-block;background:#fff;color:var(--primary-2);padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:700;font-size:18px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+    .footer{padding:24px 0;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--border);margin-top:42px}
+    .footer a{color:var(--primary-2);text-decoration:none}
+    .footer a:hover{text-decoration:underline}
+    @media(max-width:768px){
+      .plans-grid{grid-template-columns:1fr}
+      .plan-card{max-width:400px;margin:0 auto}
+      .compare-table{font-size:13px}
+      .compare-table th,.compare-table td{padding:10px 8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="surface">
+      <div class="brand">
+        <img src="{$logoSrc}" alt="RankX SEO">
+      </div>
+
+      <div class="hero">
+        <h1>باقات وأسعار RankX SEO</h1>
+        <p class="subtitle">اختر الباقة المناسبة لمتجرك وابدأ في تحسين محتواك اليوم</p>
+      </div>
+
+      <div class="plans-grid">
+        {$plansHtml}
+      </div>
+
+      <div class="compare-section">
+        <h2>مقارنة الباقات</h2>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>الميزة</th>
+              <th>تجربة اقتصادية</th>
+              <th>الأساسية</th>
+              <th class="plan-highlight">المتقدمة ⭐</th>
+              <th>الاحترافية</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>تحسين وصف المنتج</td>
+              <td>25</td>
+              <td>80</td>
+              <td class="plan-highlight">260</td>
+              <td>700</td>
+            </tr>
+            <tr>
+              <td>تحسين SEO المنتج</td>
+              <td>15</td>
+              <td>40</td>
+              <td class="plan-highlight">140</td>
+              <td>350</td>
+            </tr>
+            <tr>
+              <td>تحسين ALT الصور</td>
+              <td>25</td>
+              <td>80</td>
+              <td class="plan-highlight">260</td>
+              <td>700</td>
+            </tr>
+            <tr>
+              <td>عمليات الكلمات المفتاحية</td>
+              <td>5</td>
+              <td>10</td>
+              <td class="plan-highlight">40</td>
+              <td>120</td>
+            </tr>
+            <tr>
+              <td>تحليل سيو الدومين</td>
+              <td>1</td>
+              <td>3</td>
+              <td class="plan-highlight">12</td>
+              <td>35</td>
+            </tr>
+            <tr>
+              <td>سجل العمليات</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+              <td class="plan-highlight check">✓</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>أولوية الدعم</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+              <td class="plan-highlight cross">—</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>حدود تنفيذ أعلى</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+              <td class="plan-highlight cross">—</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td><strong>السعر / شهر</strong></td>
+              <td><strong>5 ر.س</strong></td>
+              <td><strong>29 ر.س</strong></td>
+              <td class="plan-highlight"><strong>79 ر.س</strong></td>
+              <td><strong>149 ر.س</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cta-box">
+        <h3>هل تحتاج مساعدة في اختيار الباقة؟</h3>
+        <p>فريقنا جاهز لمساعدتك واختيار الأنسب لمتجرك</p>
+        <a href="mailto:seo@rankxseo.com">تواصل معنا</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        <a href="{$safeAppUrl}/">الرئيسية</a> · 
+        <a href="{$safeAppUrl}/about">من نحن</a> · 
+        <a href="{$safeAppUrl}/faq">الأسئلة الشائعة</a> · 
+        <a href="{$safeAppUrl}/privacy">الخصوصية</a> · 
+        <a href="{$safeAppUrl}/terms">الشروط</a>
       </p>
       <p>© 2024 RankX SEO - جميع الحقوق محفوظة</p>
     </div>
