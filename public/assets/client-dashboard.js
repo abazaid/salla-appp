@@ -3,6 +3,7 @@
     return;
   }
   window.__CLIENT_DASHBOARD_PRODUCTS_INIT__ = true;
+  console.log('Dashboard JS loaded');
   const appBasePath = (document.querySelector('.dashboard-shell')?.dataset.appBasePath || '').replace(/\/+$/, '');
   const apiPrefixes = Array.from(new Set([
     `${appBasePath}/api`,
@@ -2541,7 +2542,17 @@
     });
     document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
-    document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
+    
+    const sitemapBtn = document.getElementById('save-sitemap-settings');
+    if (sitemapBtn) {
+      console.log('Sitemap button found:', sitemapBtn);
+      sitemapBtn.addEventListener('click', () => {
+        console.log('Sitemap button clicked!');
+        saveSitemapSettings();
+      });
+    } else {
+      console.log('Sitemap button NOT found!');
+    }
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
     document.getElementById('alt-clear-selection')?.addEventListener('click', () => {
       state.altSelectedProductIds = new Set();
