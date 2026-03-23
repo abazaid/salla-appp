@@ -121,7 +121,7 @@ final class OpenAIClient
             throw new RuntimeException('OPENAI_API_KEY is missing.');
         }
 
-        $model = Config::get('OPENAI_MODEL', 'gpt-5-mini');
+        $model = Config::get('OPENAI_IMAGE_MODEL', 'gpt-4o-mini');
         $reasoningEffort = Config::get('OPENAI_REASONING_EFFORT', 'low');
         $language = trim((string) ($settings['output_language'] ?? ''));
         if ($language === '') {
