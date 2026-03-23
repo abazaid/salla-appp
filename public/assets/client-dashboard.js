@@ -1230,7 +1230,7 @@
     }
   }
 
-  async function loadOptimizationSettings() {
+  async function loadOptimizationSettingsLegacy() {
     try {
       const data = await apiFetch('/settings').then((response) => response.json());
       if (!data.success) {
@@ -1244,7 +1244,7 @@
     }
   }
 
-  async function saveOptimizationSettings() {
+  async function saveOptimizationSettingsLegacy() {
     const button = document.getElementById('save-optimization-settings');
     const oldText = button?.textContent || 'حفظ التعليمات';
     const payload = {
@@ -1253,9 +1253,7 @@
       product_description_instructions: document.getElementById('setting-product-description-instructions')?.value || '',
       meta_title_instructions: document.getElementById('setting-meta-title-instructions')?.value || '',
       meta_description_instructions: document.getElementById('setting-meta-description-instructions')?.value || '',
-      image_alt_instructions: document.getElementById('setting-image-alt-instructions')?.value || '',
-      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || '',
-      sitemap_url: document.getElementById('setting-sitemap-url')?.value || ''
+      image_alt_instructions: document.getElementById('setting-image-alt-instructions')?.value || ''
     };
 
     if (button) {
@@ -1362,7 +1360,7 @@
     }
   }
 
-  async function saveStoreSeo() {
+  async function saveStoreSeoLegacy() {
     const button = document.getElementById('save-store-seo');
     const oldText = button?.textContent || 'حفظ في المتجر';
     const title = document.getElementById('store-seo-title')?.value.trim() || '';
@@ -2337,9 +2335,7 @@
       meta_description_instructions: document.getElementById('setting-meta-description-instructions')?.value || '',
       image_alt_instructions: source === 'alt'
         ? readSettingValue('alt-setting-image-alt-instructions', 'setting-image-alt-instructions', '')
-        : undefined,
-      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || '',
-      sitemap_url: document.getElementById('setting-sitemap-url')?.value || ''
+        : undefined
     };
 
     if (button) {
