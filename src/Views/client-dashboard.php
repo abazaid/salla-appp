@@ -153,29 +153,16 @@ if ($appBasePath === '/') {
             </p>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="section-head">
-          <div>
-            <h2 style="margin:0 0 6px;">إعدادات السايت ماب</h2>
-            <p class="muted" style="margin:0;">أدخل رابط السايت ماب لحفظ الروابط الداخلية.</p>
-          </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button id="save-sitemap-settings" class="btn btn-sky" type="button">حفظ روابط السايت ماب</button>
-          </div>
-        </div>
-
-        <div id="sitemap-alert"></div>
-
-        <div style="margin-top:16px;">
+        <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #FCD34D;">
           <label for="setting-sitemap-url"><strong>رابط السايت ماب</strong></label>
           <input id="setting-sitemap-url" type="url" placeholder="https://yourstore.com/sitemap.xml" style="margin-top:8px;">
           <div class="helper-row">
             <span>الروابط المحفوظة: <strong id="setting-sitemap-links-count">0</strong></span>
             <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
           </div>
+          <button id="save-sitemap-settings" class="btn btn-sky" type="button" style="margin-top:12px;">حفظ روابط السايت ماب</button>
         </div>
+        <div id="sitemap-alert"></div>
       </div>
 
       <div class="card">
