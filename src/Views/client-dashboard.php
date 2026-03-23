@@ -382,17 +382,6 @@ if ($appBasePath === '/') {
 - يتضمن اسم المنتج عند الإمكان
 - 70-125 حرف تقريبًا</textarea>
           </div>
-          <div>
-
-          </div>
-          <div>
-            <label for="setting-sitemap-url"><strong>رابط السايت ماب للروابط الداخلية</strong></label>
-            <input id="setting-sitemap-url" type="url" placeholder="https://your-store.com/sitemap.xml">
-            <div class="helper-row">
-              <span id="setting-sitemap-links-count">0 روابط</span>
-              <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
-            </div>
-          </div>
         </div>
       </div>
 
