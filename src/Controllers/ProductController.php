@@ -288,7 +288,7 @@ final class ProductController
         if ($store === null) {
             Response::json([
                 'success' => false,
-                'message' => 'No connected store found.',
+                'message' => 'لم يتم العثور على متجر مرتبط. تأكد من ربط المتجر أولاً.',
             ], 404);
             return;
         }
@@ -331,11 +331,10 @@ final class ProductController
                     $mergedSettings['sitemap_last_fetched_at'] = (string) ($sitemap['fetched_at'] ?? date(DATE_ATOM));
                     $sitemapInfoMessage = 'تم جلب روابط السايت ماب بنجاح: ' . ((int) ($sitemap['links_count'] ?? 0)) . ' رابط.';
                 } catch (\Throwable $exception) {
-                    Response::json([
-                        'success' => false,
-                        'message' => 'تعذر قراءة السايت ماب: ' . $this->humanizeProviderError($exception->getMessage()),
-                    ], 422);
-                    return;
+                    $mergedSettings['sitemap_links_cache'] = $cachedLinks;
+                    $mergedSettings['sitemap_links_count'] = (int) ($currentSettings['sitemap_links_count'] ?? count($cachedLinks));
+                    $mergedSettings['sitemap_last_fetched_at'] = (string) ($currentSettings['sitemap_last_fetched_at'] ?? '');
+                    $sitemapInfoMessage = 'تم حفظ الإعدادات. ملاحظة: تعذر جلب روابط السايت ماب - ' . $this->humanizeProviderError($exception->getMessage());
                 }
             } else {
                 $mergedSettings['sitemap_links_cache'] = $cachedLinks;
@@ -349,11 +348,13 @@ final class ProductController
         ]);
 
         $responseSettings = $this->normalizeOptimizationSettings($mergedSettings);
+        $successMessage = 'تم حفظ إعدادات التحسين بنجاح.';
+        if ($sitemapInfoMessage !== '') {
+            $successMessage .= ' ' . $sitemapInfoMessage;
+        }
         Response::json([
             'success' => true,
-            'message' => $sitemapInfoMessage !== ''
-                ? ('Optimization settings saved. ' . $sitemapInfoMessage)
-                : 'Optimization settings saved.',
+            'message' => $successMessage,
             'settings' => $responseSettings,
         ]);
     }
