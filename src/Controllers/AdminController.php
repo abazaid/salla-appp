@@ -10,6 +10,7 @@ use App\Repositories\StoreRepository;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\View;
+use App\Support\Plans;
 
 final class AdminController
 {
@@ -78,9 +79,12 @@ HTML));
             $storeName = htmlspecialchars((string) ($store['store_name'] ?? '-'), ENT_QUOTES, 'UTF-8');
             $merchantId = htmlspecialchars((string) ($store['merchant_id'] ?? '-'), ENT_QUOTES, 'UTF-8');
             $status = htmlspecialchars((string) ($store['subscription_status'] ?? '-'), ENT_QUOTES, 'UTF-8');
+            $planId = (string) ($store['plan_name'] ?? Plans::BUDGET_TRIAL);
+            $plan = Plans::get($planId);
+            $planDisplay = $plan !== null ? $plan['icon'] . ' ' . $plan['name_ar'] : $planId;
             $used = (int) ($store['used_products'] ?? 0);
             $quota = (int) ($store['product_quota'] ?? 0);
-            $rows .= "<tr><td>{$storeName}</td><td><code>{$merchantId}</code></td><td>{$status}</td><td>{$used} / {$quota}</td><td><a href=\"/admin/stores/{$store['id']}\">فتح</a></td></tr>";
+            $rows .= "<tr><td>{$storeName}</td><td><code>{$merchantId}</code></td><td>{$planDisplay}</td><td>{$status}</td><td>{$used} / {$quota}</td><td><a href=\"/admin/stores/{$store['id']}\">فتح</a></td></tr>";
         }
 
         Response::html(View::render('Admin Dashboard', <<<HTML
@@ -115,7 +119,7 @@ HTML));
       </div>
     </div>
     <table style="width:100%;border-collapse:collapse;margin-top:12px;">
-      <thead><tr><th style="text-align:right;padding:10px;">المتجر</th><th style="text-align:right;padding:10px;">Merchant ID</th><th style="text-align:right;padding:10px;">الحالة</th><th style="text-align:right;padding:10px;">الاستهلاك</th><th style="text-align:right;padding:10px;">التفاصيل</th></tr></thead>
+      <thead><tr><th style="text-align:right;padding:10px;">المتجر</th><th style="text-align:right;padding:10px;">Merchant ID</th><th style="text-align:right;padding:10px;">الباقة</th><th style="text-align:right;padding:10px;">الحالة</th><th style="text-align:right;padding:10px;">الاستهلاك</th><th style="text-align:right;padding:10px;">التفاصيل</th></tr></thead>
       <tbody>{$rows}</tbody>
     </table>
   </div>
@@ -191,27 +195,28 @@ HTML));
         $ownerEmail = htmlspecialchars((string) ($store['owner_email'] ?? '-'), ENT_QUOTES, 'UTF-8');
         $merchantId = htmlspecialchars((string) ($store['merchant_id'] ?? '-'), ENT_QUOTES, 'UTF-8');
         $status = htmlspecialchars((string) ($store['subscription_status'] ?? 'trial'), ENT_QUOTES, 'UTF-8');
-        $planName = htmlspecialchars((string) ($store['plan_name'] ?? 'starter'), ENT_QUOTES, 'UTF-8');
+        $planId = (string) ($store['plan_name'] ?? Plans::BUDGET_TRIAL);
+        $currentPlan = Plans::get($planId);
         $periodStart = htmlspecialchars((string) ($store['period_started_at'] ?? date('Y-m-d H:i:s')), ENT_QUOTES, 'UTF-8');
         $periodEnd = htmlspecialchars((string) ($store['period_ends_at'] ?? date('Y-m-d H:i:s', strtotime('+30 days'))), ENT_QUOTES, 'UTF-8');
         $used = (int) ($store['used_products'] ?? 0);
         $quota = (int) ($store['product_quota'] ?? 0);
         $jsonStore = (new StoreRepository())->find((string) ($store['merchant_id'] ?? '')) ?? [];
-        $usageLogs = $jsonStore['usage_logs'] ?? [];
-        $aiUsage = $repository->storeAiUsageSummary($storeId);
-        $aiUsageByMode = $repository->storeAiUsageSummaryByMode($storeId);
-        $aiUsageLogs = $repository->listStoreAiUsageLogs($storeId, 200);
-        $logHtml = '';
 
-        foreach (array_reverse($usageLogs) as $log) {
-            $productName = htmlspecialchars((string) ($log['product_name'] ?? '-'), ENT_QUOTES, 'UTF-8');
-            $usedAt = htmlspecialchars((string) ($log['used_at'] ?? '-'), ENT_QUOTES, 'UTF-8');
-            $logHtml .= "<tr><td style=\"padding:10px;\">{$productName}</td><td style=\"padding:10px;\">{$usedAt}</td></tr>";
+        $planOptions = '';
+        foreach (Plans::all() as $plan) {
+            $selected = $plan['id'] === $planId ? 'selected' : '';
+            $planOptions .= '<option value="' . $plan['id'] . '" ' . $selected . '>' . $plan['icon'] . ' ' . $plan['name_ar'] . ' - ' . $plan['price_sar'] . ' ر.س</option>';
         }
 
-        if ($logHtml === '') {
-            $logHtml = '<tr><td colspan="2" style="padding:10px;">لا توجد سجلات استخدام بعد.</td></tr>';
+        $statusOptions = '';
+        $statuses = ['trial' => 'تجربة', 'active' => 'نشط', 'inactive' => 'متوقف', 'expired' => 'منتهي'];
+        foreach ($statuses as $key => $label) {
+            $selected = $key === $status ? 'selected' : '';
+            $statusOptions .= '<option value="' . $key . '" ' . $selected . '>' . $label . '</option>';
         }
+
+        $planQuotasJson = json_encode(array_map(fn($p) => $p['quotas'], Plans::all()));
 
         Response::html(View::render('Admin Store', <<<HTML
 <div class="card">
@@ -233,18 +238,57 @@ HTML));
   {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية لهذا المتجر')}
   <div class="card" style="margin-top:16px;">
     <h2>تعديل الاشتراك</h2>
-    <form method="post" action="/admin/stores/{$store['id']}/subscription">
+    <form method="post" id="subscription-form">
       <div class="grid">
-        <div><label>الحالة</label><input name="status" value="{$status}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
-        <div><label>اسم الباقة</label><input name="plan_name" value="{$planName}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
-        <div><label>إجمالي الحصة</label><input name="product_quota" type="number" value="{$quota}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
-        <div><label>المستخدم</label><input name="used_products" type="number" value="{$used}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
-        <div><label>بداية الفترة</label><input name="period_started_at" value="{$periodStart}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
-        <div><label>نهاية الفترة</label><input name="period_ends_at" value="{$periodEnd}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;"></div>
+        <div>
+          <label>الحالة</label>
+          <select name="status" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+            {$statusOptions}
+          </select>
+        </div>
+        <div>
+          <label>الباقة</label>
+          <select name="plan_id" id="plan-select" onchange="updatePlanQuotas()" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+            {$planOptions}
+          </select>
+        </div>
+        <div>
+          <label>إجمالي الحصة</label>
+          <input name="product_quota" type="number" value="{$quota}" id="product-quota" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+        </div>
+        <div>
+          <label>المستخدم</label>
+          <input name="used_products" type="number" value="{$used}" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+        </div>
+        <div>
+          <label>بداية الفترة</label>
+          <input name="period_started_at" value="{$periodStart}" type="datetime-local" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+        </div>
+        <div>
+          <label>نهاية الفترة</label>
+          <input name="period_ends_at" value="{$periodEnd}" type="datetime-local" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+        </div>
       </div>
-      <button style="background:linear-gradient(135deg, #3B82F6, #6366F1);color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;margin-top:12px;box-shadow:0 0 20px rgba(99, 102, 241, 0.35);">حفظ التعديلات</button>
+      <div id="plan-details" class="card" style="margin-top:16px;background:#EEF2FF;border:none;">
+        <h3 style="margin:0 0 12px;">تفاصيل الباقة: {$currentPlan['icon']} {$currentPlan['name_ar']}</h3>
+        <p style="margin:0;color:#64748B;font-size:14px;">{$currentPlan['description_ar']}</p>
+      </div>
+      <button type="submit" formaction="/admin/stores/{$store['id']}/subscription" style="background:linear-gradient(135deg, #3B82F6, #6366F1);color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;margin-top:12px;box-shadow:0 0 20px rgba(99, 102, 241, 0.35);">حفظ التعديلات</button>
     </form>
   </div>
+
+  <script>
+    const planQuotas = {$planQuotasJson};
+    
+    function updatePlanQuotas() {
+      const planId = document.getElementById('plan-select').value;
+      const quota = planQuotas[planId];
+      if (quota) {
+        const total = Object.values(quota).reduce((a, b) => a + b, 0);
+        document.getElementById('product-quota').value = total;
+      }
+    }
+  </script>
   <div class="card danger-zone" style="margin-top:16px;">
     <h2>منطقة خطرة</h2>
     <p class="muted">حذف المتجر سيزيله من قاعدة البيانات ولوحة الأدمن. لا يتم إلغاء تثبيته تلقائيًا من سلة.</p>
@@ -278,14 +322,34 @@ HTML));
             return;
         }
 
+        $planId = trim((string) ($_POST['plan_id'] ?? Plans::BUDGET_TRIAL));
+        $plan = Plans::get($planId);
+        if ($plan === null) {
+            $plan = Plans::get(Plans::BUDGET_TRIAL);
+            $planId = Plans::BUDGET_TRIAL;
+        }
+
+        $periodStartedAt = trim((string) ($_POST['period_started_at'] ?? ''));
+        $periodEndsAt = trim((string) ($_POST['period_ends_at'] ?? ''));
+        if ($periodStartedAt !== '') {
+            $periodStartedAt = date('Y-m-d H:i:s', strtotime($periodStartedAt));
+        }
+        if ($periodEndsAt !== '') {
+            $periodEndsAt = date('Y-m-d H:i:s', strtotime($periodEndsAt));
+        }
+
         $payload = [
             'status' => trim((string) ($_POST['status'] ?? 'trial')),
-            'plan_name' => trim((string) ($_POST['plan_name'] ?? 'starter')),
-            'product_quota' => (int) ($_POST['product_quota'] ?? 0),
+            'plan_name' => $planId,
+            'product_quota' => (int) ($_POST['product_quota'] ?? array_sum($plan['quotas'])),
             'used_products' => (int) ($_POST['used_products'] ?? 0),
-            'period_started_at' => trim((string) ($_POST['period_started_at'] ?? '')),
-            'period_ends_at' => trim((string) ($_POST['period_ends_at'] ?? '')),
+            'period_started_at' => $periodStartedAt,
+            'period_ends_at' => $periodEndsAt,
         ];
+
+        foreach ($plan['quotas'] as $key => $value) {
+            $payload['quota_' . $key] = $value;
+        }
 
         $repository->updateStoreSubscription($storeId, $payload);
         $repository->logAdminActivity(
