@@ -135,6 +135,26 @@ if ($appBasePath === '/') {
         </div>
       </div>
 
+      <div class="card" style="background:#FEF3C7;border-color:#FCD34D;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <span style="font-size:24px;">💡</span>
+          <div>
+            <h3 style="margin:0 0 8px;color:#92400E;">مهم: الربط الداخلي للمنتجات</h3>
+            <p style="margin:0 0 8px;color:#78350F;font-size:14px;line-height:1.7;">
+              لإضافة روابط داخلية للمنتجات داخل الأوصاف، يجب:
+            </p>
+            <ol style="margin:0 0 10px;padding-right:20px;color:#78350F;font-size:14px;line-height:1.8;">
+              <li>أضف رابط <strong>السايت ماب</strong> في الحقل المخصص (مثال: <code style="background:#FEF9C3;padding:2px 6px;border-radius:4px;">https://yourstore.com/sitemap.xml</code>)</li>
+              <li>اضغط على <strong>حفظ التعليمات</strong></li>
+              <li>سيتم جلب الروابط واستخدامها تلقائيًا في الأوصاف</li>
+            </ol>
+            <p style="margin:0;color:#92400E;font-size:13px;">
+              <strong>ملاحظة:</strong> بدون السايت ماب، لن يتم إضافة روابط داخلية للمنتجات.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="section-head">
           <div>
