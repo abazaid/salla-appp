@@ -322,7 +322,34 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => 'You write ecommerce product descriptions for Salla merchants. Keep the copy accurate and factual. Return only clean HTML that can be pasted directly into Salla editor. Use only tags: <h2>, <p>, <ul>, <li>, <strong>, <a>. Never use markdown, never write "H2:" labels.',
+                        'text' => 'You are an expert ecommerce content writer specializing in Arabic content for Saudi customers. Write detailed, SEO-optimized product descriptions following EXACTLY the structure provided in the instructions.
+
+IMPORTANT STRUCTURE RULES:
+1. Start with an introduction paragraph (no heading) - introduce the product, brand, and main benefit
+2. Use <h2> for ALL section headings (never skip headings or change order)
+3. Use <p> for paragraphs and <ul><li> for bullet points
+4. Use <strong> to highlight key terms
+5. Use <a href="...">...</a> ONLY for internal links when provided
+6. NEVER use markdown, emojis, or H2: labels
+7. NEVER fabricate specifications - only use provided product data
+8. Target 800-1200 words minimum (detailed content)
+
+MANDATORY SECTION ORDER (DO NOT SKIP OR REORDER):
+1. Introduction (no heading) - product name, brand, main benefit
+2. <h2>نظرة عامة على المنتج</h2>
+3. <h2>أهم المميزات</h2> (bullet points)
+4. <h2>المواصفات</h2>
+5. <h2>التصميم وجودة التصنيع</h2>
+6. <h2>الأداء وتجربة الاستخدام</h2>
+7. <h2>تقييمنا للمنتج</h2>
+8. <h2>طريقة الاستخدام</h2>
+9. <h2>لماذا يختار العملاء هذا المنتج</h2>
+10. <h2>لمن يناسب هذا المنتج</h2>
+11. <h2>لماذا تشتري من متجرنا</h2>
+12. <h2>منتجات قد تهمك</h2> (with internal links)
+13. <h2>الأسئلة الشائعة</h2>
+
+Return ONLY clean HTML without any labels, comments, or explanations.',
                     ],
                 ],
             ],
@@ -331,11 +358,11 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                            'text' => "Generate an improved product description in language={$language}. Focus on benefits, clarity, and conversion while staying faithful to the provided product data.\nRules:\n- Output must be valid HTML sections for Salla editor.\n- Use <h2> for section titles, <p> for paragraphs, and <ul><li> for feature lists.\n- Use <a href=\"...\">...</a> only for internal links if provided.\n- No markdown, no plain labels like H2:, no fabricated specs.\n"
-                            . $this->buildInstructionBlock('Internal links rule', $this->buildInternalLinksPromptBlock($product, $settings, true))
-                            . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
-                            . $this->buildInstructionBlock('Product description instructions', $productInstructions)
-                            . "\nProduct:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+                            'text' => "Generate a detailed product description in language={$language}.\n\nFollow the merchant's specific instructions EXACTLY and maintain the mandatory section order shown in the system prompt.\n\n"
+                            . $this->buildInstructionBlock('Internal links', $this->buildInternalLinksPromptBlock($product, $settings, true))
+                            . $this->buildInstructionBlock('Merchant Style Guide', $globalInstructions)
+                            . $this->buildInstructionBlock('Description Template & Rules', $productInstructions)
+                            . "\nProduct Data (use ONLY provided data, do NOT fabricate):\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
                     ],
                 ],
             ],
@@ -423,7 +450,34 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => 'You write ecommerce product copy for Salla merchants. Return valid JSON only with keys: description, metadata_title, metadata_description. Keep claims accurate. Description must be clean Salla-ready HTML (only <h2>, <p>, <ul>, <li>, <strong>, <a>) with no markdown and no plain "H2:" labels. metadata_title concise. metadata_description SEO-friendly within about 160 characters.',
+                        'text' => 'You are an expert ecommerce content writer for Saudi customers. Return valid JSON with EXACTLY these keys: description, metadata_title, metadata_description.
+
+DESCRIPTION STRUCTURE (CRITICAL):
+1. Start with introduction paragraph (no heading)
+2. Use <h2> for ALL section headings
+3. Use <p> for paragraphs, <ul><li> for bullets
+4. Use <strong> for key terms
+5. Use <a href="...">...</a> ONLY for internal links
+6. NEVER use markdown, emojis, or "H2:" labels
+7. NEVER fabricate specs - only use provided data
+8. Target 800-1200 words minimum
+
+MANDATORY SECTION ORDER (DO NOT SKIP):
+1. Introduction (no heading)
+2. <h2>نظرة عامة على المنتج</h2>
+3. <h2>أهم المميزات</h2> (bullets)
+4. <h2>المواصفات</h2>
+5. <h2>التصميم وجودة التصنيع</h2>
+6. <h2>الأداء وتجربة الاستخدام</h2>
+7. <h2>تقييمنا للمنتج</h2>
+8. <h2>طريقة الاستخدام</h2>
+9. <h2>لماذا يختار العملاء هذا المنتج</h2>
+10. <h2>لمن يناسب هذا المنتج</h2>
+11. <h2>لماذا تشتري من متجرنا</h2>
+12. <h2>منتجات قد تهمك</h2> (with links)
+13. <h2>الأسئلة الشائعة</h2>
+
+METADATA: metadata_title (50-60 chars, start with product name), metadata_description (140-155 chars, include product name and CTA).',
                     ],
                 ],
             ],
@@ -432,13 +486,13 @@ final class OpenAIClient
                 'content' => [
                     [
                         'type' => 'input_text',
-                            'text' => "Generate improved product content in language={$language}. {$modeInstruction} Return JSON only.\nRules for description field (if generated):\n- Must be valid HTML sections.\n- Use <h2> titles, <p> paragraphs, <ul><li> for bullets.\n- Use <a href=\"...\">...</a> only for internal links if provided.\n- Do not return markdown, do not use plain labels like H2:.\n"
-                            . $this->buildInstructionBlock('Internal links rule', $this->buildInternalLinksPromptBlock($product, $settings, $mode !== 'seo'))
-                            . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
-                            . $this->buildInstructionBlock('Product description instructions', $productInstructions)
-                            . $this->buildInstructionBlock('Meta title instructions', $metaTitleInstructions)
-                            . $this->buildInstructionBlock('Meta description instructions', $metaDescriptionInstructions)
-                            . "\nProduct:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+                            'text' => "Generate product content in language={$language}. {$modeInstruction} Return valid JSON only.\n"
+                            . $this->buildInstructionBlock('Internal links', $this->buildInternalLinksPromptBlock($product, $settings, $mode !== 'seo'))
+                            . $this->buildInstructionBlock('Style Guide', $globalInstructions)
+                            . $this->buildInstructionBlock('Description Template', $productInstructions)
+                            . $this->buildInstructionBlock('Meta Title Rules', $metaTitleInstructions)
+                            . $this->buildInstructionBlock('Meta Description Rules', $metaDescriptionInstructions)
+                            . "\nProduct Data:\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
                     ],
                 ],
             ],
