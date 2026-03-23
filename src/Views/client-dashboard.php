@@ -145,13 +145,245 @@ if ($appBasePath === '/') {
             </p>
             <ol style="margin:0 0 10px;padding-right:20px;color:#78350F;font-size:14px;line-height:1.8;">
               <li>أضف رابط <strong>السايت ماب</strong> في الحقل المخصص (مثال: <code style="background:#FEF9C3;padding:2px 6px;border-radius:4px;">https://yourstore.com/sitemap.xml</code>)</li>
-              <li>اضغط على <strong>حفظ التعليمات</strong></li>
+              <li>اضغط على <strong>حفظ روابط السايت ماب</strong></li>
               <li>سيتم جلب الروابط واستخدامها تلقائيًا في الأوصاف</li>
             </ol>
             <p style="margin:0;color:#92400E;font-size:13px;">
               <strong>ملاحظة:</strong> بدون السايت ماب، لن يتم إضافة روابط داخلية للمنتجات.
             </p>
           </div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #FCD34D;">
+          <label for="setting-sitemap-url"><strong>رابط السايت ماب</strong></label>
+          <input id="setting-sitemap-url" type="url" placeholder="https://yourstore.com/sitemap.xml" style="margin-top:8px;">
+          <div class="helper-row">
+            <span>الروابط المحفوظة: <strong id="setting-sitemap-links-count">0</strong></span>
+            <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
+          </div>
+          <button id="save-sitemap-settings" class="btn btn-sky" type="button" style="margin-top:12px;">حفظ روابط السايت ماب</button>
+        </div>
+        <div id="sitemap-alert" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <h2 style="margin:0 0 6px;">خيارات التحسين</h2>
+            <p class="muted" style="margin:0;">إعدادات عامة للتوليد لكل متجر. إذا تركت أي حقل فارغًا سيتم تجاوزه.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="save-optimization-settings" class="btn btn-sky" type="button">حفظ التعليمات</button>
+          </div>
+        </div>
+
+        <div id="optimization-settings-alert"></div>
+
+        <div class="grid" style="margin-top:0;">
+          <div>
+            <label for="setting-output-language"><strong>لغة التوليد الأساسية</strong></label>
+            <select id="setting-output-language">
+              <option value="ar" selected>العربية</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="setting-global-instructions"><strong>تعليمات عامة</strong></label>
+            <textarea id="setting-global-instructions" rows="14">اكتب محتوى عربي احترافي موجه للعميل السعودي.
+ركّز على مساعدة العميل في اتخاذ قرار الشراء.
+اجعل النص:
+- واضح
+- سهل القراءة
+- عملي (يفيد العميل فعليًا)
+
+القواعد:
+- لا تنسخ من المنافسين
+- لا تخترع معلومات أو مواصفات
+- استخدم اسم المنتج + البراند بشكل طبيعي
+- ركّز على الفوائد (مو الوصف فقط)
+- تجنب الحشو والكلمات الفارغة
+- لا تذكر مواقع أو منافسين
+- لا تضع روابط خارجية (فقط روابط داخلية)
+
+الهدف:
+- رفع التحويل (Conversion)
+- تحسين SEO</textarea>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="setting-product-description-instructions"><strong>تعليمات وصف المنتج</strong></label>
+            <textarea id="setting-product-description-instructions" rows="28">🧩 أهم نقطة: تحديد نوع المنتج
+
+قبل كتابة أي وصف لازم تحدد نوع المنتج:
+• ملابس (رجالي / نسائي)
+• أحذية
+• إكسسوارات
+• إلكترونيات
+• أدوات منزلية
+
+🧠 قواعد حسب نوع المنتج (عام)
+
+إذا المنتج ملابس:
+ركّز على:
+- الخامة
+- المقاس
+- الراحة
+- الاستخدام (يومي / رسمي)
+
+إذا المنتج إلكتروني:
+ركّز على:
+- الأداء
+- المواصفات
+- الاستخدام العملي
+
+إذا المنتج تجميلي:
+ركّز على:
+- النتائج
+- المكونات
+- الأمان
+
+القاعدة الذهبية:
+👉 كل نوع له زاوية بيع مختلفة — لا تكتب وصف عام
+
+🧾 وصف المنتج (الزبدة العملية)
+
+الهدف:
+- محتوى مقنع + SEO
+- يساعد العميل يشتري
+
+الطول:
+800 – 1200 كلمة (أو أقل بدون حشو)
+
+🔗 الربط الداخلي (الزبدة)
+استخدم 2–3 روابط فقط من نفس المتجر مرتبطة مباشرة بالمنتج
+مثال (ملابس):
+- رابط فئة (فساتين)
+- رابط براند
+- رابط منتج مشابه
+
+🧱 هيكل الوصف (مهم جدًا)
+
+1. مقدمة (بدون عنوان)
+   - تعريف بالمنتج
+   - اسم المنتج
+   - البراند
+   - أهم ميزة
+
+2. H2: نظرة عامة على المنتج
+   - الشركة
+   - الفئة
+   - الاستخدام
+
+3. H2: أهم المميزات
+   - نقاط Bullet فقط
+
+4. H2: المواصفات
+   - فقط معلومات مؤكدة
+
+5. H2: التصميم وجودة التصنيع
+   - الشكل
+   - الخامة
+   - الراحة
+
+6. H2: الأداء وتجربة الاستخدام
+   (حسب نوع المنتج)
+   مثال ملابس:
+   - الراحة
+   - الحركة
+   - الاستخدام اليومي
+
+7. H2: تقييمنا للمنتج
+   - رأي واقعي بدون مبالغة
+
+8. H2: طريقة الاستخدام
+   - كيف يستخدم المنتج
+
+9. H2: مقارنة مع منتجات مشابهة
+   - فرق حقيقي فقط
+
+10. H2: لماذا يختار العملاء هذا المنتج
+    - نقاط إقناع
+
+11. H2: لمن يناسب هذا المنتج
+    - تحديد الجمهور
+
+12. H2: لماذا تشتري من متجرنا
+    - سرعة الشحن
+    - جودة
+    - ضمان
+
+13. H2: منتجات قد تهمك
+    - روابط داخلية فقط
+
+14. H2: الأسئلة الشائعة
+    - 5–7 أسئلة حقيقية
+
+⚠️ أهم الأخطاء (لازم تتجنبها)
+
+❌ كتابة وصف عام يصلح لأي منتج
+❌ اختراع مواصفات
+❌ تكرار الكلمات المفتاحية
+❌ حشو بدون فائدة
+❌ نسخ من المنافسين</textarea>
+          </div>
+          <div>
+            <label for="setting-meta-title-instructions"><strong>تعليمات Meta Title</strong></label>
+            <textarea id="setting-meta-title-instructions" rows="12">🏷️ Meta Title
+المطلوب:
+- 50-60 حرف
+- يبدأ باسم المنتج
+
+الصيغة: اسم المنتج + الفئة + ميزة قوية
+
+مثال (ملابس):
+فستان سهرة ساتان نسائي تصميم أنيق وقصة مريحة
+
+مثال (إلكترونيات):
+سماعة بلوتوث لاسلكية بجودة صوت عالية وعمر بطارية طويل
+
+تجنب:
+- التكرار
+- الكلمات المبالغ فيها
+- الحشو</textarea>
+          </div>
+          <div>
+            <label for="setting-meta-description-instructions"><strong>تعليمات Meta Description</strong></label>
+            <textarea id="setting-meta-description-instructions" rows="12">📝 Meta Description
+المطلوب:
+- 140-155 حرف
+- يحتوي اسم المنتج
+- يحفّز على الشراء
+
+الصيغة: اشتري + المنتج + ميزة + فائدة + عنصر ثقة
+
+مثال (ملابس):
+اشتري فستان سهرة ساتان نسائي بتصميم أنيق وخامة ناعمة مريحة. مثالي للمناسبات ويوفر لك إطلالة راقية بجودة عالية.
+
+مثال (إلكترونيات):
+اشتري سماعة بلوتوث لاسلكية بصوت واضح ونقي مع عزل ضوضاء متقدم. بطارية تدوم 24 ساعة وشحن سريع عبر USB-C.
+
+تجنب:
+- التكرار
+- الكلمات المبالغ فيها
+- الحشو</textarea>
+          </div>
+          <div>
+            <label for="setting-image-alt-instructions"><strong>تعليمات ALT للصور</strong></label>
+            <textarea id="setting-image-alt-instructions" rows="12">🖼️ ALT للصور - القاعدة الذهبية:
+"كل نوع له زاوية بيع مختلفة"
+
+أمثلة حسب نوع المنتج:
+• ملابس: "صورة فستان سهرة نسائي ساتان أرجواني، تصميم سهرة أنيق"
+• إلكترونيات: "سماعة بلوتوث لاسلكية بيضاء مع علبة شحن"
+• تجميلي: "عبوة كريم مرطب للوجه 50ml بتركيبة فيتامين E"
+
+القواعد:
+- دقيق: يصف الصورة بشكل صحيح
+- طبيعي: يبدو كجملة عادية
+- واضح: يفهم منه محتوى الصورة
+- يتضمن اسم المنتج عند الإمكان
+- 70-125 حرف تقريبًا</textarea>
+          </div>
+        </div>
+      </div>
         </div>
       </div>
 

@@ -359,6 +359,58 @@ final class ProductController
         ]);
     }
 
+    public function saveSitemapSettings(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لم يتم العثور على متجر مرتبط. تأكد من ربط المتجر أولاً.',
+            ], 404);
+            return;
+        }
+
+        $currentSettings = (array) ($store['settings'] ?? []);
+        $sitemapUrl = $this->normalizeSitemapUrl((string) ($_POST['sitemap_url'] ?? ''));
+        
+        $mergedSettings = $currentSettings;
+        $mergedSettings['sitemap_url'] = $sitemapUrl;
+        
+        $message = 'تم حفظ رابط السايت ماب.';
+        
+        if ($sitemapUrl !== '') {
+            try {
+                $sitemap = (new SitemapService())->fetchAndParse($sitemapUrl);
+                $mergedSettings['sitemap_links_cache'] = $sitemap['links'];
+                $mergedSettings['sitemap_links_count'] = (int) ($sitemap['links_count'] ?? 0);
+                $mergedSettings['sitemap_last_fetched_at'] = (string) ($sitemap['fetched_at'] ?? date(DATE_ATOM));
+                $message = 'تم جلب روابط السايت ماب بنجاح: ' . ((int) ($sitemap['links_count'] ?? 0)) . ' رابط.';
+            } catch (\Throwable $exception) {
+                $mergedSettings['sitemap_links_cache'] = $currentSettings['sitemap_links_cache'] ?? [];
+                $mergedSettings['sitemap_links_count'] = (int) ($currentSettings['sitemap_links_count'] ?? 0);
+                $mergedSettings['sitemap_last_fetched_at'] = $currentSettings['sitemap_last_fetched_at'] ?? '';
+                $message = 'تم الحفظ. ملاحظة: تعذر جلب روابط السايت ماب - ' . $this->humanizeProviderError($exception->getMessage());
+            }
+        } else {
+            $mergedSettings['sitemap_links_cache'] = [];
+            $mergedSettings['sitemap_links_count'] = 0;
+            $mergedSettings['sitemap_last_fetched_at'] = '';
+            $message = 'تم حذف رابط السايت ماب.';
+        }
+
+        (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
+            'settings' => $mergedSettings,
+        ]);
+
+        Response::json([
+            'success' => true,
+            'message' => $message,
+            'links_count' => $mergedSettings['sitemap_links_count'],
+            'last_fetched' => $mergedSettings['sitemap_last_fetched_at'],
+        ]);
+    }
+
     public function saveStoreSeoInstructions(): void
     {
         $store = $this->resolveStore();
