@@ -1113,86 +1113,6 @@
     }
   }
 
-  function setStoreSeoAlert(type, message) {
-    const root = document.getElementById('store-seo-alert');
-    if (!root) return;
-    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
-  }
-
-  function updateStoreSeoCounters() {
-    const title = document.getElementById('store-seo-title')?.value || '';
-    const description = document.getElementById('store-seo-description')?.value || '';
-    const keywords = document.getElementById('store-seo-keywords')?.value || '';
-
-    if (document.getElementById('store-seo-title-count')) document.getElementById('store-seo-title-count').textContent = `${title.length} حرف`;
-    if (document.getElementById('store-seo-description-count')) document.getElementById('store-seo-description-count').textContent = `${description.length} حرف`;
-    if (document.getElementById('store-seo-keywords-count')) document.getElementById('store-seo-keywords-count').textContent = `${keywords.length} حرف`;
-  }
-
-  async function persistStoreSeoInstructions(options = {}) {
-    const {
-      showSuccess = true,
-      showProgress = true,
-      button = null
-    } = options;
-
-    const oldText = button?.textContent || 'حفظ تعليمات سيو المتجر';
-    const payload = {
-      store_seo_instructions: document.getElementById('setting-store-seo-instructions')?.value || '',
-      output_language: getOutputLanguage('products') || ''
-    };
-
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'جاري الحفظ...';
-    }
-
-    if (showProgress) {
-      setStoreSeoAlert('success', 'جاري حفظ تعليمات سيو المتجر...');
-    }
-
-    try {
-      const response = await apiFetch('/store-seo/instructions/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json();
-
-      if (!data.success) {
-        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ تعليمات سيو المتجر.'));
-        return false;
-      }
-
-      if (data.settings) {
-        fillOptimizationSettings(data.settings);
-      }
-
-      if (showSuccess) {
-        setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ تعليمات سيو المتجر.'));
-      }
-
-      return true;
-    } catch (error) {
-      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ تعليمات سيو المتجر.');
-      return false;
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = oldText;
-      }
-    }
-  }
-
-  async function saveStoreSeoInstructions() {
-    const button = document.getElementById('save-store-seo-instructions');
-    await persistStoreSeoInstructions({
-      showSuccess: true,
-      showProgress: true,
-      button
-    });
-  }
-
   function setOptimizationSettingsAlert(type, message, source = 'products') {
     const root = source === 'alt'
       ? document.getElementById('optimization-settings-alt-alert')
@@ -1211,7 +1131,6 @@
     if (document.getElementById('setting-meta-description-instructions')) document.getElementById('setting-meta-description-instructions').value = settings.meta_description_instructions || '';
     if (document.getElementById('setting-image-alt-instructions')) document.getElementById('setting-image-alt-instructions').value = settings.image_alt_instructions || '';
     if (document.getElementById('alt-setting-image-alt-instructions')) document.getElementById('alt-setting-image-alt-instructions').value = settings.image_alt_instructions || '';
-    if (document.getElementById('setting-store-seo-instructions')) document.getElementById('setting-store-seo-instructions').value = settings.store_seo_instructions || '';
     if (document.getElementById('setting-sitemap-url')) document.getElementById('setting-sitemap-url').value = settings.sitemap_url || '';
     if (document.getElementById('setting-sitemap-links-count')) {
       const count = Number(settings.sitemap_links_count || 0);
@@ -1278,179 +1197,6 @@
       setOptimizationSettingsAlert('success', normalizeApiMessage(data.message, 'تم حفظ إعدادات التحسين.'));
     } catch (error) {
       setOptimizationSettingsAlert('error', 'حدث خطأ أثناء حفظ إعدادات التحسين.');
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = oldText;
-      }
-    }
-  }
-
-  async function loadStoreSeo() {
-    try {
-      const data = await apiFetch('/store-seo').then((response) => response.json());
-      if (!data.success) {
-        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر جلب سيو المتجر.'));
-        return;
-      }
-
-      const seo = data.seo || {};
-      const title = String(seo.title || seo.meta_title || seo.metadata_title || seo.homepage_title || '').trim();
-      const description = String(seo.description || seo.meta_description || seo.metadata_description || seo.homepage_description || '').trim();
-      const keywords = Array.isArray(seo.keywords)
-        ? seo.keywords.map((item) => String(item || '').trim()).filter(Boolean).join(', ')
-        : String(seo.keywords || '').trim();
-      if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = title;
-      if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = description;
-      if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = keywords;
-      setStoreSeoAlert('', '');
-      updateStoreSeoCounters();
-    } catch (error) {
-      setStoreSeoAlert('error', 'تعذر جلب سيو المتجر.');
-    }
-  }
-
-  async function optimizeStoreSeo() {
-    const button = document.getElementById('generate-store-seo');
-    const oldText = button?.textContent || 'إنشاء بالذكاء الاصطناعي';
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'جاري التوليد...';
-    }
-
-    const saved = await persistStoreSeoInstructions({
-      showSuccess: false,
-      showProgress: false
-    });
-    if (!saved) {
-      if (button) {
-        button.disabled = false;
-        button.textContent = oldText;
-      }
-      return;
-    }
-
-    setStoreSeoAlert('success', 'جاري إنشاء سيو المتجر...');
-    try {
-      const data = await apiFetch('/store-seo/optimize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: getOutputLanguage('products') || 'ar'
-        })
-      }).then((response) => response.json());
-
-      if (!data.success) {
-        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر توليد سيو المتجر.'));
-        return;
-      }
-
-      if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.optimized_title || '';
-      if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.optimized_description || '';
-      if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.optimized_keywords || '';
-      updateStoreSeoCounters();
-      setStoreSeoAlert('success', 'تم إنشاء سيو المتجر. راجع ثم احفظ.');
-    } catch (error) {
-      setStoreSeoAlert('error', 'حدث خطأ أثناء توليد سيو المتجر.');
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = oldText;
-      }
-    }
-  }
-
-  async function saveStoreSeoLegacy() {
-    const button = document.getElementById('save-store-seo');
-    const oldText = button?.textContent || 'حفظ في المتجر';
-    const title = document.getElementById('store-seo-title')?.value.trim() || '';
-    const description = document.getElementById('store-seo-description')?.value.trim() || '';
-    const keywords = document.getElementById('store-seo-keywords')?.value.trim() || '';
-
-    if (!title || !description) {
-      setStoreSeoAlert('error', 'أدخل عنوان ووصف المتجر قبل الحفظ.');
-      return;
-    }
-
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'جاري الحفظ...';
-    }
-
-    setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
-    try {
-      const data = await apiFetch('/store-seo/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, keywords })
-      }).then((response) => response.json());
-
-      if (!data.success) {
-        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ سيو المتجر.'));
-        return;
-      }
-
-      setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
-      await loadOperations();
-      await loadUsage();
-    } catch (error) {
-      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = oldText;
-      }
-    }
-  }
-
-  async function saveStoreSeo() {
-    const button = document.getElementById('save-store-seo');
-    const oldText = button?.textContent || 'حفظ في المتجر';
-    const title = document.getElementById('store-seo-title')?.value.trim() || '';
-    const description = document.getElementById('store-seo-description')?.value.trim() || '';
-    const keywords = document.getElementById('store-seo-keywords')?.value.trim() || '';
-
-    if (!title || !description) {
-      setStoreSeoAlert('error', 'أدخل عنوان ووصف المتجر قبل الحفظ.');
-      return;
-    }
-
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'جاري الحفظ...';
-    }
-
-    setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
-    try {
-      const data = await apiFetch('/store-seo/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, keywords })
-      }).then((response) => response.json());
-
-      if (!data.success) {
-        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ سيو المتجر.'));
-        if (data.applied_seo) {
-          if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.applied_seo.title || '';
-          if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.applied_seo.description || '';
-          if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.applied_seo.keywords || '';
-          updateStoreSeoCounters();
-        }
-        return;
-      }
-
-      if (data.applied_seo) {
-        if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.applied_seo.title || '';
-        if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.applied_seo.description || '';
-        if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.applied_seo.keywords || '';
-      }
-      updateStoreSeoCounters();
-      setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
-      await loadStoreSeo();
-      await loadOperations();
-      await loadUsage();
-    } catch (error) {
-      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -2170,7 +1916,6 @@
   function getOperationLabel(mode) {
     if (mode === 'description') return 'وصف المنتج';
     if (mode === 'seo') return 'SEO المنتج';
-    if (mode === 'store_seo') return 'سيو المتجر';
     if (mode === 'image_alt') return 'ALT الصور';
     if (mode === 'image_alt_bulk') return 'ALT الصور (جملة)';
     return 'الوصف + SEO';
@@ -2743,9 +2488,6 @@
         saveDomainSeoConfig();
       }
     });
-    document.getElementById('generate-store-seo')?.addEventListener('click', optimizeStoreSeo);
-    document.getElementById('save-store-seo')?.addEventListener('click', saveStoreSeo);
-    document.getElementById('save-store-seo-instructions')?.addEventListener('click', saveStoreSeoInstructions);
     document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
@@ -2756,9 +2498,6 @@
     });
     document.getElementById('alt-apply-filters')?.addEventListener('click', applyAltFilters);
     document.getElementById('alt-clear-filters')?.addEventListener('click', clearAltFilters);
-    document.getElementById('store-seo-title')?.addEventListener('input', updateStoreSeoCounters);
-    document.getElementById('store-seo-description')?.addEventListener('input', updateStoreSeoCounters);
-    document.getElementById('store-seo-keywords')?.addEventListener('input', updateStoreSeoCounters);
 
     document.querySelectorAll('[data-quick-filter]').forEach((chip) => {
       chip.addEventListener('click', () => {
@@ -2836,6 +2575,5 @@
   loadProducts();
   loadOptimizationSettings();
   loadOperations();
-  loadStoreSeo();
   loadUsage();
 })();
