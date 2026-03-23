@@ -1364,17 +1364,34 @@ final class ProductController
         return in_array($mode, ['description', 'seo', 'all'], true) ? $mode : 'all';
     }
 
+    private function getDefaultOptimizationSettings(): array
+    {
+        return [
+            'output_language' => 'ar',
+            'global_instructions' => "اكتب محتوى عربي احترافي موجه للعميل السعودي.\nركّز على مساعدة العميل في اتخاذ قرار الشراء.\nاجعل النص: واضح، سهل القراءة، عملي.\nالقواعد:\n- لا تنسخ من المنافسين\n- لا تخترع معلومات أو مواصفات\n- استخدم اسم المنتج + البراند بشكل طبيعي\n- ركّز على الفوائد (مو الوصف فقط)\n- تجنب الحشو والكلمات الفارغة\n- لا تذكر مواقع أو منافسين\n- لا تضع روابط خارجية (فقط روابط داخلية)\nالهدف: رفع التحويل (Conversion) وتحسين SEO",
+            'product_description_instructions' => "الهدف: محتوى مقنع + SEO يساعد العميل يشتري\nالطول: 800 – 1200 كلمة (بدون حشو)\n\nهيكل الوصف:\n1. مقدمة: تعريف بالمنتج + اسم + البراند + أهم ميزة\n2. H2: نظرة عامة على المنتج\n3. H2: أهم المميزات (نقاط Bullet)\n4. H2: المواصفات\n5. H2: التصميم وجودة التصنيع\n6. H2: الأداء وتجربة الاستخدام\n7. H2: تقييمنا للمنتج\n8. H2: طريقة الاستخدام\n9. H2: لمن يناسب هذا المنتج\n10. H2: لماذا تشتري من متجرنا\n11. H2: منتجات قد تهمك\n12. H2: الأسئلة الشائعة",
+            'meta_title_instructions' => "50–60 حرف | الصيغة: اسم المنتج + الفئة + ميزة قوية\nمثال: فستان ساتان نسائي تصميم أنيق وقصة مريحة\nتجنب: التكرار والحشو",
+            'meta_description_instructions' => "140–155 حرف | الصيغة: اشتري + المنتج + ميزة + فائدة + عنصر ثقة\nمثال: اشتري فستان ساتان نسائي بتصميم أنيق وخامة ناعمة. مثالي للمناسبات.",
+            'image_alt_instructions' => "دقيق + طبيعي + واضح\n- يصف الصورة بشكل صحيح\n- يبدو كجملة عادية\n- يتضمن اسم المنتج عند الإمكان\n- 70-125 حرف",
+            'store_seo_instructions' => '',
+            'sitemap_url' => '',
+            'sitemap_links_count' => 0,
+            'sitemap_last_fetched_at' => '',
+        ];
+    }
+
     private function normalizeOptimizationSettings(array $settings): array
     {
+        $defaults = $this->getDefaultOptimizationSettings();
         $sitemapLinksCache = is_array($settings['sitemap_links_cache'] ?? null) ? (array) $settings['sitemap_links_cache'] : [];
 
         return [
-            'output_language' => $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? '')),
-            'global_instructions' => $this->normalizeOptimizationText((string) ($settings['global_instructions'] ?? ''), 5000),
-            'product_description_instructions' => $this->normalizeOptimizationText((string) ($settings['product_description_instructions'] ?? ''), 5000),
-            'meta_title_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_title_instructions'] ?? ''), 3000),
-            'meta_description_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_description_instructions'] ?? ''), 3000),
-            'image_alt_instructions' => $this->normalizeOptimizationText((string) ($settings['image_alt_instructions'] ?? ''), 3000),
+            'output_language' => $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? $defaults['output_language'])),
+            'global_instructions' => $this->normalizeOptimizationText((string) ($settings['global_instructions'] ?? $defaults['global_instructions']), 5000),
+            'product_description_instructions' => $this->normalizeOptimizationText((string) ($settings['product_description_instructions'] ?? $defaults['product_description_instructions']), 5000),
+            'meta_title_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_title_instructions'] ?? $defaults['meta_title_instructions']), 3000),
+            'meta_description_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_description_instructions'] ?? $defaults['meta_description_instructions']), 3000),
+            'image_alt_instructions' => $this->normalizeOptimizationText((string) ($settings['image_alt_instructions'] ?? $defaults['image_alt_instructions']), 3000),
             'store_seo_instructions' => $this->normalizeOptimizationText((string) ($settings['store_seo_instructions'] ?? ''), 5000),
             'sitemap_url' => $this->normalizeSitemapUrl((string) ($settings['sitemap_url'] ?? '')),
             'sitemap_links_count' => (int) ($settings['sitemap_links_count'] ?? count($sitemapLinksCache)),
