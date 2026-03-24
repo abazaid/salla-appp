@@ -17,7 +17,7 @@ if ($appBasePath === '/') {
     <nav class="sidebar-nav">
       <button type="button" class="sidebar-link is-active" data-section-target="home">الرئيسية</button>
       <button type="button" class="sidebar-link" data-section-target="products">المنتجات</button>
-
+      <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
       <button type="button" class="sidebar-link" data-section-target="domain-seo">سيو الدومين</button>
@@ -77,7 +77,7 @@ if ($appBasePath === '/') {
             <li>إنشاء ذكي حسب تعليماتك</li>
             <li>حفظ مباشر في إعدادات سلة</li>
           </ul>
-
+          <button class="btn btn-sky" type="button" data-home-go="store-seo">الانتقال إلى سيو المتجر</button>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
@@ -382,6 +382,18 @@ if ($appBasePath === '/') {
 - يتضمن اسم المنتج عند الإمكان
 - 70-125 حرف تقريبًا</textarea>
           </div>
+          <div>
+            <label for="setting-store-seo-instructions"><strong>تعليمات سيو المتجر</strong></label>
+            <textarea id="setting-store-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد عنوان/وصف/كلمات سيو المتجر..."></textarea>
+          </div>
+          <div>
+            <label for="setting-sitemap-url"><strong>رابط السايت ماب للروابط الداخلية</strong></label>
+            <input id="setting-sitemap-url" type="url" placeholder="https://your-store.com/sitemap.xml">
+            <div class="helper-row">
+              <span id="setting-sitemap-links-count">0 روابط</span>
+              <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -462,6 +474,41 @@ if ($appBasePath === '/') {
 
         <div style="margin-top:20px;">
           <div id="products-pagination-bottom" class="pagination"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-store-seo" data-app-section="store-seo" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">سيو المتجر</div>
+            <h2 style="margin:12px 0 8px;">إعدادات SEO المتجر</h2>
+            <p class="muted" style="margin:0;">عدّل عنوان ووصف المتجر يدويًا أو أنشئهما بالذكاء الاصطناعي ثم احفظ مباشرة في سلة.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="save-store-seo-instructions" class="btn btn-secondary" type="button">حفظ تعليمات سيو المتجر</button>
+            <button id="generate-store-seo" class="btn btn-sky" type="button">إنشاء بالذكاء الاصطناعي</button>
+            <button id="save-store-seo" class="btn" type="button">حفظ في المتجر</button>
+          </div>
+        </div>
+        <div id="store-seo-alert"></div>
+        <div class="grid" style="margin-top:0;">
+          <div>
+            <label for="store-seo-title"><strong>عنوان المتجر</strong></label>
+            <input id="store-seo-title" type="text" placeholder="عنوان صفحة المتجر في نتائج البحث">
+            <div class="helper-row"><span>الموصى به 35-65 حرفًا</span><span id="store-seo-title-count">0 حرف</span></div>
+          </div>
+          <div>
+            <label for="store-seo-keywords"><strong>الكلمات المفتاحية</strong></label>
+            <input id="store-seo-keywords" type="text" placeholder="مثال: متجر، عروض، منتجات أصلية">
+            <div class="helper-row"><span>افصل الكلمات بفاصلة</span><span id="store-seo-keywords-count">0 حرف</span></div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="store-seo-description"><strong>وصف المتجر</strong></label>
+            <textarea id="store-seo-description" rows="6" placeholder="الوصف الذي سيظهر في محركات البحث للمتجر"></textarea>
+            <div class="helper-row"><span>الموصى به 120-160 حرفًا</span><span id="store-seo-description-count">0 حرف</span></div>
+          </div>
         </div>
       </div>
     </section>
@@ -729,6 +776,7 @@ if ($appBasePath === '/') {
                 <option value="description">وصف المنتج</option>
                 <option value="seo">SEO المنتج</option>
                 <option value="combo_all">الوصف + SEO</option>
+                <option value="store_seo">سيو المتجر</option>
               </select>
             </div>
           </div>

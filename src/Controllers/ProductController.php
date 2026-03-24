@@ -886,7 +886,31 @@ final class ProductController
                 'product_topics' => $productsContext['topics'],
             ], is_array($currentSeo) ? $currentSeo : [], $settings);
 
+            if (Database::isAvailable()) {
+                $dbStore = (new SaaSRepository())->findStoreByMerchantId((int) ($store['merchant_id'] ?? 0));
+                if ($dbStore && isset($generated['_usage'], $generated['_model'])) {
+                    $usageCost = (new OpenAICostCalculator())->calculate((array) $generated['_usage']);
+                    (new SaaSRepository())->logAiUsage(
+                        (int) $dbStore['id'],
+                        0,
+                        (string) $generated['_model'],
+                        $usageCost,
+                        'store_seo'
+                    );
+                }
+            }
 
+            Response::json([
+                'success' => true,
+                'current_title' => (string) ($currentSeo['title'] ?? ''),
+                'current_description' => (string) ($currentSeo['description'] ?? ''),
+                'current_keywords' => (string) ($currentSeo['keywords'] ?? ''),
+                'optimized_title' => $this->normalizeStoreSeoTitle((string) ($generated['title'] ?? '')),
+                'optimized_description' => $this->normalizeStoreSeoDescription((string) ($generated['description'] ?? '')),
+                'optimized_keywords' => $this->normalizeStoreSeoKeywords((string) ($generated['keywords'] ?? '')),
+                'language_code' => $languageCode,
+                'subscription' => $subscriptionManager->summary($store),
+            ]);
         } catch (\Throwable $exception) {
             Response::json([
                 'success' => false,
