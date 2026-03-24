@@ -274,8 +274,9 @@ final class ProductController
             return;
         }
 
-        $accessToken = $this->resolveAccessToken($store);
-        if ($accessToken === null) {
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+
+        if (!$accessToken) {
             Response::json([
                 'success' => false,
                 'message' => 'لا يوجد رمز وصول صالح.',
@@ -285,9 +286,7 @@ final class ProductController
 
         try {
             $brandsResponse = (new SallaApiClient())->listBrands($accessToken);
-            error_log('Brands API Response: ' . json_encode($brandsResponse));
             $brandsData = $brandsResponse['data'] ?? [];
-            error_log('Brands Data: ' . json_encode($brandsData));
             
             $brands = array_map(static function (array $brand): array {
                 return [
@@ -305,7 +304,6 @@ final class ProductController
                 'total' => count($brands),
             ]);
         } catch (\Throwable $exception) {
-            error_log('Brands API Error: ' . $exception->getMessage());
             Response::json([
                 'success' => false,
                 'message' => 'تعذر جلب الماركات: ' . $exception->getMessage(),
@@ -334,8 +332,10 @@ final class ProductController
             return;
         }
 
-        $accessToken = $this->resolveAccessToken($store);
-        if ($accessToken === null) {
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+        $settings = $store['settings'] ?? [];
+
+        if (!$accessToken) {
             Response::json([
                 'success' => false,
                 'message' => 'لا يوجد رمز وصول صالح.',
@@ -354,7 +354,6 @@ final class ProductController
                 'logo' => (string) ($brandData['logo'] ?? ''),
             ];
 
-            $settings = $this->buildOptimizationSettings($store);
             $generated = (new OpenAIClient())->generateBrandSeo($brand, $settings);
 
             Response::json([
@@ -395,8 +394,9 @@ final class ProductController
             return;
         }
 
-        $accessToken = $this->resolveAccessToken($store);
-        if ($accessToken === null) {
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+
+        if (!$accessToken) {
             Response::json([
                 'success' => false,
                 'message' => 'لا يوجد رمز وصول صالح.',
