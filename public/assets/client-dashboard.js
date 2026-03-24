@@ -2363,6 +2363,20 @@
         return;
       }
       fillOptimizationSettings(data.settings || {});
+      
+      // Auto-fill sitemap URL from store domain if empty
+      const sitemapInput = document.getElementById('setting-sitemap-url');
+      if (sitemapInput && !sitemapInput.value.trim() && data.store_domain) {
+        let domain = String(data.store_domain || '').trim();
+        if (domain && !domain.startsWith('http')) {
+          domain = 'https://' + domain;
+        }
+        if (domain && !domain.includes('/sitemap')) {
+          domain = domain.replace(/\/$/, '') + '/sitemap.xml';
+        }
+        sitemapInput.value = domain;
+      }
+      
       setOptimizationSettingsAlert('', '', 'products');
       setOptimizationSettingsAlert('', '', 'alt');
     } catch (error) {

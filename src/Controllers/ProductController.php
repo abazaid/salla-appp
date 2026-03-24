@@ -277,6 +277,7 @@ final class ProductController
         Response::json([
             'success' => true,
             'merchant_id' => $store['merchant_id'] ?? null,
+            'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
             'settings' => $this->normalizeOptimizationSettings((array) ($store['settings'] ?? [])),
         ]);
     }
