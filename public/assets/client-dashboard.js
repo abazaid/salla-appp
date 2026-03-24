@@ -1473,26 +1473,32 @@
     try {
       setBrandSeoAlert('success', 'جاري تحميل الماركات...');
       const data = await apiFetch('/brands').then((response) => response.json());
+      console.log('API Response:', data);
       if (!data.success) {
         setBrandSeoAlert('error', normalizeApiMessage(data.message, 'تعذر تحميل الماركات.'));
         return;
       }
       state.brands.list = data.brands || [];
+      console.log('Brands stored:', state.brands.list);
       renderBrandsList();
       setBrandSeoAlert('', '');
     } catch (error) {
+      console.error('Load brands error:', error);
       setBrandSeoAlert('error', 'تعذر تحميل الماركات.');
     }
   }
 
   function renderBrandsList() {
     const root = document.getElementById('brands-list');
+    console.log('renderBrandsList called, root:', root);
+    console.log('state.brands.list:', state.brands.list);
     if (!root) return;
 
     const nameFilter = (document.getElementById('brand-filter-name')?.value || '').toLowerCase().trim();
     const statusFilter = document.getElementById('brand-filter-status')?.value || 'all';
 
     let filtered = state.brands.list;
+    console.log('Filtered brands:', filtered);
     if (nameFilter) {
       filtered = filtered.filter((b) => (b.name || '').toLowerCase().includes(nameFilter));
     }
