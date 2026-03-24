@@ -17,7 +17,9 @@ if ($appBasePath === '/') {
     <nav class="sidebar-nav">
       <button type="button" class="sidebar-link is-active" data-section-target="home">الرئيسية</button>
       <button type="button" class="sidebar-link" data-section-target="products">المنتجات</button>
-      <button type="button" class="sidebar-link" data-section-target="brand-seo">سيو الماركات</button>
+      <button type="button" class="sidebar-link" data-section-target="brand-seo">
+        سيو الماركات <span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;">قريباً</span>
+      </button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
@@ -68,6 +70,20 @@ if ($appBasePath === '/') {
             <li>عرض قبل/بعد ثم حفظ في سلة</li>
           </ul>
           <button class="btn btn-sky" type="button" data-home-go="products">الانتقال إلى المنتجات</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;opacity:0.7;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <h3 style="margin:0;">قسم سيو الماركات</h3>
+            <span style="background:#F59E0B;color:#fff;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;">قريباً</span>
+          </div>
+          <p class="muted" style="margin:0 0 12px;">تحسين وصف الماركات التجارية و Meta Tags بالذكاء الاصطناعي.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>جلب جميع الماركات من المتجر</li>
+            <li>تحسين وصف و Meta Tags</li>
+            <li>حفظ مباشر في سلة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" disabled style="opacity:0.5;cursor:not-allowed;">الانتقال إلى سيو الماركات</button>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
