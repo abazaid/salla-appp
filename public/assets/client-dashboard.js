@@ -1,9 +1,10 @@
 (function () {
   if (window.__CLIENT_DASHBOARD_PRODUCTS_INIT__) {
+    console.log('Dashboard JS already initialized');
     return;
   }
   window.__CLIENT_DASHBOARD_PRODUCTS_INIT__ = true;
-  console.log('Dashboard JS loaded');
+  console.log('Dashboard JS loaded - initializing...');
   const appBasePath = (document.querySelector('.dashboard-shell')?.dataset.appBasePath || '').replace(/\/+$/, '');
   const merchantId = document.querySelector('.dashboard-shell')?.dataset.merchantId || '';
   const apiPrefixes = Array.from(new Set([
@@ -2902,6 +2903,7 @@
   }
 
   function bindEvents() {
+    console.log('bindEvents called');
     document.querySelectorAll('[data-section-target]').forEach((button) => {
       button.addEventListener('click', () => switchSection(button.getAttribute('data-section-target') || 'products'));
     });
@@ -2945,7 +2947,12 @@
     document.getElementById('reconnect-store')?.addEventListener('click', reconnectStore);
 
     // Brand SEO events
-    document.getElementById('refresh-brands')?.addEventListener('click', loadBrands);
+    const refreshBtn = document.getElementById('refresh-brands');
+    console.log('Refresh brands button:', refreshBtn);
+    refreshBtn?.addEventListener('click', () => {
+      console.log('Refresh brands clicked!');
+      loadBrands();
+    });
     document.getElementById('brand-filter-name')?.addEventListener('input', renderBrandsList);
     document.getElementById('brand-filter-status')?.addEventListener('change', renderBrandsList);
     document.getElementById('generate-brand-seo')?.addEventListener('click', generateBrandSeo);
