@@ -526,9 +526,7 @@
       return `
       <div style="display:grid;gap:6px;justify-items:stretch;min-width:78px;">
         <span class="status-badge ${ready ? 'success' : 'danger'}" style="padding:4px 8px;font-size:11px;justify-content:center;">${ready ? 'نص ALT محسّن' : 'لا نص ALT'}</span>
-        <button class="btn btn-secondary" type="button" data-open-alt-single="${Number(product.id)}:${Number(image.id)}" style="padding:0;border:none;background:transparent;">
-          <img src="${escapeHtml(image.url || '')}" alt="${escapeHtml(image.alt || product.name || 'image')}" style="width:78px;height:78px;object-fit:cover;border-radius:10px;border:2px solid ${ready ? 'rgba(15,123,102,.42)' : 'rgba(185,65,54,.36)'};display:block;">
-        </button>
+        <img src="${escapeHtml(image.url || '')}" alt="${escapeHtml(image.alt || product.name || 'image')}" style="width:78px;height:78px;object-fit:cover;border-radius:10px;border:2px solid ${ready ? 'rgba(15,123,102,.42)' : 'rgba(185,65,54,.36)'};display:block;cursor:default;">
         <button class="btn btn-sky" type="button" data-open-alt-single="${Number(product.id)}:${Number(image.id)}" style="padding:8px 8px;font-size:12px;">تحسين</button>
       </div>
       `;
