@@ -135,35 +135,38 @@ if ($appBasePath === '/') {
         </div>
       </div>
 
-      <div class="card" style="background:#FEF3C7;border-color:#FCD34D;">
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:24px;">💡</span>
-          <div>
-            <h3 style="margin:0 0 8px;color:#92400E;">مهم: الربط الداخلي للمنتجات</h3>
-            <p style="margin:0 0 8px;color:#78350F;font-size:14px;line-height:1.7;">
-              لإضافة روابط داخلية للمنتجات داخل الأوصاف، يجب:
-            </p>
-            <ol style="margin:0 0 10px;padding-right:20px;color:#78350F;font-size:14px;line-height:1.8;">
-              <li>أضف رابط <strong>السايت ماب</strong> في الحقل المخصص (مثال: <code style="background:#FEF9C3;padding:2px 6px;border-radius:4px;">https://yourstore.com/sitemap.xml</code>)</li>
-              <li>اضغط على <strong>حفظ روابط السايت ماب</strong></li>
-              <li>سيتم جلب الروابط واستخدامها تلقائيًا في الأوصاف</li>
-            </ol>
-            <p style="margin:0;color:#92400E;font-size:13px;">
-              <strong>ملاحظة:</strong> بدون السايت ماب، لن يتم إضافة روابط داخلية للمنتجات.
-            </p>
+      <details class="card" style="background:#FEF3C7;border:1px solid #FCD34D;margin-bottom:16px;">
+        <summary style="cursor:pointer;padding:16px;list-style:none;display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            <span style="font-size:20px;">💡</span>
+            <div>
+              <h3 style="margin:0;color:#92400E;">مهم: الربط الداخلي للمنتجات</h3>
+              <p style="margin:4px 0 0;color:#78350F;font-size:13px;">بدون السايت ماب، لن يتم إضافة روابط داخلية للمنتجات.</p>
+            </div>
           </div>
-        </div>
-        <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #FCD34D;">
-          <label for="setting-sitemap-url"><strong>رابط السايت ماب</strong></label>
-          <input id="setting-sitemap-url" type="url" placeholder="https://yourstore.com/sitemap.xml" style="margin-top:8px;">
-          <div class="helper-row">
-            <span>الروابط المحفوظة: <strong id="setting-sitemap-links-count">0</strong></span>
-            <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
+          <span style="color:#92400E;font-size:18px;">▼</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <p style="margin:12px 0 8px;color:#78350F;font-size:14px;line-height:1.7;">
+            لإضافة روابط داخلية للمنتجات داخل الأوصاف، يجب:
+          </p>
+          <ol style="margin:0 0 10px;padding-right:20px;color:#78350F;font-size:14px;line-height:1.8;">
+            <li>أضف رابط <strong>السايت ماب</strong> في الحقل المخصص</li>
+            <li>اضغط على <strong>حفظ روابط السايت ماب</strong></li>
+            <li>سيتم جلب الروابط واستخدامها تلقائيًا في الأوصاف</li>
+          </ol>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #FCD34D;">
+            <label for="setting-sitemap-url"><strong>رابط السايت ماب</strong></label>
+            <input id="setting-sitemap-url" type="url" placeholder="https://yourstore.com/sitemap.xml" style="margin-top:8px;width:100%;padding:10px;border-radius:8px;border:1px solid #D97706;">
+            <div class="helper-row" style="margin-top:8px;">
+              <span>الروابط المحفوظة: <strong id="setting-sitemap-links-count">0</strong></span>
+              <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
+            </div>
+            <button id="save-sitemap-settings" class="btn btn-sky" type="button" style="margin-top:12px;">حفظ روابط السايت ماب</button>
           </div>
-          <button id="save-sitemap-settings" class="btn btn-sky" type="button" style="margin-top:12px;">حفظ روابط السايت ماب</button>
+          <div id="sitemap-alert" style="margin-top:12px;"></div>
         </div>
-        <div id="sitemap-alert"></div>
-      </div>
+      </details>
 
       <div class="card">
         <div class="section-head">

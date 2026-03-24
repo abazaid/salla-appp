@@ -491,6 +491,18 @@ final class View
       background: var(--danger-soft);
       color: var(--danger);
     }
+    details > summary {
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker {
+      display: none;
+    }
+    details[open] summary span {
+      transform: rotate(180deg);
+    }
+    details > summary > div > span:last-child {
+      transition: transform 0.2s ease;
+    }
     @media (max-width: 980px) {
       .hero,
       .compare-grid,
