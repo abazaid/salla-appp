@@ -2806,7 +2806,9 @@
       console.log('Sitemap button found:', sitemapBtn);
       sitemapBtn.addEventListener('click', () => {
         console.log('Sitemap button clicked!');
-        saveSitemapSettings();
+        if (confirm('هل تريد حفظ رابط السايت ماب وجلب الروابط؟')) {
+          saveSitemapSettings();
+        }
       });
     } else {
       console.log('Sitemap button NOT found!');
