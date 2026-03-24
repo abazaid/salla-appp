@@ -168,16 +168,17 @@ if ($appBasePath === '/') {
         </div>
       </details>
 
-      <div class="card">
-        <div class="section-head">
+      <details class="card" style="margin-bottom:0;">
+        <summary style="cursor:pointer;padding:0 0 16px;list-style:none;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color);margin-bottom:16px;">
           <div>
-            <h2 style="margin:0 0 6px;">خيارات التحسين</h2>
-            <p class="muted" style="margin:0;">إعدادات عامة للتوليد لكل متجر. إذا تركت أي حقل فارغًا سيتم تجاوزه.</p>
+            <h2 style="margin:0 0 4px;">خيارات التحسين</h2>
+            <p class="muted" style="margin:0;font-size:14px;">إعدادات عامة للتوليد لكل متجر. إذا تركت أي حقل فارغًا سيتم تجاوزه.</p>
           </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;gap:10px;align-items:center;">
             <button id="save-optimization-settings" class="btn btn-sky" type="button">حفظ التعليمات</button>
+            <span style="color:var(--muted);font-size:18px;">▼</span>
           </div>
-        </div>
+        </summary>
 
         <div id="optimization-settings-alert"></div>
 
@@ -390,7 +391,7 @@ if ($appBasePath === '/') {
             <textarea id="setting-store-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد عنوان/وصف/كلمات سيو المتجر..."></textarea>
           </div>
         </div>
-      </div>
+      </details>
 
       <div class="card">
         <div class="section-head">
