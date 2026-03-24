@@ -285,7 +285,9 @@ final class ProductController
 
         try {
             $brandsResponse = (new SallaApiClient())->listBrands($accessToken);
+            error_log('Brands API Response: ' . json_encode($brandsResponse));
             $brandsData = $brandsResponse['data'] ?? [];
+            error_log('Brands Data: ' . json_encode($brandsData));
             
             $brands = array_map(static function (array $brand): array {
                 return [
@@ -303,6 +305,7 @@ final class ProductController
                 'total' => count($brands),
             ]);
         } catch (\Throwable $exception) {
+            error_log('Brands API Error: ' . $exception->getMessage());
             Response::json([
                 'success' => false,
                 'message' => 'تعذر جلب الماركات: ' . $exception->getMessage(),
