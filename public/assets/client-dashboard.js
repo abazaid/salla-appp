@@ -2919,18 +2919,7 @@
     document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
     
-    const sitemapBtn = document.getElementById('save-sitemap-settings');
-    if (sitemapBtn) {
-      console.log('Sitemap button found:', sitemapBtn);
-      sitemapBtn.addEventListener('click', () => {
-        console.log('Sitemap button clicked!');
-        if (confirm('هل تريد حفظ رابط السايت ماب وجلب الروابط؟')) {
-          saveSitemapSettings();
-        }
-      });
-    } else {
-      console.log('Sitemap button NOT found!');
-    }
+    document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
 
     // Brand SEO events
     document.getElementById('refresh-brands')?.addEventListener('click', loadBrands);
