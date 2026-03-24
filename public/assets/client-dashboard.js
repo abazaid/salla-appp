@@ -1429,8 +1429,7 @@
     }
   }
 
-  // Brand SEO State
-  const state = window.__CLIENT_DASHBOARD_STATE__ || {};
+  // Brand SEO State - add to existing state object
   state.brands = {
     list: [],
     current: null,
