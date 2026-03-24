@@ -217,9 +217,7 @@ HTML));
             . '&scope=' . urlencode($scopes)
             . '&state=' . urlencode($state);
 
-        Response::json([
-            'success' => true,
-            'redirect_url' => $authorizeUrl,
-        ]);
+        header('Location: ' . $authorizeUrl);
+        exit;
     }
 }
