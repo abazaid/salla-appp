@@ -409,13 +409,12 @@ final class DataForSeoClient
         $items = array_values(array_filter((array) ($firstResult['items'] ?? []), 'is_array'));
 
         $mapped = array_map(static function (array $item): array {
-            $keywordData = is_array($item['keyword_data'] ?? null) ? (array) $item['keyword_data'] : [];
-            $keywordInfo = is_array($keywordData['keyword_info'] ?? null) ? (array) $keywordData['keyword_info'] : [];
-            $keywordValue = (string) ($item['keyword'] ?? ($keywordData['keyword'] ?? ''));
-            $searchVolume = (int) ($item['search_volume'] ?? ($keywordInfo['search_volume'] ?? 0));
-            $competitionIndex = (float) ($item['competition_index'] ?? ($item['competition'] ?? ($keywordInfo['competition'] ?? 0)));
-            $competitionLevel = (string) ($item['competition'] ?? ($keywordInfo['competition_level'] ?? ''));
-            $cpc = (float) ($item['cpc'] ?? ($keywordInfo['cpc'] ?? 0));
+            $keywordInfo = is_array($item['keyword_info'] ?? null) ? (array) $item['keyword_info'] : [];
+            $keywordValue = (string) ($item['keyword'] ?? '');
+            $searchVolume = (int) ($keywordInfo['search_volume'] ?? 0);
+            $competitionIndex = (float) ($keywordInfo['competition'] ?? 0);
+            $competitionLevel = (string) ($keywordInfo['competition_level'] ?? '');
+            $cpc = (float) ($keywordInfo['cpc'] ?? 0);
 
             return [
                 'keyword' => $keywordValue,
