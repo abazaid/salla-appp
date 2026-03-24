@@ -386,14 +386,6 @@ if ($appBasePath === '/') {
             <label for="setting-store-seo-instructions"><strong>تعليمات سيو المتجر</strong></label>
             <textarea id="setting-store-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد عنوان/وصف/كلمات سيو المتجر..."></textarea>
           </div>
-          <div>
-            <label for="setting-sitemap-url"><strong>رابط السايت ماب للروابط الداخلية</strong></label>
-            <input id="setting-sitemap-url" type="url" placeholder="https://your-store.com/sitemap.xml">
-            <div class="helper-row">
-              <span id="setting-sitemap-links-count">0 روابط</span>
-              <span id="setting-sitemap-last-fetched">لم يتم الجلب بعد</span>
-            </div>
-          </div>
         </div>
       </div>
 
