@@ -430,6 +430,166 @@ final class ProductController
         }
     }
 
+    public function categories(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لم يتم العثور على متجر مرتبط.',
+            ], 404);
+            return;
+        }
+
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+
+        if (!$accessToken) {
+            Response::json([
+                'success' => false,
+                'message' => 'لا يوجد رمز وصول صالح.',
+            ], 401);
+            return;
+        }
+
+        try {
+            $categoriesResponse = (new SallaApiClient())->listCategories($accessToken);
+            $categoriesData = $categoriesResponse['data'] ?? [];
+            
+            $categories = array_map(static function (array $category): array {
+                return [
+                    'id' => (int) ($category['id'] ?? 0),
+                    'name' => (string) ($category['name'] ?? ''),
+                    'products_count' => (int) ($category['products_count'] ?? 0),
+                ];
+            }, $categoriesData);
+
+            Response::json([
+                'success' => true,
+                'categories' => $categories,
+                'total' => count($categories),
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => 'تعذر جلب الأقسام: ' . $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function optimizeCategorySeo(array $params): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لم يتم العثور على متجر مرتبط.',
+            ], 404);
+            return;
+        }
+
+        $categoryId = (int) ($params['id'] ?? 0);
+        if ($categoryId <= 0) {
+            Response::json([
+                'success' => false,
+                'message' => 'معرّف القسم غير صالح.',
+            ], 400);
+            return;
+        }
+
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+        $settings = $store['settings'] ?? [];
+
+        if (!$accessToken) {
+            Response::json([
+                'success' => false,
+                'message' => 'لا يوجد رمز وصول صالح.',
+            ], 401);
+            return;
+        }
+
+        try {
+            $categoryResponse = (new SallaApiClient())->categoryDetails($accessToken, $categoryId);
+            $categoryData = $categoryResponse['data'] ?? [];
+            
+            $category = [
+                'id' => (int) ($categoryData['id'] ?? 0),
+                'name' => (string) ($categoryData['name'] ?? ''),
+            ];
+
+            $generated = (new OpenAIClient())->generateCategorySeo($category, $settings);
+
+            Response::json([
+                'success' => true,
+                'current_meta_title' => (string) ($categoryData['meta_title'] ?? ''),
+                'current_meta_description' => (string) ($categoryData['meta_description'] ?? ''),
+                'optimized_meta_title' => $generated['meta_title'] ?? '',
+                'optimized_meta_description' => $generated['meta_description'] ?? '',
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function saveCategorySeo(array $params): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لم يتم العثور على متجر مرتبط.',
+            ], 404);
+            return;
+        }
+
+        $categoryId = (int) ($params['id'] ?? 0);
+        if ($categoryId <= 0) {
+            Response::json([
+                'success' => false,
+                'message' => 'معرّف القسم غير صالح.',
+            ], 400);
+            return;
+        }
+
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+
+        if (!$accessToken) {
+            Response::json([
+                'success' => false,
+                'message' => 'لا يوجد رمز وصول صالح.',
+            ], 401);
+            return;
+        }
+
+        $input = Request::input();
+        $metaTitle = trim((string) ($input['meta_title'] ?? ''));
+        $metaDescription = trim((string) ($input['meta_description'] ?? ''));
+
+        try {
+            $result = (new SallaApiClient())->updateCategorySeo(
+                $accessToken,
+                $categoryId,
+                $metaTitle,
+                $metaDescription
+            );
+
+            Response::json([
+                'success' => true,
+                'message' => 'تم حفظ SEO القسم بنجاح.',
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => 'تعذر حفظ SEO القسم: ' . $exception->getMessage(),
+            ], 500);
+        }
+    }
+
     public function optimizationSettings(): void
     {
         $store = $this->resolveStore();

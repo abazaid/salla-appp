@@ -16,14 +16,17 @@ if ($appBasePath === '/') {
 
     <nav class="sidebar-nav">
       <button type="button" class="sidebar-link is-active" data-section-target="home">الرئيسية</button>
-      <button type="button" class="sidebar-link" data-section-target="products">المنتجات</button>
-      <button type="button" class="sidebar-link" data-section-target="brand-seo">
-        سيو الماركات <span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;">قريباً</span>
-      </button>
-      <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
+      <button type="button" class="sidebar-link" data-section-target="products">سيو المنتجات</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
       <button type="button" class="sidebar-link" data-section-target="domain-seo">سيو الدومين</button>
+      <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
+      <button type="button" class="sidebar-link" data-section-target="brand-seo">
+        سيو الماركات <span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;">قريباً</span>
+      </button>
+      <button type="button" class="sidebar-link" data-section-target="category-seo">
+        سيو الأقسام <span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;">قريباً</span>
+      </button>
       <button type="button" class="sidebar-link" data-section-target="operations">سجل العمليات</button>
       <button type="button" class="sidebar-link" data-section-target="account-settings">الحساب والإعدادات</button>
     </nav>
@@ -62,39 +65,14 @@ if ($appBasePath === '/') {
 
       <div class="grid">
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">قسم المنتجات</h3>
+          <h3 style="margin:0 0 8px;">قسم سيو المنتجات</h3>
           <p class="muted" style="margin:0 0 12px;">تحسين وصف المنتج أو سيو المنتج أو الاثنين معًا مع مراجعة قبل الحفظ.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
             <li>بحث وفلاتر متقدمة</li>
             <li>تحسين فردي وجماعي</li>
             <li>عرض قبل/بعد ثم حفظ في سلة</li>
           </ul>
-          <button class="btn btn-sky" type="button" data-home-go="products">الانتقال إلى المنتجات</button>
-        </div>
-
-        <div class="card surface-soft" style="box-shadow:none;opacity:0.7;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h3 style="margin:0;">قسم سيو الماركات</h3>
-            <span style="background:#F59E0B;color:#fff;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;">قريباً</span>
-          </div>
-          <p class="muted" style="margin:0 0 12px;">تحسين وصف الماركات التجارية و Meta Tags بالذكاء الاصطناعي.</p>
-          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
-            <li>جلب جميع الماركات من المتجر</li>
-            <li>تحسين وصف و Meta Tags</li>
-            <li>حفظ مباشر في سلة</li>
-          </ul>
-          <button class="btn btn-sky" type="button" disabled style="opacity:0.5;cursor:not-allowed;">الانتقال إلى سيو الماركات</button>
-        </div>
-
-        <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">قسم سيو المتجر</h3>
-          <p class="muted" style="margin:0 0 12px;">توليد أو تعديل عنوان المتجر، الوصف، والكلمات المفتاحية للموقع بالكامل.</p>
-          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
-            <li>قراءة البيانات الحالية</li>
-            <li>إنشاء ذكي حسب تعليماتك</li>
-            <li>حفظ مباشر في إعدادات سلة</li>
-          </ul>
-          <button class="btn btn-sky" type="button" data-home-go="store-seo">الانتقال إلى سيو المتجر</button>
+          <button class="btn btn-sky" type="button" data-home-go="products">الانتقال إلى سيو المنتجات</button>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
@@ -128,6 +106,45 @@ if ($appBasePath === '/') {
             <li>عرض المنافسين وأهم المؤشرات</li>
           </ul>
           <button class="btn btn-sky" type="button" data-home-go="domain-seo">الانتقال إلى سيو الدومين</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <h3 style="margin:0 0 8px;">قسم سيو المتجر</h3>
+          <p class="muted" style="margin:0 0 12px;">توليد أو تعديل عنوان المتجر، الوصف، والكلمات المفتاحية للموقع بالكامل.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>قراءة البيانات الحالية</li>
+            <li>إنشاء ذكي حسب تعليماتك</li>
+            <li>حفظ مباشر في إعدادات سلة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" data-home-go="store-seo">الانتقال إلى سيو المتجر</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;opacity:0.7;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <h3 style="margin:0;">قسم سيو الماركات</h3>
+            <span style="background:#F59E0B;color:#fff;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;">قريباً</span>
+          </div>
+          <p class="muted" style="margin:0 0 12px;">تحسين وصف الماركات التجارية و Meta Tags بالذكاء الاصطناعي.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>جلب جميع الماركات من المتجر</li>
+            <li>تحسين وصف و Meta Tags</li>
+            <li>حفظ مباشر في سلة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" disabled style="opacity:0.5;cursor:not-allowed;">الانتقال إلى سيو الماركات</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;opacity:0.7;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <h3 style="margin:0;">قسم سيو الأقسام</h3>
+            <span style="background:#F59E0B;color:#fff;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;">قريباً</span>
+          </div>
+          <p class="muted" style="margin:0 0 12px;">تحسين Meta Title و Meta Description لأقسام المتجر بالذكاء الاصطناعي.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>جلب جميع أقسام المتجر</li>
+            <li>تحسين Meta Tags</li>
+            <li>حفظ مباشر في سلة</li>
+          </ul>
+          <button class="btn btn-sky" type="button" disabled style="opacity:0.5;cursor:not-allowed;">الانتقال إلى سيو الأقسام</button>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
@@ -565,6 +582,23 @@ if ($appBasePath === '/') {
             <label><strong>Meta Description بعد التحسين</strong></label>
             <textarea id="brand-optimized-meta-description" rows="2" style="margin-top:8px;"></textarea>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-category-seo" data-app-section="category-seo" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill" style="background:#F59E0B;">قريباً</div>
+            <h2 style="margin:12px 0 8px;">إدارة SEO الأقسام</h2>
+            <p class="muted" style="margin:0;">قسم تحسين Meta Title و Meta Description لأقسام المتجر. قريباً!</p>
+          </div>
+        </div>
+        <div class="card surface-soft" style="box-shadow:none;text-align:center;padding:60px 20px;">
+          <div style="font-size:64px;margin-bottom:20px;">🚧</div>
+          <h3 style="margin:0 0 12px;">قريباً</h3>
+          <p class="muted" style="margin:0;">هذا القسم قيد التطوير وسيكون متاحاً قريباً.</p>
         </div>
       </div>
     </section>

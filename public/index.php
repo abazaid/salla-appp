@@ -45,6 +45,7 @@ $router->post('/webhooks/salla', [WebhookController::class, 'handle']);
 $router->get('/embedded', [EmbeddedController::class, 'index']);
 $router->get('/api/products', [ProductController::class, 'index']);
 $router->get('/api/brands', [ProductController::class, 'brands']);
+$router->get('/api/categories', [ProductController::class, 'categories']);
 $router->get('/api/subscription', [ProductController::class, 'subscription']);
 $router->get('/api/settings', [ProductController::class, 'optimizationSettings']);
 $router->post('/api/settings/save', [ProductController::class, 'saveOptimizationSettings']);
@@ -62,6 +63,8 @@ $router->post('/api/store-seo/instructions/save', [ProductController::class, 'sa
 $router->post('/api/store-seo/save', [ProductController::class, 'saveStoreSeo']);
 $router->post('/api/brands/{id}/optimize', [ProductController::class, 'optimizeBrandSeo']);
 $router->post('/api/brands/{id}/save', [ProductController::class, 'saveBrandSeo']);
+$router->post('/api/categories/{id}/optimize', [ProductController::class, 'optimizeCategorySeo']);
+$router->post('/api/categories/{id}/save', [ProductController::class, 'saveCategorySeo']);
 $router->post('/api/products/alt/bulk', [ProductController::class, 'bulkOptimizeVisibleImagesAlt']);
 $router->post('/api/products/{id}/optimize', [ProductController::class, 'optimize']);
 $router->post('/api/products/{id}/save-description', [ProductController::class, 'saveDescription']);
