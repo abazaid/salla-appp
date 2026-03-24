@@ -1456,7 +1456,7 @@
   async function loadBrands() {
     try {
       setBrandSeoAlert('success', 'جاري تحميل الماركات...');
-      const data = await apiFetch('/brands').then((response) => response.json());
+      const data = await apiFetch('/api/brands').then((response) => response.json());
       if (!data.success) {
         setBrandSeoAlert('error', normalizeApiMessage(data.message, 'تعذر تحميل الماركات.'));
         return;
@@ -2457,6 +2457,11 @@
     }
     if (section === 'operations') {
       loadOperations();
+    }
+    if (section === 'brand-seo') {
+      if (!state.brands.list.length) {
+        loadBrands();
+      }
     }
     if (section === 'brand-seo') {
       if (!state.brands.list.length) {
