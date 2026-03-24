@@ -262,6 +262,171 @@ final class ProductController
         ]);
     }
 
+    public function brands(): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لم يتم العثور على متجر مرتبط.',
+            ], 404);
+            return;
+        }
+
+        $accessToken = $this->resolveAccessToken($store);
+        if ($accessToken === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لا يوجد رمز وصول صالح.',
+            ], 401);
+            return;
+        }
+
+        try {
+            $brandsResponse = (new SallaApiClient())->listBrands($accessToken);
+            $brandsData = $brandsResponse['data'] ?? [];
+            
+            $brands = array_map(static function (array $brand): array {
+                return [
+                    'id' => (int) ($brand['id'] ?? 0),
+                    'name' => (string) ($brand['name'] ?? ''),
+                    'description' => (string) ($brand['description'] ?? ''),
+                    'logo' => (string) ($brand['logo'] ?? ''),
+                    'products_count' => (int) ($brand['products_count'] ?? 0),
+                ];
+            }, $brandsData);
+
+            Response::json([
+                'success' => true,
+                'brands' => $brands,
+                'total' => count($brands),
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => 'تعذر جلب الماركات: ' . $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function optimizeBrandSeo(array $params): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لم يتم العثور على متجر مرتبط.',
+            ], 404);
+            return;
+        }
+
+        $brandId = (int) ($params['id'] ?? 0);
+        if ($brandId <= 0) {
+            Response::json([
+                'success' => false,
+                'message' => 'معرّف الماركة غير صالح.',
+            ], 400);
+            return;
+        }
+
+        $accessToken = $this->resolveAccessToken($store);
+        if ($accessToken === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لا يوجد رمز وصول صالح.',
+            ], 401);
+            return;
+        }
+
+        try {
+            $brandResponse = (new SallaApiClient())->brandDetails($accessToken, $brandId);
+            $brandData = $brandResponse['data'] ?? [];
+            
+            $brand = [
+                'id' => (int) ($brandData['id'] ?? 0),
+                'name' => (string) ($brandData['name'] ?? ''),
+                'description' => (string) ($brandData['description'] ?? ''),
+                'logo' => (string) ($brandData['logo'] ?? ''),
+            ];
+
+            $settings = $this->buildOptimizationSettings($store);
+            $generated = (new OpenAIClient())->generateBrandSeo($brand, $settings);
+
+            Response::json([
+                'success' => true,
+                'current_description' => $brand['description'],
+                'current_meta_title' => (string) ($brandData['meta_title'] ?? ''),
+                'current_meta_description' => (string) ($brandData['meta_description'] ?? ''),
+                'optimized_description' => $generated['description'] ?? '',
+                'optimized_meta_title' => $generated['meta_title'] ?? '',
+                'optimized_meta_description' => $generated['meta_description'] ?? '',
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function saveBrandSeo(array $params): void
+    {
+        $store = $this->resolveStore();
+
+        if ($store === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لم يتم العثور على متجر مرتبط.',
+            ], 404);
+            return;
+        }
+
+        $brandId = (int) ($params['id'] ?? 0);
+        if ($brandId <= 0) {
+            Response::json([
+                'success' => false,
+                'message' => 'معرّف الماركة غير صالح.',
+            ], 400);
+            return;
+        }
+
+        $accessToken = $this->resolveAccessToken($store);
+        if ($accessToken === null) {
+            Response::json([
+                'success' => false,
+                'message' => 'لا يوجد رمز وصول صالح.',
+            ], 401);
+            return;
+        }
+
+        $input = Request::input();
+        $description = trim((string) ($input['description'] ?? ''));
+        $metaTitle = trim((string) ($input['meta_title'] ?? ''));
+        $metaDescription = trim((string) ($input['meta_description'] ?? ''));
+
+        try {
+            $result = (new SallaApiClient())->updateBrandSeo(
+                $accessToken,
+                $brandId,
+                $description,
+                $metaTitle ?: null,
+                $metaDescription ?: null
+            );
+
+            Response::json([
+                'success' => true,
+                'message' => 'تم حفظ SEO الماركة بنجاح.',
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => 'تعذر حفظ SEO الماركة: ' . $exception->getMessage(),
+            ], 500);
+        }
+    }
+
     public function optimizationSettings(): void
     {
         $store = $this->resolveStore();

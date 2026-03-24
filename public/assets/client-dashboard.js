@@ -1420,31 +1420,7 @@
     if (!title || !description) {
       setStoreSeoAlert('error', 'أدخل عنوان ووصف المتجر قبل الحفظ.');
       return;
-    }
-
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'جاري الحفظ...';
-    }
-
-    setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
-    try {
-      const data = await apiFetch('/store-seo/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, keywords })
-      }).then((response) => response.json());
-
-      if (!data.success) {
-        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ سيو المتجر.'));
-        return;
       }
-
-      setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
-      await loadOperations();
-      await loadUsage();
-    } catch (error) {
-      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -1453,54 +1429,189 @@
     }
   }
 
-  async function saveStoreSeo() {
-    const button = document.getElementById('save-store-seo');
-    const oldText = button?.textContent || 'حفظ في المتجر';
-    const title = document.getElementById('store-seo-title')?.value.trim() || '';
-    const description = document.getElementById('store-seo-description')?.value.trim() || '';
-    const keywords = document.getElementById('store-seo-keywords')?.value.trim() || '';
+  // Brand SEO State
+  const state = window.__CLIENT_DASHBOARD_STATE__ || {};
+  state.brands = {
+    list: [],
+    current: null,
+    page: 1,
+    pageSize: 12,
+    filter: {
+      name: '',
+      status: 'all',
+    },
+  };
 
-    if (!title || !description) {
-      setStoreSeoAlert('error', 'أدخل عنوان ووصف المتجر قبل الحفظ.');
+  function setBrandSeoAlert(type, message) {
+    const root = document.getElementById('brand-seo-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  function setBrandEditorAlert(type, message) {
+    const root = document.getElementById('brand-editor-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  async function loadBrands() {
+    try {
+      setBrandSeoAlert('success', 'جاري تحميل الماركات...');
+      const data = await apiFetch('/brands').then((response) => response.json());
+      if (!data.success) {
+        setBrandSeoAlert('error', normalizeApiMessage(data.message, 'تعذر تحميل الماركات.'));
+        return;
+      }
+      state.brands.list = data.brands || [];
+      renderBrandsList();
+      setBrandSeoAlert('', '');
+    } catch (error) {
+      setBrandSeoAlert('error', 'تعذر تحميل الماركات.');
+    }
+  }
+
+  function renderBrandsList() {
+    const root = document.getElementById('brands-list');
+    if (!root) return;
+
+    const nameFilter = (document.getElementById('brand-filter-name')?.value || '').toLowerCase().trim();
+    const statusFilter = document.getElementById('brand-filter-status')?.value || 'all';
+
+    let filtered = state.brands.list;
+    if (nameFilter) {
+      filtered = filtered.filter((b) => (b.name || '').toLowerCase().includes(nameFilter));
+    }
+    if (statusFilter === 'has_description') {
+      filtered = filtered.filter((b) => (b.description || '').trim() !== '');
+    } else if (statusFilter === 'no_description') {
+      filtered = filtered.filter((b) => (b.description || '').trim() === '');
+    }
+
+    if (!filtered.length) {
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لا توجد ماركات.</p></div>';
       return;
     }
 
+    root.innerHTML = `
+      <div class="products-grid" style="margin-top:16px;">
+        ${filtered.map((brand) => `
+          <article class="product-card">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+              ${brand.logo ? `<img src="${escapeHtml(brand.logo)}" alt="${escapeHtml(brand.name)}" style="width:48px;height:48px;object-fit:contain;border-radius:8px;">` : '<div style="width:48px;height:48px;background:var(--bg-soft);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">🏷️</div>'}
+              <div style="flex:1;min-width:0;">
+                <h3 class="product-title" style="margin:0;font-size:15px;">${escapeHtml(brand.name || 'ماركة')}</h3>
+                <p class="muted" style="margin:4px 0 0;font-size:12px;">${brand.products_count || 0} منتج</p>
+              </div>
+            </div>
+            <p class="muted" style="font-size:13px;margin:0 0 12px;line-height:1.5;">
+              ${brand.description ? escapeHtml(brand.description).substring(0, 100) + (brand.description.length > 100 ? '...' : '') : 'بدون وصف'}
+            </p>
+            <button class="btn btn-sky" type="button" data-brand-id="${brand.id}" style="width:100%;padding:10px;">
+              تحسين SEO
+            </button>
+          </article>
+        `).join('')}
+      </div>
+    `;
+
+    root.querySelectorAll('[data-brand-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const brandId = Number(button.getAttribute('data-brand-id'));
+        openBrandEditor(brandId);
+      });
+    });
+  }
+
+  function openBrandEditor(brandId) {
+    const brand = state.brands.list.find((b) => b.id === brandId);
+    if (!brand) return;
+
+    state.brands.current = brand;
+    document.getElementById('brand-editor-title').textContent = `تحرير SEO: ${brand.name}`;
+    document.getElementById('brand-current-description').value = brand.description || '';
+    document.getElementById('brand-optimized-description').value = brand.description || '';
+    document.getElementById('brand-current-meta-title').value = brand.meta_title || '';
+    document.getElementById('brand-optimized-meta-title').value = brand.meta_title || '';
+    document.getElementById('brand-current-meta-description').value = brand.meta_description || '';
+    document.getElementById('brand-optimized-meta-description').value = brand.meta_description || '';
+    setBrandEditorAlert('', '');
+    document.getElementById('brand-seo-editor').style.display = 'block';
+  }
+
+  function closeBrandEditor() {
+    state.brands.current = null;
+    document.getElementById('brand-seo-editor').style.display = 'none';
+  }
+
+  async function generateBrandSeo() {
+    if (!state.brands.current) return;
+    const button = document.getElementById('generate-brand-seo');
+    const oldText = button?.textContent || 'توليد بالذكاء الاصطناعي';
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري التوليد...';
+    }
+    setBrandEditorAlert('success', 'جاري توليد SEO للماركة...');
+
+    try {
+      const response = await apiFetch(`/brands/${state.brands.current.id}/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setBrandEditorAlert('error', normalizeApiMessage(data.message, 'تعذر توليد SEO.'));
+        return;
+      }
+
+      document.getElementById('brand-optimized-description').value = data.optimized_description || '';
+      document.getElementById('brand-optimized-meta-title').value = data.optimized_meta_title || '';
+      document.getElementById('brand-optimized-meta-description').value = data.optimized_meta_description || '';
+      setBrandEditorAlert('success', 'تم توليد SEO بنجاح. راجع ثم احفظ.');
+    } catch (error) {
+      setBrandEditorAlert('error', 'حدث خطأ أثناء التوليد.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  async function saveBrandSeoToStore() {
+    if (!state.brands.current) return;
+    const button = document.getElementById('save-brand-seo');
+    const oldText = button?.textContent || 'حفظ في المتجر';
     if (button) {
       button.disabled = true;
       button.textContent = 'جاري الحفظ...';
     }
+    setBrandEditorAlert('success', 'جاري الحفظ...');
 
-    setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
     try {
-      const data = await apiFetch('/store-seo/save', {
+      const response = await apiFetch(`/brands/${state.brands.current.id}/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, keywords })
-      }).then((response) => response.json());
+        body: JSON.stringify({
+          description: document.getElementById('brand-optimized-description')?.value || '',
+          meta_title: document.getElementById('brand-optimized-meta-title')?.value || '',
+          meta_description: document.getElementById('brand-optimized-meta-description')?.value || '',
+        })
+      });
+      const data = await response.json();
 
       if (!data.success) {
-        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ سيو المتجر.'));
-        if (data.applied_seo) {
-          if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.applied_seo.title || '';
-          if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.applied_seo.description || '';
-          if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.applied_seo.keywords || '';
-          updateStoreSeoCounters();
-        }
+        setBrandEditorAlert('error', normalizeApiMessage(data.message, 'تعذر الحفظ.'));
         return;
       }
 
-      if (data.applied_seo) {
-        if (document.getElementById('store-seo-title')) document.getElementById('store-seo-title').value = data.applied_seo.title || '';
-        if (document.getElementById('store-seo-description')) document.getElementById('store-seo-description').value = data.applied_seo.description || '';
-        if (document.getElementById('store-seo-keywords')) document.getElementById('store-seo-keywords').value = data.applied_seo.keywords || '';
-      }
-      updateStoreSeoCounters();
-      setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
-      await loadStoreSeo();
-      await loadOperations();
-      await loadUsage();
+      setBrandEditorAlert('success', 'تم حفظ SEO الماركة بنجاح.');
+      closeBrandEditor();
+      await loadBrands();
     } catch (error) {
-      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
+      setBrandEditorAlert('error', 'حدث خطأ أثناء الحفظ.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -2348,6 +2459,11 @@
     if (section === 'operations') {
       loadOperations();
     }
+    if (section === 'brand-seo') {
+      if (!state.brands.list.length) {
+        loadBrands();
+      }
+    }
   }
 
   // Override settings handlers to support both Products and ALT sections.
@@ -2811,6 +2927,15 @@
     } else {
       console.log('Sitemap button NOT found!');
     }
+
+    // Brand SEO events
+    document.getElementById('refresh-brands')?.addEventListener('click', loadBrands);
+    document.getElementById('brand-filter-name')?.addEventListener('input', renderBrandsList);
+    document.getElementById('brand-filter-status')?.addEventListener('change', renderBrandsList);
+    document.getElementById('generate-brand-seo')?.addEventListener('click', generateBrandSeo);
+    document.getElementById('save-brand-seo')?.addEventListener('click', saveBrandSeoToStore);
+    document.getElementById('cancel-brand-seo')?.addEventListener('click', closeBrandEditor);
+
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
     document.getElementById('alt-clear-selection')?.addEventListener('click', () => {
       state.altSelectedProductIds = new Set();

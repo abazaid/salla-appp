@@ -40,6 +40,36 @@ final class SallaApiClient
         return $response['body'];
     }
 
+    public function listBrands(string $accessToken): array
+    {
+        $response = $this->httpClient->get(self::API_BASE . '/brands', $this->headers($accessToken));
+        return $response['body'];
+    }
+
+    public function brandDetails(string $accessToken, int $brandId): array
+    {
+        $response = $this->httpClient->get(self::API_BASE . '/brands/' . $brandId, $this->headers($accessToken));
+        return $response['body'];
+    }
+
+    public function updateBrandSeo(string $accessToken, int $brandId, string $description, ?string $metaTitle = null, ?string $metaDescription = null): array
+    {
+        $payload = [
+            'description' => $description,
+        ];
+
+        if ($metaTitle !== null) {
+            $payload['meta_title'] = trim($metaTitle);
+        }
+
+        if ($metaDescription !== null) {
+            $payload['meta_description'] = trim($metaDescription);
+        }
+
+        $response = $this->httpClient->post(self::API_BASE . '/brands/' . $brandId, $payload, $this->headers($accessToken));
+        return $response['body'];
+    }
+
     public function productDetails(string $accessToken, int $productId): array
     {
         $response = $this->httpClient->get(self::API_BASE . '/products/' . $productId, $this->headers($accessToken));

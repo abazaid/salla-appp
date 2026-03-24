@@ -17,6 +17,7 @@ if ($appBasePath === '/') {
     <nav class="sidebar-nav">
       <button type="button" class="sidebar-link is-active" data-section-target="home">الرئيسية</button>
       <button type="button" class="sidebar-link" data-section-target="products">المنتجات</button>
+      <button type="button" class="sidebar-link" data-section-target="brand-seo">سيو الماركات</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
@@ -470,6 +471,84 @@ if ($appBasePath === '/') {
 
         <div style="margin-top:20px;">
           <div id="products-pagination-bottom" class="pagination"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-brand-seo" data-app-section="brand-seo" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">سيو الماركات</div>
+            <h2 style="margin:12px 0 8px;">إدارة SEO الماركات التجارية</h2>
+            <p class="muted" style="margin:0;">اختر ماركة وقم بتحسين وصفها و Meta Tags بالذكاء الاصطناعي.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="refresh-brands" class="btn btn-secondary" type="button">تحديث القائمة</button>
+          </div>
+        </div>
+        <div id="brand-seo-alert"></div>
+        <div class="toolbar" style="margin-top:16px;">
+          <div class="toolbar-row">
+            <div>
+              <label for="brand-filter-name"><strong>بحث باسم الماركة</strong></label>
+              <input id="brand-filter-name" type="text" placeholder="اكتب اسم الماركة">
+            </div>
+            <div>
+              <label for="brand-filter-status"><strong>الحالة</strong></label>
+              <select id="brand-filter-status">
+                <option value="all">جميع الماركات</option>
+                <option value="has_description">لها وصف</option>
+                <option value="no_description">بدون وصف</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="brands-list"></div>
+
+      <div id="brand-seo-editor" style="display:none;">
+        <div class="card">
+          <div class="section-head">
+            <div>
+              <h2 id="brand-editor-title" style="margin:0;">تحرير SEO الماركة</h2>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button id="generate-brand-seo" class="btn btn-sky" type="button">توليد بالذكاء الاصطناعي</button>
+              <button id="save-brand-seo" class="btn" type="button">حفظ في المتجر</button>
+              <button id="cancel-brand-seo" class="btn btn-secondary" type="button">إلغاء</button>
+            </div>
+          </div>
+          <div id="brand-editor-alert"></div>
+          <div class="grid" style="margin-top:16px;">
+            <div>
+              <label><strong>الوصف الحالي</strong></label>
+              <textarea id="brand-current-description" readonly rows="4" style="margin-top:8px;"></textarea>
+            </div>
+            <div>
+              <label><strong>الوصف بعد التحسين</strong></label>
+              <textarea id="brand-optimized-description" rows="4" style="margin-top:8px;"></textarea>
+            </div>
+          </div>
+          <div class="grid" style="margin-top:16px;">
+            <div>
+              <label><strong>Meta Title الحالي</strong></label>
+              <input id="brand-current-meta-title" type="text" readonly style="margin-top:8px;">
+            </div>
+            <div>
+              <label><strong>Meta Title بعد التحسين</strong></label>
+              <input id="brand-optimized-meta-title" type="text" style="margin-top:8px;">
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <label><strong>Meta Description الحالي</strong></label>
+            <textarea id="brand-current-meta-description" readonly rows="2" style="margin-top:8px;"></textarea>
+          </div>
+          <div style="margin-top:16px;">
+            <label><strong>Meta Description بعد التحسين</strong></label>
+            <textarea id="brand-optimized-meta-description" rows="2" style="margin-top:8px;"></textarea>
+          </div>
         </div>
       </div>
     </section>

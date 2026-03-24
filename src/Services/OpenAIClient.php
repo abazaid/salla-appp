@@ -271,6 +271,91 @@ final class OpenAIClient
         ];
     }
 
+    public function generateBrandSeo(array $brand, array $settings = []): array
+    {
+        $apiKey = Config::get('OPENAI_API_KEY');
+
+        if (!$apiKey) {
+            throw new RuntimeException('OPENAI_API_KEY is missing.');
+        }
+
+        $model = Config::get('OPENAI_MODEL', 'gpt-5-mini');
+        $reasoningEffort = Config::get('OPENAI_REASONING_EFFORT', 'low');
+        $language = trim((string) ($settings['output_language'] ?? ''));
+        if ($language === '') {
+            $language = 'ar';
+        }
+        $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
+        $brandSeoInstructions = trim((string) ($settings['brand_seo_instructions'] ?? ''));
+
+        $response = $this->httpClient->post(self::API_BASE . '/responses', [
+            'model' => $model,
+            'reasoning' => [
+                'effort' => $reasoningEffort,
+            ],
+            'input' => [
+                [
+                    'role' => 'system',
+                    'content' => [
+                        [
+                            'type' => 'input_text',
+                            'text' => 'You are an expert ecommerce SEO specialist writing brand content in Arabic for Saudi customers. Return ONLY valid JSON.',
+                        ],
+                    ],
+                ],
+                [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'input_text',
+                            'text' => "Generate SEO-optimized content for a brand in language={$language}.
+
+Brand Information:
+- Name: " . ($brand['name'] ?? 'Brand') . "
+- Current Description: " . ($brand['description'] ?? 'No description') . "
+
+Rules:
+- Write compelling meta_title (max 60 characters)
+- Write meta_description (max 160 characters)
+- Write a rich brand description (2-3 paragraphs)
+- Include brand story, values, and what makes it special
+- Target Saudi Arabian market
+- Use natural Arabic
+"
+                                . $this->buildInstructionBlock('Global instructions', $globalInstructions)
+                                . $this->buildInstructionBlock('Brand SEO instructions', $brandSeoInstructions)
+                                . "\nReturn ONLY JSON: {\"meta_title\": \"...\", \"meta_description\": \"...\", \"description\": \"...\"}",
+                        ],
+                    ],
+                ],
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Accept' => 'application/json',
+        ], 90);
+
+        $body = $response['body'];
+        $text = $this->extractText($body);
+
+        if ($text === '') {
+            throw new RuntimeException('OpenAI returned empty brand SEO content.');
+        }
+
+        $decoded = json_decode($text, true);
+
+        if (!is_array($decoded)) {
+            throw new RuntimeException('OpenAI returned invalid JSON for brand SEO.');
+        }
+
+        return [
+            'meta_title' => $this->limitText(trim((string) ($decoded['meta_title'] ?? '')), 60),
+            'meta_description' => $this->limitText(trim((string) ($decoded['meta_description'] ?? '')), 160),
+            'description' => trim((string) ($decoded['description'] ?? '')),
+            '_usage' => is_array($body['usage'] ?? null) ? $body['usage'] : [],
+            '_model' => $model,
+        ];
+    }
+
     private function normalizeKeywords(string $keywords): string
     {
         $keywords = trim($keywords);
