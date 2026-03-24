@@ -1911,7 +1911,7 @@
               </table>
             </div>
           </details>
-          <p class="muted" style="margin:10px 0 0;">تاريخ الجلب من DataForSEO: ${escapeHtml(fetchedAt)}</p>
+          <p class="muted" style="margin:10px 0 0;">تاريخ آخر جلب: ${escapeHtml(fetchedAt)}</p>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
@@ -2112,7 +2112,7 @@
       button.disabled = true;
       button.textContent = 'جاري التحديث...';
     }
-    setDomainSeoAlert('success', 'جاري جلب بيانات الدومين من DataForSEO...');
+    setDomainSeoAlert('success', 'جاري جلب بيانات الدومين...');
 
     try {
       const data = await apiFetch('/domain-seo/refresh', {
@@ -2698,7 +2698,7 @@
               </tbody>
             </table>
           </div>
-          <p class="muted" style="margin:10px 0 0;">تاريخ الجلب من DataForSEO: ${escapeHtml(fetchedAt)}</p>
+          <p class="muted" style="margin:10px 0 0;">تاريخ آخر جلب: ${escapeHtml(fetchedAt)}</p>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
