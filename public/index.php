@@ -35,6 +35,7 @@ $router->post('/admin/email-test', [AdminController::class, 'sendTestEmail']);
 $router->get('/login', [AuthController::class, 'loginForm']);
 $router->post('/login', [AuthController::class, 'loginSubmit']);
 $router->get('/logout', [AuthController::class, 'logout']);
+$router->get('/api/auth/reconnect', [AuthController::class, 'reconnect']);
 $router->get('/forgot-password', [AuthController::class, 'forgotPasswordForm']);
 $router->post('/forgot-password', [AuthController::class, 'forgotPasswordSubmit']);
 $router->get('/set-password', [AuthController::class, 'setPasswordForm']);

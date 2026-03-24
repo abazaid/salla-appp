@@ -944,6 +944,13 @@ if ($appBasePath === '/') {
           <a class="btn btn-secondary" href="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>/forgot-password">استرجاع كلمة المرور</a>
           <a class="btn" href="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>/logout">تسجيل الخروج</a>
         </div>
+
+        <div class="card surface-soft" style="box-shadow:none;margin-top:20px;border:1px solid #FCD34D;">
+          <h3 style="margin:0 0 8px;color:#92400E;">🔄 إعادة ربط المتجر</h3>
+          <p class="muted" style="margin:0 0 12px;">إذا أضفت صلاحيات جديدة للتطبيق (مثل Brands أو Categories)، يجب إعادة ربط المتجر لتحديث الصلاحيات.</p>
+          <button id="reconnect-store" class="btn btn-sky" type="button">إعادة ربط المتجر الآن</button>
+          <div id="reconnect-alert" style="margin-top:10px;"></div>
+        </div>
       </div>
 
       <div id="usage-card" class="card">

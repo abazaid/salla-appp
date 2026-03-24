@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Config;
 use App\Repositories\SaaSRepository;
+use App\Repositories\StoreRepository;
 use App\Services\Mailer;
 use App\Support\Database;
 use App\Support\Request;
@@ -190,5 +192,34 @@ HTML));
             'merchantId' => (string) ($store['merchant_id'] ?? '-'),
             'ownerEmail' => (string) ($store['owner_email'] ?? '-'),
         ]));
+    }
+
+    public function reconnect(): void
+    {
+        $clientId = Config::get('SALLA_CLIENT_ID', '');
+        $redirectUri = Config::get('SALLA_REDIRECT_URI', '');
+
+        if ($clientId === '' || $redirectUri === '') {
+            Response::json([
+                'success' => false,
+                'message' => 'OAuth configuration is missing.',
+            ], 500);
+            return;
+        }
+
+        $scopes = 'offline access merchants.read products.read brands.read brands.read_write categories.read categories.read_write';
+        $state = bin2hex(random_bytes(16));
+
+        $authorizeUrl = 'https://accounts.salla.sa/oauth2/authorize'
+            . '?client_id=' . urlencode($clientId)
+            . '&redirect_uri=' . urlencode($redirectUri)
+            . '&response_type=code'
+            . '&scope=' . urlencode($scopes)
+            . '&state=' . urlencode($state);
+
+        Response::json([
+            'success' => true,
+            'redirect_url' => $authorizeUrl,
+        ]);
     }
 }

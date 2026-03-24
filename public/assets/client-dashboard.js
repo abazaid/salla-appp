@@ -1336,6 +1336,43 @@
     }
   }
 
+  async function reconnectStore() {
+    const button = document.getElementById('reconnect-store');
+    const alertDiv = document.getElementById('reconnect-alert');
+    const oldText = button?.textContent || 'إعادة ربط المتجر الآن';
+    
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري التحويل...';
+    }
+    if (alertDiv) {
+      alertDiv.innerHTML = '<div class="notice success">جاري تحويلك لصفحة ربط المتجر...</div>';
+    }
+
+    try {
+      const data = await apiFetch('/auth/reconnect').then((response) => response.json());
+      if (data.success && data.redirect_url) {
+        window.location.href = data.redirect_url;
+      } else {
+        if (alertDiv) {
+          alertDiv.innerHTML = '<div class="notice error">تعذر الحصول على رابط إعادة الربط.</div>';
+        }
+        if (button) {
+          button.disabled = false;
+          button.textContent = oldText;
+        }
+      }
+    } catch (error) {
+      if (alertDiv) {
+        alertDiv.innerHTML = '<div class="notice error">حدث خطأ أثناء محاولة إعادة الربط.</div>';
+      }
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
   async function loadStoreSeo() {
     try {
       const data = await apiFetch('/store-seo').then((response) => response.json());
@@ -2920,6 +2957,7 @@
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
     
     document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
+    document.getElementById('reconnect-store')?.addEventListener('click', reconnectStore);
 
     // Brand SEO events
     document.getElementById('refresh-brands')?.addEventListener('click', loadBrands);
