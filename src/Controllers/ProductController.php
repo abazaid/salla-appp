@@ -2307,6 +2307,12 @@ final class ProductController
             }
         }
 
-        return array_values($stores)[0] ?? null;
+        // If only one store exists and user is logged in, use it
+        if (count($stores) === 1) {
+            return array_values($stores)[0];
+        }
+
+        // Don't return random store - return null instead
+        return null;
     }
 }

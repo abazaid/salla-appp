@@ -14,6 +14,7 @@ final class OAuthController
     public function callback(): void
     {
         $code = (string) Request::query('code', '');
+        $state = (string) Request::query('state', '');
 
         if ($code === '') {
             Response::json([
@@ -47,16 +48,19 @@ final class OAuthController
                 ?? 'unknown'
             );
 
+            $existingStore = $repository->find($merchantId);
+            $isReconnect = $existingStore !== null;
+
             $repository->save($merchantId, [
                 'merchant_id' => $merchantId,
                 'token_payload' => $tokenPayload,
                 'merchant_info' => $merchantInfo,
-                'settings' => [
+                'settings' => $existingStore['settings'] ?? [
                     'tone' => 'احترافي مقنع',
                     'language' => 'ar',
                     'mode' => 'manual_review',
                 ],
-                'subscription' => [
+                'subscription' => $existingStore['subscription'] ?? [
                     'status' => 'trial',
                     'plan_name' => 'starter',
                     'product_quota' => 20,
@@ -65,14 +69,19 @@ final class OAuthController
                     'period_ends_at' => date('c', strtotime('+30 days')),
                     'last_event' => 'oauth.connected',
                 ],
-                'usage_logs' => [],
+                'usage_logs' => $existingStore['usage_logs'] ?? [],
             ]);
 
-            Response::json([
-                'success' => true,
-                'message' => 'Store connected successfully.',
-                'merchant_id' => $merchantId,
-            ]);
+            // Restore session for reconnect
+            if ($isReconnect) {
+                $store = (new \App\Repositories\SaaSRepository())->findStoreByMerchantId((int) $merchantId);
+                if ($store) {
+                    $_SESSION['store_id'] = (int) $store['id'];
+                }
+            }
+
+            header('Location: /dashboard');
+            exit;
         } catch (\Throwable $exception) {
             Response::json([
                 'success' => false,

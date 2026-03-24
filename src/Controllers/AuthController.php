@@ -207,8 +207,14 @@ HTML));
             return;
         }
 
+        $sessionStoreId = (int) ($_SESSION['store_id'] ?? 0);
         $scopes = 'offline access merchants.read products.read brands.read brands.read_write categories.read categories.read_write';
         $state = bin2hex(random_bytes(16));
+        
+        // Store the session store_id in state to restore after reconnection
+        if ($sessionStoreId > 0) {
+            $state = $sessionStoreId . '_' . $state;
+        }
 
         $authorizeUrl = 'https://accounts.salla.sa/oauth2/authorize'
             . '?client_id=' . urlencode($clientId)

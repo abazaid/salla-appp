@@ -5,6 +5,7 @@
   window.__CLIENT_DASHBOARD_PRODUCTS_INIT__ = true;
   console.log('Dashboard JS loaded');
   const appBasePath = (document.querySelector('.dashboard-shell')?.dataset.appBasePath || '').replace(/\/+$/, '');
+  const merchantId = document.querySelector('.dashboard-shell')?.dataset.merchantId || '';
   const apiPrefixes = Array.from(new Set([
     `${appBasePath}/api`,
     `${appBasePath}/public/api`
@@ -13,11 +14,17 @@
   async function apiFetch(path, options = {}) {
     let lastResponse = null;
     let lastError = null;
+    
+    // Add merchant_id to query string if available
+    let separator = '?';
+    if (path.includes('?')) separator = '&';
+    const merchantIdParam = merchantId ? `${separator}merchant_id=${encodeURIComponent(merchantId)}` : '';
+    const fullPath = `${path}${merchantIdParam}`;
 
     for (let i = 0; i < apiPrefixes.length; i += 1) {
       const prefix = apiPrefixes[i].replace(/\/+$/, '');
       try {
-        const response = await fetch(`${prefix}${path}`, options);
+        const response = await fetch(`${prefix}${fullPath}`, options);
         lastResponse = response;
         if (response.status !== 404) {
           return response;

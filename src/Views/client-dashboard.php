@@ -7,7 +7,7 @@ if ($appBasePath === '/') {
     $appBasePath = '';
 }
 ?>
-<div class="dashboard-shell" data-app-base-path="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>">
+<div class="dashboard-shell" data-app-base-path="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>" data-merchant-id="<?= htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') ?>">
   <aside class="card dashboard-sidebar">
     <div>
       <h3 style="margin:0 0 8px;">أدوات المتجر</h3>
