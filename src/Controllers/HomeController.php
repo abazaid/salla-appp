@@ -305,11 +305,19 @@ final class HomeController
           </ul>
         </article>
         <article class="card">
-          <h3>سيو المتجر (Meta Title / Description / Keywords)</h3>
+          <h3>تحسين SEO المنتجات</h3>
           <ul class="list">
-            <li>توليد صياغات قوية لصفحة المتجر الرئيسية وفق طول مناسب لمحركات البحث.</li>
-            <li>تحسين النصوص الحالية بدل استبدالها عشوائيًا، مع مراعاة هوية المتجر.</li>
-            <li>تحديث فوري من اللوحة إلى إعدادات SEO في سلة.</li>
+            <li>Meta Title و Meta Description محسّنة لكل منتج.</li>
+            <li>تحسين متوافق مع محركات البحث لرفع ظهور منتجاتك.</li>
+            <li>حفظ مباشر في متجرك على سلة.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>تحسين SEO الماركات التجارية</h3>
+          <ul class="list">
+            <li>تحسين وصف و Meta Tags للماركات التجارية.</li>
+            <li>رفع ظهور الماركات في نتائج البحث.</li>
+            <li>حفظ مباشر في سلة.</li>
           </ul>
         </article>
         <article class="card">
@@ -321,13 +329,116 @@ final class HomeController
           </ul>
         </article>
         <article class="card">
-          <h3>ذكاء الكلمات والمنافسين</h3>
+          <h3>تحليل الكلمات المفتاحية</h3>
           <ul class="list">
             <li>تحليل الكلمة المفتاحية: حجم البحث، المنافسة، CPC، واقتراحات مرتبطة.</li>
-            <li>تحليل الدومين والمنافسين مع مؤشرات ترتيب الكلمات العضوية.</li>
-            <li>حفظ نتائج البحث السابقة لتقليل الهدر في النقاط وتسريع العمل.</li>
+            <li>حفظ نتائج البحث السابقة لتقليل الهدر وتسريع العمل.</li>
           </ul>
         </article>
+        <article class="card">
+          <h3>تحليل سيو الدومين</h3>
+          <ul class="list">
+            <li>تحليل شامل لموقعك مع مؤشرات ترتيب الكلمات العضوية.</li>
+            <li>مقارنة مع المنافسين في نفس المجال.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>سيو المتجر</h3>
+          <ul class="list">
+            <li>توليد صياغات قوية لصفحة المتجر الرئيسية.</li>
+            <li>تحسين Meta Title / Description / Keywords للمتجر.</li>
+            <li>تحديث فوري من اللوحة إلى إعدادات SEO في سلة.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>تحرير يدوي بدون AI</h3>
+          <ul class="list">
+            <li>تعديل الوصف و Meta Tags يدويًا مباشرة.</li>
+            <li>لا يستهلك من رصيدك لأنه لا يستخدم الذكاء الاصطناعي.</li>
+            <li>حفظ مباشر في متجرك.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="surface section">
+      <h2>الباقات والأسعار</h2>
+      <p>اختر الباقة المناسبة لمتجرك وابدأ بتحسين محتواك اليوم.</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));">
+        <article class="card" style="border:2px solid #10B981;">
+          <h3 style="color:#10B981;">🟢 التجربة الاقتصادية</h3>
+          <div style="font-size:32px;font-weight:800;margin:10px 0;">5 ر.س<span style="font-size:16px;color:var(--muted);font-weight:400;">/شهر</span></div>
+          <p style="color:var(--muted);font-size:14px;">جرّب المنصة بسعر رمزي</p>
+          <ul class="list" style="font-size:15px;">
+            <li>25 تحسين وصف منتج</li>
+            <li>15 تحسين SEO منتج</li>
+            <li>25 تحسين ALT صور</li>
+            <li>5 كلمات مفتاحية</li>
+            <li>1 تحليل دومين</li>
+            <li>10 تحسين ماركات</li>
+          </ul>
+          <a class="btn btn-primary" href="{$loginHref}" style="margin-top:12px;background:#10B981;">ابدأ الآن</a>
+        </article>
+        <article class="card" style="border:2px solid #3B82F6;">
+          <h3 style="color:#3B82F6;">🔵 الخطة الأساسية</h3>
+          <div style="font-size:32px;font-weight:800;margin:10px 0;">29 ر.س<span style="font-size:16px;color:var(--muted);font-weight:400;">/شهر</span></div>
+          <p style="color:var(--muted);font-size:14px;">للمتاجر الصغيرة والمتوسطة</p>
+          <ul class="list" style="font-size:15px;">
+            <li>80 تحسين وصف منتج</li>
+            <li>40 تحسين SEO منتج</li>
+            <li>80 تحسين ALT صور</li>
+            <li>10 كلمات مفتاحية</li>
+            <li>3 تحليل دومين</li>
+            <li>20 تحسين ماركات</li>
+          </ul>
+          <a class="btn btn-primary" href="{$loginHref}" style="margin-top:12px;background:#3B82F6;">ابدأ الآن</a>
+        </article>
+        <article class="card" style="border:2px solid #8B5CF6;position:relative;">
+          <div style="position:absolute;top:-12px;right:20px;background:var(--gradient-main);color:#fff;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;">الأكثر شعبية ⭐</div>
+          <h3 style="color:#8B5CF6;">🟣 الخطة المتقدمة</h3>
+          <div style="font-size:32px;font-weight:800;margin:10px 0;">79 ر.س<span style="font-size:16px;color:var(--muted);font-weight:400;">/شهر</span></div>
+          <p style="color:var(--muted);font-size:14px;">للمتاجر المتنامية</p>
+          <ul class="list" style="font-size:15px;">
+            <li>260 تحسين وصف منتج</li>
+            <li>140 تحسين SEO منتج</li>
+            <li>260 تحسين ALT صور</li>
+            <li>40 كلمة مفتاحية</li>
+            <li>12 تحليل دومين</li>
+            <li>60 تحسين ماركات</li>
+            <li>+ سجل النشاطات</li>
+            <li>+ تصدير البيانات</li>
+            <li>+ أداء أسرع</li>
+          </ul>
+          <a class="btn btn-primary" href="{$loginHref}" style="margin-top:12px;background:var(--gradient-main);">ابدأ الآن</a>
+        </article>
+        <article class="card" style="border:2px solid #EF4444;">
+          <h3 style="color:#EF4444;">🔴 الخطة الاحترافية</h3>
+          <div style="font-size:32px;font-weight:800;margin:10px 0;">149 ر.س<span style="font-size:16px;color:var(--muted);font-weight:400;">/شهر</span></div>
+          <p style="color:var(--muted);font-size:14px;">للمتاجر الكبيرة والوكالات</p>
+          <ul class="list" style="font-size:15px;">
+            <li>700 تحسين وصف منتج</li>
+            <li>350 تحسين SEO منتج</li>
+            <li>700 تحسين ALT صور</li>
+            <li>120 كلمة مفتاحية</li>
+            <li>35 تحليل دومين</li>
+            <li>150 تحسين ماركات</li>
+            <li>+ دعم أولوي</li>
+            <li>+ حدود أعلى</li>
+            <li>+ كل مميزات المتقدمة</li>
+          </ul>
+          <a class="btn btn-primary" href="{$loginHref}" style="margin-top:12px;background:#EF4444;">ابدأ الآن</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="surface section">
+      <h2>لماذا هذه المنصة تفرق فعليًا؟</h2>
+      <p>الهدف ليس فقط "إنشاء نص"، بل بناء نظام محتوى كامل يساعد متجرك على النمو بشكل مستمر.</p>
+      <div class="kpis">
+        <div class="kpi">واجهة موحدة<strong>8</strong>أقسام تشغيل</div>
+        <div class="kpi">تحسين قابل للقياس<strong>100%</strong>سجل عمليات</div>
+        <div class="kpi">تحكم كامل<strong>يدوي + AI</strong>قبل الحفظ</div>
+        <div class="kpi">جاهز للنشر<strong>مباشر</strong>داخل سلة</div>
       </div>
     </section>
 
@@ -370,15 +481,23 @@ final class HomeController
       <div class="faq">
         <details>
           <summary>هل المنصة مناسبة لمتجر صغير أو جديد؟</summary>
-          <p>نعم، لأنها تقلل وقت كتابة المحتوى وتمنحك خطوات واضحة للبدء دون تعقيد تقني.</p>
+          <p>نعم، لأنها تقلل وقت كتابة المحتوى وتمنحك خطوات واضحة للبدء دون تعقيد تقني. ابدأ بالخطة الاقتصادية بـ 5 ر.س فقط.</p>
         </details>
         <details>
-          <summary>هل أقدر تعديل النص قبل الحفظ؟</summary>
-          <p>أكيد. كل مخرجات AI تمر بمرحلة مراجعة كاملة قبل اعتمادها داخل سلة.</p>
+          <summary>هل أقدر أعدّل النص قبل الحفظ؟</summary>
+          <p>أكيد. كل مخرجات AI تمر بمرحلة مراجعة كاملة قبل اعتمادها داخل سلة. كما يمكنك استخدام التحرير اليدوي بدون AI.</p>
         </details>
         <details>
           <summary>هل التحسين يشمل المنتجات فقط؟</summary>
-          <p>لا، يشمل أيضًا سيو المتجر، ALT الصور، تحليل الكلمات المفتاحية، وتحليل الدومين والمنافسين.</p>
+          <p>لا، يشمل أيضًا SEO الماركات، سيو المتجر، ALT الصور، تحليل الكلمات المفتاحية، وتحليل سيو الدومين.</p>
+        </details>
+        <details>
+          <summary>ماذا لو استهلكت رصيدي؟</summary>
+          <p>ستظهر لك رسالة تنبيه. يمكنك ترقية اشتراكك للحصول على رصيد أكبر، أو الانتظار حتى تجديد الفترة التالية.</p>
+        </details>
+        <details>
+          <summary>هل أحتاج حساب OpenAI؟</summary>
+          <p>لا، التكلفة مشمولة في اشتراكك. لا حاجة لإنشاء حساب OpenAI أو شراء رصيد. نحن نتولى كل شيء.</p>
         </details>
       </div>
       <div class="hero-actions" style="margin-top:18px">
