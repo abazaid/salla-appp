@@ -75,19 +75,22 @@ final class SubscriptionManager
         $subscription = $store['subscription'] ?? [];
 
         $modeToQuota = [
-            'description' => 'product_description',
-            'seo' => 'product_seo',
-            'all' => 'product_description',
-            'image_alt' => 'image_alt',
-            'image_alt_bulk' => 'image_alt',
-            'store_seo' => 'product_seo',
-            'keyword_research' => 'keyword_research',
-            'domain_seo' => 'domain_seo',
+            'description' => ['product_description'],
+            'seo' => ['product_seo'],
+            'all' => ['product_description', 'product_seo'],
+            'image_alt' => ['image_alt'],
+            'image_alt_bulk' => ['image_alt'],
+            'store_seo' => ['product_seo'],
+            'keyword_research' => ['keyword_research'],
+            'domain_seo' => ['domain_seo'],
+            'brand_seo' => ['brand_seo'],
         ];
 
-        $quotaType = $modeToQuota[$mode] ?? 'product_description';
-        $usedKey = 'used_' . $quotaType;
-        $subscription[$usedKey] = (int) ($subscription[$usedKey] ?? 0) + 1;
+        $quotaTypes = $modeToQuota[$mode] ?? ['product_description'];
+        foreach ($quotaTypes as $quotaType) {
+            $usedKey = 'used_' . $quotaType;
+            $subscription[$usedKey] = (int) ($subscription[$usedKey] ?? 0) + 1;
+        }
         
         $subscription['used_products'] = (int) ($subscription['used_products'] ?? 0) + 1;
         $store['subscription'] = $subscription;
