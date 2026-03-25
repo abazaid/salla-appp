@@ -60,7 +60,7 @@ final class SallaApiClient
 
     public function updateCategorySeo(string $accessToken, int $categoryId, string $metaTitle, string $metaDescription): array
     {
-        $response = $this->httpClient->post(
+        $response = $this->httpClient->put(
             self::API_BASE . '/categories/' . $categoryId,
             ['meta_title' => $metaTitle, 'meta_description' => $metaDescription],
             $this->headers($accessToken)
@@ -88,7 +88,7 @@ final class SallaApiClient
             $payload['meta_description'] = trim($metaDescription);
         }
 
-        $response = $this->httpClient->post(self::API_BASE . '/brands/' . $brandId, $payload, $this->headers($accessToken));
+        $response = $this->httpClient->put(self::API_BASE . '/brands/' . $brandId, $payload, $this->headers($accessToken));
         return $response['body'];
     }
 
