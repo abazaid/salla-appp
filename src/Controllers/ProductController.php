@@ -295,6 +295,8 @@ final class ProductController
                     'description' => (string) ($brand['description'] ?? ''),
                     'logo' => (string) ($brand['logo'] ?? ''),
                     'products_count' => (int) ($brand['products_count'] ?? 0),
+                    'meta_title' => (string) ($brand['meta_title'] ?? ''),
+                    'meta_description' => (string) ($brand['meta_description'] ?? ''),
                 ];
             }, $brandsData);
 
