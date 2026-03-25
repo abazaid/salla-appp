@@ -405,7 +405,7 @@ final class ProductController
         }
 
         $input = Request::input();
-        $description = trim((string) ($input['description'] ?? ''));
+        $description = mb_substr(trim((string) ($input['description'] ?? '')), 0, 255);
         $metaTitle = trim((string) ($input['meta_title'] ?? ''));
         $metaDescription = trim((string) ($input['meta_description'] ?? ''));
 
