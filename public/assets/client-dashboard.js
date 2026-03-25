@@ -1891,15 +1891,22 @@
     setCategoryEditorAlert('success', 'جاري الحفظ...');
 
     try {
+      const metaTitle = document.getElementById('category-optimized-meta-title')?.value || '';
+      const metaDescription = document.getElementById('category-optimized-meta-description')?.value || '';
+      console.log('Saving category SEO:', { metaTitle, metaDescription });
+
       const response = await apiFetch(`/categories/${state.categories.current.id}/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          meta_title: document.getElementById('category-optimized-meta-title')?.value || '',
-          meta_description: document.getElementById('category-optimized-meta-description')?.value || '',
+          meta_title: metaTitle,
+          meta_description: metaDescription,
         })
       });
+      
+      console.log('Save response status:', response.status);
       const data = await response.json();
+      console.log('Save response data:', data);
 
       if (!data.success) {
         setCategoryEditorAlert('error', normalizeApiMessage(data.message, 'تعذر الحفظ.'));
@@ -1910,7 +1917,8 @@
       closeCategoryEditor();
       await loadCategories();
     } catch (error) {
-      setCategoryEditorAlert('error', 'حدث خطأ أثناء الحفظ.');
+      console.error('Save category SEO error:', error);
+      setCategoryEditorAlert('error', 'حدث خطأ أثناء الحفظ: ' + (error.message || 'خطأ غير معروف'));
     } finally {
       if (button) {
         button.disabled = false;
