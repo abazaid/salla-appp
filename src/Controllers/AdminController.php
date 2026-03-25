@@ -218,6 +218,19 @@ HTML));
 
         $planQuotasJson = json_encode(array_map(fn($p) => $p['quotas'], Plans::all()));
 
+        $quotaKeys = ['product_description', 'product_seo', 'image_alt', 'keyword_research', 'domain_seo', 'brand_seo'];
+        $currentUsed = [];
+        $currentQuota = [];
+        foreach ($quotaKeys as $key) {
+            $usedKey = 'used_' . $key;
+            $quotaKey = 'quota_' . $key;
+            $defaultQuota = $currentPlan['quotas'][$key] ?? 0;
+            $currentUsed[$key] = (int) ($store[$usedKey] ?? 0);
+            $currentQuota[$key] = (int) ($store[$quotaKey] ?? $defaultQuota);
+        }
+        $currentUsedJson = json_encode($currentUsed);
+        $currentQuotaJson = json_encode($currentQuota);
+
         Response::html(View::render('Admin Store', <<<HTML
 <div class="card">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -236,7 +249,7 @@ HTML));
   {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI لهذا المتجر حسب النوع')}
   {$this->renderAiPricingTypeSummaryCard($aiUsageByMode, 'ملخص التسعير لهذا المتجر حسب النوع')}
   {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية لهذا المتجر')}
-  <div class="card" style="margin-top:16px;">
+    <div class="card" style="margin-top:16px;">
     <h2>تعديل الاشتراك</h2>
     <form method="post" id="subscription-form">
       <div class="grid">
@@ -274,6 +287,47 @@ HTML));
         <p style="margin:0;color:#64748B;font-size:14px;">{$currentPlan['description_ar']}</p>
       </div>
       <button type="submit" formaction="/admin/stores/{$store['id']}/subscription" style="background:linear-gradient(135deg, #3B82F6, #6366F1);color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;margin-top:12px;box-shadow:0 0 20px rgba(99, 102, 241, 0.35);">حفظ التعديلات</button>
+    </form>
+  </div>
+
+  <div class="card" style="margin-top:16px;background:#FEF3C7;border:1px solid #F59E0B;">
+    <h2 style="margin-top:0;">تعديل الحصص الفردية</h2>
+    <p class="muted">أضف أو انقص من حصة كل عملية على حدة. القيم السالبة تنقص من المستخدم.</p>
+    <form method="post" action="/admin/stores/{$store['id']}/adjust-quotas">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+        <div>
+          <label>تحسين وصف منتج</label>
+          <input name="quota_product_description" type="number" value="0" placeholder="0" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+          <small class="muted">الحالي: {$currentUsed['product_description']} / {$currentQuota['product_description']}</small>
+        </div>
+        <div>
+          <label>تحسين SEO منتج</label>
+          <input name="quota_product_seo" type="number" value="0" placeholder="0" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+          <small class="muted">الحالي: {$currentUsed['product_seo']} / {$currentQuota['product_seo']}</small>
+        </div>
+        <div>
+          <label>تحسين ALT صور</label>
+          <input name="quota_image_alt" type="number" value="0" placeholder="0" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+          <small class="muted">الحالي: {$currentUsed['image_alt']} / {$currentQuota['image_alt']}</small>
+        </div>
+        <div>
+          <label>كلمات مفتاحية</label>
+          <input name="quota_keyword_research" type="number" value="0" placeholder="0" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+          <small class="muted">الحالي: {$currentUsed['keyword_research']} / {$currentQuota['keyword_research']}</small>
+        </div>
+        <div>
+          <label>تحليل سيو دومين</label>
+          <input name="quota_domain_seo" type="number" value="0" placeholder="0" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+          <small class="muted">الحالي: {$currentUsed['domain_seo']} / {$currentQuota['domain_seo']}</small>
+        </div>
+        <div>
+          <label>تحسين SEO ماركة</label>
+          <input name="quota_brand_seo" type="number" value="0" placeholder="0" style="width:100%;padding:12px;margin-top:8px;border-radius:12px;border:1px solid #E2E8F0;">
+          <small class="muted">الحالي: {$currentUsed['brand_seo']} / {$currentQuota['brand_seo']}</small>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:12px;font-size:13px;">💡 أدخل قيمة موجبة (+) لإضافة أو سالبة (-) لإنقاص من الحصة الحالية.</p>
+      <button type="submit" style="background:linear-gradient(135deg, #F59E0B, #D97706);color:#fff;border:none;padding:12px 18px;border-radius:12px;cursor:pointer;margin-top:8px;">تطبيق التعديلات</button>
     </form>
   </div>
 
@@ -364,6 +418,61 @@ HTML));
         (new StoreRepository())->save((string) $store['merchant_id'], [
             'subscription' => array_merge($jsonStore['subscription'] ?? [], $payload),
         ]);
+
+        header('Location: /admin/stores/' . $storeId);
+    }
+
+    public function adjustQuotas(array $params): void
+    {
+        if (!$this->ensureAdmin()) {
+            return;
+        }
+
+        $storeId = (int) ($params['id'] ?? 0);
+        $repository = new SaaSRepository();
+        $store = $repository->findStoreById($storeId);
+
+        if (!$store) {
+            header('Location: /admin/stores');
+            return;
+        }
+
+        $quotaKeys = ['product_description', 'product_seo', 'image_alt', 'keyword_research', 'domain_seo', 'brand_seo'];
+        $updates = [];
+
+        foreach ($quotaKeys as $key) {
+            $usedKey = 'used_' . $key;
+            $quotaKey = 'quota_' . $key;
+            $adjustValue = (int) ($_POST['quota_' . $key] ?? 0);
+            
+            if ($adjustValue !== 0) {
+                $currentUsed = (int) ($store[$usedKey] ?? 0);
+                $currentQuota = (int) ($store[$quotaKey] ?? 0);
+                
+                $updates[$usedKey] = max(0, $currentUsed + $adjustValue);
+                $updates[$quotaKey] = max(0, $currentQuota + $adjustValue);
+            }
+        }
+
+        if (!empty($updates)) {
+            $repository->updateStoreSubscription($storeId, $updates);
+            $repository->logAdminActivity(
+                (string) Config::get('ADMIN_EMAIL', 'admin'),
+                'quotas.adjusted',
+                'store',
+                (string) $storeId,
+                $updates
+            );
+
+            $jsonStore = (new StoreRepository())->find((string) $store['merchant_id']) ?? [];
+            $currentSub = $jsonStore['subscription'] ?? [];
+            foreach ($updates as $key => $value) {
+                $currentSub[$key] = $value;
+            }
+            (new StoreRepository())->save((string) $store['merchant_id'], [
+                'subscription' => $currentSub,
+            ]);
+        }
 
         header('Location: /admin/stores/' . $storeId);
     }

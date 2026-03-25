@@ -451,6 +451,9 @@ final class ProductController
                 $metaDescription ?: null
             );
 
+            $brandName = $brandData['name'] ?? 'ماركة';
+            $store = $subscriptionManager->recordOptimization($store, $brandId, $brandName, 'brand_seo', 'completed');
+
             Response::json([
                 'success' => true,
                 'message' => 'تم حفظ SEO الماركة بنجاح.',
@@ -984,6 +987,8 @@ final class ProductController
             ];
             $this->appendKeywordHistory($store, $historyEntry);
 
+            $store = $subscriptionManager->recordOptimization($store, 0, $keyword, 'keyword_research', 'completed');
+
             Response::json([
                 'success' => true,
                 'merchant_id' => $store['merchant_id'] ?? null,
@@ -1175,8 +1180,11 @@ final class ProductController
                 $historyEntry
             );
 
+            $store = $subscriptionManager->recordOptimization($store, 0, $domain, 'domain_seo', 'completed');
+            
             (new StoreRepository())->save((string) ($store['merchant_id'] ?? ''), [
                 'settings' => $settings,
+                'subscription' => $store['subscription'] ?? [],
             ]);
 
             Response::json([

@@ -29,6 +29,7 @@ $router->get('/admin/dashboard', [AdminController::class, 'dashboard']);
 $router->get('/admin/stores', [AdminController::class, 'stores']);
 $router->get('/admin/stores/{id}', [AdminController::class, 'store']);
 $router->post('/admin/stores/{id}/subscription', [AdminController::class, 'updateSubscription']);
+$router->post('/admin/stores/{id}/adjust-quotas', [AdminController::class, 'adjustQuotas']);
 $router->post('/admin/stores/{id}/delete', [AdminController::class, 'deleteStore']);
 $router->get('/admin/activity', [AdminController::class, 'activity']);
 $router->post('/admin/email-test', [AdminController::class, 'sendTestEmail']);
