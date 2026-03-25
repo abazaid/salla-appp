@@ -3200,4 +3200,8 @@
   loadOperations();
   loadStoreSeo();
   loadUsage();
+
+  window.openManualEdit = openManualEdit;
+  window.closeManualEdit = closeManualEdit;
+  window.saveManualEdit = saveManualEdit;
 })();
