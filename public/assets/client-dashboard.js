@@ -3204,4 +3204,5 @@
   window.openManualEdit = openManualEdit;
   window.closeManualEdit = closeManualEdit;
   window.saveManualEdit = saveManualEdit;
+  console.log('Manual edit functions exposed:', typeof window.saveManualEdit, typeof window.openManualEdit);
 })();
