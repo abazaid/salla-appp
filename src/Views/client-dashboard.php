@@ -21,7 +21,7 @@ if ($appBasePath === '/') {
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
       <button type="button" class="sidebar-link" data-section-target="domain-seo">سيو الدومين</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
-      <button type="button" class="sidebar-link" data-section-target="brand-seo">🏷️ سيو الماركات</button>
+      <button type="button" class="sidebar-link" data-section-target="brand-seo">سيو الماركات</button>
       <button type="button" class="sidebar-link" data-section-target="category-seo">
         سيو الأقسام <span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;">قريباً</span>
       </button>
@@ -119,7 +119,7 @@ if ($appBasePath === '/') {
 
         <div class="card surface-soft" style="box-shadow:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h3 style="margin:0;">🏷️ قسم سيو الماركات</h3>
+            <h3 style="margin:0;">قسم سيو الماركات</h3>
           </div>
           <p class="muted" style="margin:0 0 12px;">تحسين وصف الماركات التجارية و Meta Tags بالذكاء الاصطناعي.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
