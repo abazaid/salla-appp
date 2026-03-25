@@ -732,12 +732,16 @@ final class ProductController
         $metaDescription = trim((string) ($input['meta_description'] ?? ''));
 
         try {
+            error_log('saveCategorySeo - categoryId: ' . $categoryId . ', metaTitle: ' . $metaTitle . ', metaDesc: ' . $metaDescription);
+            
             $result = (new SallaApiClient())->updateCategorySeo(
                 $accessToken,
                 $categoryId,
                 $metaTitle,
                 $metaDescription
             );
+            
+            error_log('saveCategorySeo - result: ' . json_encode($result));
 
             $categoryName = 'قسم';
             $store = $subscriptionManager->recordOptimization($store, $categoryId, $categoryName, 'category_seo', 'completed');
