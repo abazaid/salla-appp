@@ -473,6 +473,7 @@
           <button class="btn" type="button" ${isLoading ? 'disabled' : ''} data-action="description" data-id="${Number(product.id)}">${isLoading ? 'جاري التحضير...' : 'تحسين الوصف'}</button>
           <button class="btn btn-sky" type="button" ${isLoading ? 'disabled' : ''} data-action="seo" data-id="${Number(product.id)}">تحسين السيو</button>
           <button class="btn btn-secondary" type="button" ${isLoading ? 'disabled' : ''} data-action="all" data-id="${Number(product.id)}">تحسين الكل</button>
+          <button class="btn" type="button" data-action="manual" data-id="${Number(product.id)}" style="margin-top:6px;background:#6B7280;color:#fff;border:none;">تحرير يدوي</button>
         </div>
       </article>
     `;
@@ -509,13 +510,87 @@
     root.innerHTML = items.map(buildProductCard).join('');
     root.querySelectorAll('[data-action]').forEach((button) => {
       button.addEventListener('click', () => {
-        openOptimization(Number(button.dataset.id), button.dataset.action || 'all');
+        const action = button.dataset.action;
+        const productId = Number(button.dataset.id);
+        if (action === 'manual') {
+          openManualEdit(productId);
+        } else {
+          openOptimization(productId, action || 'all');
+        }
       });
     });
 
     renderPagination('products-pagination-top', totalPages);
     renderPagination('products-pagination-bottom', totalPages);
     renderAltProducts();
+  }
+
+  async function openManualEdit(productId) {
+    const product = state.products.find(p => p.id === productId);
+    if (!product) return;
+
+    document.getElementById('manual-edit-title').textContent = 'تحرير يدوي: ' + product.name;
+    
+    document.getElementById('manual-edit-current-description').value = product.description || '';
+    document.getElementById('manual-edit-optimized-description').value = product.description || '';
+    document.getElementById('manual-edit-current-meta-title').value = (product.metadata?.title || '').substring(0, 70);
+    document.getElementById('manual-edit-optimized-meta-title').value = (product.metadata?.title || '').substring(0, 70);
+    document.getElementById('manual-edit-current-meta-description').value = (product.metadata?.description || '').substring(0, 160);
+    document.getElementById('manual-edit-optimized-meta-description').value = (product.metadata?.description || '').substring(0, 160);
+    document.getElementById('manual-edit-product-id').value = productId;
+    document.getElementById('manual-edit-alert').innerHTML = '';
+    document.getElementById('manual-edit-modal').style.display = 'flex';
+  }
+
+  function closeManualEdit() {
+    document.getElementById('manual-edit-modal').style.display = 'none';
+  }
+
+  async function saveManualEdit() {
+    const productId = Number(document.getElementById('manual-edit-product-id').value);
+    const button = document.getElementById('save-manual-edit');
+    const oldText = button.textContent;
+    
+    button.disabled = true;
+    button.textContent = 'جاري الحفظ...';
+    
+    const description = document.getElementById('manual-edit-optimized-description').value;
+    const metaTitle = document.getElementById('manual-edit-optimized-meta-title').value;
+    const metaDescription = document.getElementById('manual-edit-optimized-meta-description').value;
+
+    try {
+      const response = await apiFetch(`/products/${productId}/save-manual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description, metadata_title: metaTitle, metadata_description: metaDescription })
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        document.getElementById('manual-edit-alert').innerHTML = `<div class="notice danger">${escapeHtml(data.message || 'فشل الحفظ')}</div>`;
+        return;
+      }
+
+      const product = state.products.find(p => p.id === productId);
+      if (product) {
+        product.description = description;
+        if (!product.metadata) product.metadata = {};
+        product.metadata.title = metaTitle;
+        product.metadata.description = metaDescription;
+      }
+
+      document.getElementById('manual-edit-alert').innerHTML = `<div class="notice success">تم الحفظ بنجاح!</div>`;
+      renderProducts();
+      
+      setTimeout(() => {
+        closeManualEdit();
+      }, 1000);
+    } catch (error) {
+      document.getElementById('manual-edit-alert').innerHTML = `<div class="notice danger">حدث خطأ أثناء الحفظ</div>`;
+    } finally {
+      button.disabled = false;
+      button.textContent = oldText;
+    }
   }
 
   function setAltAlert(type, message) {
@@ -2997,6 +3072,7 @@
     document.getElementById('apply-filters')?.addEventListener('click', applyFilters);
     document.getElementById('clear-filters')?.addEventListener('click', clearFilters);
     document.getElementById('close-editor')?.addEventListener('click', closeEditor);
+    document.getElementById('close-manual-edit')?.addEventListener('click', closeManualEdit);
     document.getElementById('operations-apply-filter')?.addEventListener('click', () => loadOperations());
     document.getElementById('operations-show-all')?.addEventListener('click', () => loadOperations('all'));
     document.getElementById('keyword-search-btn')?.addEventListener('click', searchKeywordResearch);

@@ -70,6 +70,8 @@ $router->post('/api/categories/{id}/save', [ProductController::class, 'saveCateg
 $router->post('/api/products/alt/bulk', [ProductController::class, 'bulkOptimizeVisibleImagesAlt']);
 $router->post('/api/products/{id}/optimize', [ProductController::class, 'optimize']);
 $router->post('/api/products/{id}/save-description', [ProductController::class, 'saveDescription']);
+$router->get('/api/products/{id}/edit-manual', [ProductController::class, 'getProductForManualEdit']);
+$router->post('/api/products/{id}/save-manual', [ProductController::class, 'saveProductManual']);
 $router->post('/api/products/{id}/images/optimize-alt', [ProductController::class, 'optimizeProductImagesAlt']);
 $router->post('/api/products/{id}/images/save-alt', [ProductController::class, 'saveProductImagesAlt']);
 $router->post('/api/products/{id}/images/{imageId}/optimize-alt', [ProductController::class, 'optimizeImageAlt']);

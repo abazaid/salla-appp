@@ -98,6 +98,21 @@ final class SallaApiClient
         return $response['body'];
     }
 
+    public function updateProduct(string $accessToken, int $productId, string $description, ?string $metadataTitle = null, ?string $metadataDescription = null): array
+    {
+        $productPayload = $this->productDetails($accessToken, $productId);
+        $product = $productPayload['data'] ?? [];
+        
+        return $this->updateProductContent(
+            $accessToken,
+            $productId,
+            $product,
+            $description,
+            $metadataTitle,
+            $metadataDescription
+        );
+    }
+
     public function updateProductContent(string $accessToken, int $productId, array $product, string $description, ?string $metadataTitle = null, ?string $metadataDescription = null): array
     {
         $payload = [

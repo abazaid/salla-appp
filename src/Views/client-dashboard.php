@@ -953,6 +953,54 @@ if ($appBasePath === '/') {
   </main>
 </div>
 
+<div id="manual-edit-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal" style="max-width:900px;">
+    <div class="modal-head">
+      <div>
+        <div class="pill">تحرير يدوي</div>
+        <h2 id="manual-edit-title" style="margin:10px 0 6px;">تحرير يدوي للمنتج</h2>
+        <p class="muted" style="margin:0;">عدّل الوصف و Meta Tags يدويًا ثم احفظ.</p>
+      </div>
+      <button id="close-manual-edit" class="btn btn-secondary" type="button" onclick="closeManualEdit()">إغلاق</button>
+    </div>
+    <div id="manual-edit-alert" style="margin:16px;"></div>
+    <div style="padding:0 24px 24px;">
+      <input type="hidden" id="manual-edit-product-id">
+      <div class="grid" style="margin-top:16px;">
+        <div>
+          <label for="manual-edit-current-description"><strong>الوصف الحالي</strong></label>
+          <textarea id="manual-edit-current-description" readonly rows="5" style="margin-top:8px;background:#F3F4F6;width:100%;padding:12px;border-radius:8px;border:1px solid #E5E7EB;"></textarea>
+        </div>
+        <div>
+          <label for="manual-edit-optimized-description"><strong>الوصف الجديد</strong></label>
+          <textarea id="manual-edit-optimized-description" rows="5" style="margin-top:8px;width:100%;padding:12px;border-radius:8px;border:1px solid #E5E7EB;" placeholder="اكتب الوصف الجديد هنا..."></textarea>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:16px;">
+        <div>
+          <label for="manual-edit-current-meta-title"><strong>Meta Title الحالي</strong> <span class="muted">(70 حرف)</span></label>
+          <input id="manual-edit-current-meta-title" type="text" readonly style="margin-top:8px;background:#F3F4F6;width:100%;padding:12px;border-radius:8px;border:1px solid #E5E7EB;">
+        </div>
+        <div>
+          <label for="manual-edit-optimized-meta-title"><strong>Meta Title الجديد</strong> <span class="muted">(70 حرف)</span></label>
+          <input id="manual-edit-optimized-meta-title" type="text" maxlength="70" style="margin-top:8px;width:100%;padding:12px;border-radius:8px;border:1px solid #E5E7EB;" placeholder="اسم المنتج + وصف مختصر">
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <label for="manual-edit-current-meta-description"><strong>Meta Description الحالي</strong> <span class="muted">(160 حرف)</span></label>
+        <textarea id="manual-edit-current-meta-description" readonly rows="2" style="margin-top:8px;background:#F3F4F6;width:100%;padding:12px;border-radius:8px;border:1px solid #E5E7EB;"></textarea>
+      </div>
+      <div style="margin-top:16px;">
+        <label for="manual-edit-optimized-meta-description"><strong>Meta Description الجديد</strong> <span class="muted">(160 حرف)</span></label>
+        <textarea id="manual-edit-optimized-meta-description" rows="2" maxlength="160" style="margin-top:8px;width:100%;padding:12px;border-radius:8px;border:1px solid #E5E7EB;" placeholder="وصف مختصر يحفز العميل على الشراء"></textarea>
+      </div>
+      <div style="margin-top:20px;text-align:left;">
+        <button id="save-manual-edit" class="btn btn-sky" type="button" onclick="saveManualEdit()">💾 حفظ في المتجر</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="editor-modal" class="modal-backdrop">
   <div class="modal">
     <div class="modal-head">

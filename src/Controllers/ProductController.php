@@ -247,6 +247,107 @@ final class ProductController
         }
     }
 
+    public function getProductForManualEdit(array $params): void
+    {
+        $store = $this->resolveStore();
+        $productId = (int) ($params['id'] ?? 0);
+
+        if ($store === null || $productId <= 0) {
+            Response::json([
+                'success' => false,
+                'message' => 'Invalid store or product.',
+            ], 422);
+            return;
+        }
+
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+
+        if (!$accessToken) {
+            Response::json([
+                'success' => false,
+                'message' => 'Missing access token.',
+            ], 400);
+            return;
+        }
+
+        try {
+            $client = new SallaApiClient();
+            $productPayload = $client->productDetails($accessToken, $productId);
+            $product = $productPayload['data'] ?? [];
+
+            if (empty($product)) {
+                Response::json([
+                    'success' => false,
+                    'message' => 'Product not found.',
+                ], 404);
+                return;
+            }
+
+            Response::json([
+                'success' => true,
+                'product' => [
+                    'id' => (int) ($product['id'] ?? 0),
+                    'name' => (string) ($product['name'] ?? ''),
+                    'description' => (string) ($product['description'] ?? ''),
+                    'metadata_title' => (string) ($product['metadata']['title'] ?? ''),
+                    'metadata_description' => (string) ($product['metadata']['description'] ?? ''),
+                ],
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function saveProductManual(array $params): void
+    {
+        $store = $this->resolveStore();
+        $productId = (int) ($params['id'] ?? 0);
+
+        if ($store === null || $productId <= 0) {
+            Response::json([
+                'success' => false,
+                'message' => 'Invalid store or product.',
+            ], 422);
+            return;
+        }
+
+        $accessToken = $store['token_payload']['access_token'] ?? null;
+        $input = Request::input();
+
+        if (!$accessToken) {
+            Response::json([
+                'success' => false,
+                'message' => 'Missing access token.',
+            ], 400);
+            return;
+        }
+
+        $description = trim((string) ($input['description'] ?? ''));
+        $metadataTitle = $this->normalizeMetadataTitle((string) ($input['metadata_title'] ?? ''));
+        $metadataDescription = $this->normalizeMetadataDescription((string) ($input['metadata_description'] ?? ''));
+
+        try {
+            $client = new SallaApiClient();
+            $updated = $client->updateProduct($accessToken, $productId, $description, $metadataTitle, $metadataDescription);
+
+            Response::json([
+                'success' => true,
+                'message' => 'تم الحفظ يدويًا بنجاح.',
+                'saved_description' => $description,
+                'saved_metadata_title' => $metadataTitle,
+                'saved_metadata_description' => $metadataDescription,
+            ]);
+        } catch (\Throwable $exception) {
+            Response::json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
     public function subscription(): void
     {
         $store = $this->resolveStore();
