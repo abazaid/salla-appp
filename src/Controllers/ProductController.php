@@ -696,6 +696,18 @@ final class ProductController
             return;
         }
 
+        $subscriptionManager = new SubscriptionManager();
+        $store = $subscriptionManager->refreshPeriodIfNeeded($store);
+
+        if (!$subscriptionManager->canOptimize($store, 'category_seo')) {
+            Response::json([
+                'success' => false,
+                'message' => 'انتهت صلاحية تحسين الأقسام. قم بالترقية للحصول على المزيد.',
+                'subscription' => $subscriptionManager->summary($store),
+            ], 402);
+            return;
+        }
+
         $categoryId = (int) ($params['id'] ?? 0);
         if ($categoryId <= 0) {
             Response::json([
@@ -726,6 +738,9 @@ final class ProductController
                 $metaTitle,
                 $metaDescription
             );
+
+            $categoryName = 'قسم';
+            $store = $subscriptionManager->recordOptimization($store, $categoryId, $categoryName, 'category_seo', 'completed');
 
             Response::json([
                 'success' => true,
