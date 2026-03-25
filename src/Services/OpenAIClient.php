@@ -130,42 +130,87 @@ final class OpenAIClient
         $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
         $imageAltInstructions = trim((string) ($settings['image_alt_instructions'] ?? ''));
 
-        $response = $this->httpClient->post(self::API_BASE . '/responses', [
-            'model' => $model,
-            'reasoning' => [
-                'effort' => $reasoningEffort,
-            ],
-            'input' => [
+        $userContentText = "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Length target: 55-70 characters.\n- Mention the product clearly and naturally.\n- Must be a complete, readable phrase (not cut off).\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n"
+            . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
+            . $this->buildInstructionBlock('Image ALT instructions', $imageAltInstructions)
+            . "\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? '');
+
+        $imageUrl = (string) ($image['url'] ?? '');
+
+        try {
+            $contentWithImage = [
                 [
-                    'role' => 'system',
-                    'content' => [
-                        [
-                            'type' => 'input_text',
-                            'text' => 'You are an expert ecommerce SEO specialist writing image ALT text. Write concise, natural, descriptive ALT text for product images. Return only plain ALT text without quotes, JSON, markdown, emojis, hashtags, or extra commentary.',
+                    'type' => 'input_text',
+                    'text' => $userContentText,
+                ],
+            ];
+
+            if ($imageUrl !== '') {
+                $contentWithImage[] = [
+                    'type' => 'input_image',
+                    'image_url' => $imageUrl,
+                ];
+            }
+
+            $response = $this->httpClient->post(self::API_BASE . '/responses', [
+                'model' => $model,
+                'reasoning' => [
+                    'effort' => $reasoningEffort,
+                ],
+                'input' => [
+                    [
+                        'role' => 'system',
+                        'content' => [
+                            [
+                                'type' => 'input_text',
+                                'text' => 'You are an expert ecommerce SEO specialist writing image ALT text. Write concise, natural, descriptive ALT text for product images. Return only plain ALT text without quotes, JSON, markdown, emojis, hashtags, or extra commentary.',
+                            ],
                         ],
                     ],
-                ],
-                [
-                    'role' => 'user',
-                    'content' => [
-                        [
-                            'type' => 'input_text',
-                            'text' => "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Length target: 55-70 characters.\n- Mention the product clearly and naturally.\n- Must be a complete, readable phrase (not cut off).\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n"
-                                . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
-                                . $this->buildInstructionBlock('Image ALT instructions', $imageAltInstructions)
-                                . "\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? ''),
-                        ],
-                        [
-                            'type' => 'input_image',
-                            'image_url' => (string) ($image['url'] ?? ''),
-                        ],
+                    [
+                        'role' => 'user',
+                        'content' => $contentWithImage,
                     ],
                 ],
-            ],
-        ], [
-            'Authorization' => 'Bearer ' . $apiKey,
-            'Accept' => 'application/json',
-        ], 90);
+            ], [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Accept' => 'application/json',
+            ], 90);
+        } catch (\Throwable $e) {
+            if (str_contains($e->getMessage(), 'does not support image input') || str_contains($e->getMessage(), 'Cannot read')) {
+                $response = $this->httpClient->post(self::API_BASE . '/responses', [
+                    'model' => $model,
+                    'reasoning' => [
+                        'effort' => $reasoningEffort,
+                    ],
+                    'input' => [
+                        [
+                            'role' => 'system',
+                            'content' => [
+                                [
+                                    'type' => 'input_text',
+                                    'text' => 'You are an expert ecommerce SEO specialist writing image ALT text. Write concise, natural, descriptive ALT text for product images. Return only plain ALT text without quotes, JSON, markdown, emojis, hashtags, or extra commentary.',
+                                ],
+                            ],
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => [
+                                [
+                                    'type' => 'input_text',
+                                    'text' => $userContentText,
+                                ],
+                            ],
+                        ],
+                    ],
+                ], [
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Accept' => 'application/json',
+                ], 90);
+            } else {
+                throw $e;
+            }
+        }
 
         $body = $response['body'];
         $text = trim($this->extractText($body));

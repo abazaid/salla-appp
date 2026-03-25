@@ -34,6 +34,7 @@ final class Plans
                     'keyword_research' => 5,
                     'domain_seo' => 1,
                     'brand_seo' => 10,
+                    'category_seo' => 10,
                 ],
             ],
             self::STARTER => [
@@ -56,6 +57,7 @@ final class Plans
                     'keyword_research' => 10,
                     'domain_seo' => 3,
                     'brand_seo' => 20,
+                    'category_seo' => 20,
                 ],
             ],
             self::GROWTH => [
@@ -78,6 +80,7 @@ final class Plans
                     'keyword_research' => 40,
                     'domain_seo' => 12,
                     'brand_seo' => 60,
+                    'category_seo' => 60,
                 ],
                 'extras' => [
                     'activity_logs' => true,
@@ -105,6 +108,7 @@ final class Plans
                     'keyword_research' => 120,
                     'domain_seo' => 35,
                     'brand_seo' => 150,
+                    'category_seo' => 150,
                 ],
                 'extras' => [
                     'priority_support' => true,
@@ -170,6 +174,7 @@ final class Plans
             'keyword_research' => 'كلمات مفتاحية',
             'domain_seo' => 'تحليل سيو دومين',
             'brand_seo' => 'تحسين SEO ماركة',
+            'category_seo' => 'تحسين SEO قسم',
         ];
 
         return $labels[$quotaKey] ?? $quotaKey;
@@ -184,6 +189,7 @@ final class Plans
             'keyword_research' => 'Keyword Research Requests',
             'domain_seo' => 'Domain SEO Analyses',
             'brand_seo' => 'Brand SEO Optimizations',
+            'category_seo' => 'Category SEO Optimizations',
         ];
 
         return $labels[$quotaKey] ?? $quotaKey;

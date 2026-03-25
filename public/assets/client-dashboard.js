@@ -157,6 +157,11 @@
         country: 'sa',
         device: 'desktop'
       }
+    },
+    categories: [],
+    brands: {
+      list: [],
+      current: null
     }
   };
 
@@ -1739,6 +1744,181 @@
     }
   }
 
+  function setCategorySeoAlert(type, message) {
+    const root = document.getElementById('category-seo-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  function setCategoryEditorAlert(type, message) {
+    const root = document.getElementById('category-editor-alert');
+    if (!root) return;
+    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  }
+
+  async function loadCategories() {
+    try {
+      setCategorySeoAlert('success', 'جاري تحميل الأقسام...');
+      const data = await apiFetch('/categories').then((response) => response.json());
+      if (!data.success) {
+        setCategorySeoAlert('error', normalizeApiMessage(data.message, 'تعذر تحميل الأقسام.'));
+        return;
+      }
+      state.categories = data.categories || [];
+      renderCategoriesList();
+      setCategorySeoAlert('', '');
+    } catch (error) {
+      console.error('Load categories error:', error);
+      setCategorySeoAlert('error', 'تعذر تحميل الأقسام.');
+    }
+  }
+
+  function renderCategoriesList() {
+    const root = document.getElementById('categories-list');
+    if (!root) return;
+
+    const nameFilter = (document.getElementById('category-filter-name')?.value || '').toLowerCase().trim();
+    const statusFilter = document.getElementById('category-filter-status')?.value || 'all';
+
+    let filtered = state.categories;
+    if (nameFilter) {
+      filtered = filtered.filter((c) => (c.name || '').toLowerCase().includes(nameFilter));
+    }
+    if (statusFilter === 'has_seo') {
+      filtered = filtered.filter((c) => (c.meta_title || '').trim() !== '' || (c.meta_description || '').trim() !== '');
+    } else if (statusFilter === 'no_seo') {
+      filtered = filtered.filter((c) => (c.meta_title || '').trim() === '' && (c.meta_description || '').trim() === '');
+    }
+
+    if (!filtered.length) {
+      root.innerHTML = '<div class="empty-state"><p class="muted" style="margin:0;">لا توجد أقسام.</p></div>';
+      return;
+    }
+
+    root.innerHTML = `
+      <div class="products-grid" style="margin-top:16px;">
+        ${filtered.map((category) => `
+          <article class="product-card">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+              <div style="width:48px;height:48px;background:var(--bg-soft);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">📁</div>
+              <div style="flex:1;min-width:0;">
+                <h3 class="product-title" style="margin:0;font-size:15px;">${escapeHtml(category.name || 'قسم')}</h3>
+                <p class="muted" style="margin:4px 0 0;font-size:12px;">${category.products_count || 0} منتج</p>
+              </div>
+            </div>
+            <p class="muted" style="font-size:13px;margin:0 0 12px;line-height:1.5;">
+              ${(category.meta_title || category.meta_description) ? (category.meta_title || 'بدون عنوان') : 'بدون SEO'}
+            </p>
+            <button class="btn btn-sky" type="button" data-category-id="${category.id}" style="width:100%;padding:10px;">
+              تحسين SEO
+            </button>
+          </article>
+        `).join('')}
+      </div>
+    `;
+
+    root.querySelectorAll('[data-category-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const categoryId = Number(button.getAttribute('data-category-id'));
+        openCategoryEditor(categoryId);
+      });
+    });
+  }
+
+  function openCategoryEditor(categoryId) {
+    const category = state.categories.find((c) => c.id === categoryId);
+    if (!category) return;
+
+    state.categories.current = category;
+    document.getElementById('category-editor-title').textContent = `تحرير SEO: ${category.name}`;
+    document.getElementById('category-current-meta-title').value = category.meta_title || '';
+    document.getElementById('category-optimized-meta-title').value = category.meta_title || '';
+    document.getElementById('category-current-meta-description').value = category.meta_description || '';
+    document.getElementById('category-optimized-meta-description').value = category.meta_description || '';
+    setCategoryEditorAlert('', '');
+    document.getElementById('category-seo-editor').style.display = 'block';
+  }
+
+  function closeCategoryEditor() {
+    state.categories.current = null;
+    document.getElementById('category-seo-editor').style.display = 'none';
+  }
+
+  async function generateCategorySeo() {
+    if (!state.categories.current) return;
+    const button = document.getElementById('generate-category-seo');
+    const oldText = button?.textContent || 'توليد بالذكاء الاصطناعي';
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري التوليد...';
+    }
+    setCategoryEditorAlert('success', 'جاري توليد SEO للقسم...');
+
+    try {
+      const response = await apiFetch(`/categories/${state.categories.current.id}/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setCategoryEditorAlert('error', normalizeApiMessage(data.message, 'تعذر توليد SEO.'));
+        return;
+      }
+
+      document.getElementById('category-optimized-meta-title').value = data.optimized_meta_title || '';
+      document.getElementById('category-optimized-meta-description').value = data.optimized_meta_description || '';
+      setCategoryEditorAlert('success', 'تم توليد SEO بنجاح. راجع ثم احفظ.');
+    } catch (error) {
+      setCategoryEditorAlert('error', 'حدث خطأ أثناء التوليد.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
+  async function saveCategorySeoToStore() {
+    if (!state.categories.current) return;
+    const button = document.getElementById('save-category-seo');
+    const oldText = button?.textContent || 'حفظ في المتجر';
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+    setCategoryEditorAlert('success', 'جاري الحفظ...');
+
+    try {
+      const response = await apiFetch(`/categories/${state.categories.current.id}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          meta_title: document.getElementById('category-optimized-meta-title')?.value || '',
+          meta_description: document.getElementById('category-optimized-meta-description')?.value || '',
+        })
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setCategoryEditorAlert('error', normalizeApiMessage(data.message, 'تعذر الحفظ.'));
+        return;
+      }
+
+      setCategoryEditorAlert('success', 'تم حفظ SEO القسم بنجاح.');
+      closeCategoryEditor();
+      await loadCategories();
+    } catch (error) {
+      setCategoryEditorAlert('error', 'حدث خطأ أثناء الحفظ.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+  }
+
   function setKeywordAlert(type, message) {
     const root = document.getElementById('keyword-alert');
     if (!root) return;
@@ -2638,9 +2818,9 @@
         loadBrands();
       }
     }
-    if (section === 'brand-seo') {
-      if (!state.brands.list.length) {
-        loadBrands();
+    if (section === 'category-seo') {
+      if (!state.categories.length) {
+        loadCategories();
       }
     }
   }
@@ -3110,6 +3290,14 @@
     document.getElementById('generate-brand-seo')?.addEventListener('click', generateBrandSeo);
     document.getElementById('save-brand-seo')?.addEventListener('click', saveBrandSeoToStore);
     document.getElementById('cancel-brand-seo')?.addEventListener('click', closeBrandEditor);
+
+    // Category SEO events
+    document.getElementById('refresh-categories')?.addEventListener('click', () => loadCategories());
+    document.getElementById('category-filter-name')?.addEventListener('input', renderCategoriesList);
+    document.getElementById('category-filter-status')?.addEventListener('change', renderCategoriesList);
+    document.getElementById('generate-category-seo')?.addEventListener('click', generateCategorySeo);
+    document.getElementById('save-category-seo')?.addEventListener('click', saveCategorySeoToStore);
+    document.getElementById('cancel-category-seo')?.addEventListener('click', closeCategoryEditor);
 
     document.getElementById('alt-optimize-selected-products')?.addEventListener('click', optimizeSelectedProductsAlt);
     document.getElementById('alt-clear-selection')?.addEventListener('click', () => {

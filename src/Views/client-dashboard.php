@@ -22,9 +22,7 @@ if ($appBasePath === '/') {
       <button type="button" class="sidebar-link" data-section-target="domain-seo">سيو الدومين</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
       <button type="button" class="sidebar-link" data-section-target="brand-seo">سيو الماركات</button>
-      <button type="button" class="sidebar-link" data-section-target="category-seo">
-        سيو الأقسام <span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;">قريباً</span>
-      </button>
+      <button type="button" class="sidebar-link" data-section-target="category-seo">سيو الأقسام</button>
       <button type="button" class="sidebar-link" data-section-target="operations">سجل العمليات</button>
       <button type="button" class="sidebar-link" data-section-target="account-settings">الحساب والإعدادات</button>
     </nav>
@@ -130,10 +128,9 @@ if ($appBasePath === '/') {
           <button class="btn btn-sky" type="button" data-home-go="brand-seo">الانتقال إلى سيو الماركات</button>
         </div>
 
-        <div class="card surface-soft" style="box-shadow:none;opacity:0.7;">
+        <div class="card surface-soft" style="box-shadow:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <h3 style="margin:0;">قسم سيو الأقسام</h3>
-            <span style="background:#F59E0B;color:#fff;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;">قريباً</span>
           </div>
           <p class="muted" style="margin:0 0 12px;">تحسين Meta Title و Meta Description لأقسام المتجر بالذكاء الاصطناعي.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
@@ -141,7 +138,7 @@ if ($appBasePath === '/') {
             <li>تحسين Meta Tags</li>
             <li>حفظ مباشر في سلة</li>
           </ul>
-          <button class="btn btn-sky" type="button" disabled style="opacity:0.5;cursor:not-allowed;">الانتقال إلى سيو الأقسام</button>
+          <button class="btn btn-sky" type="button" data-home-go="category-seo">الانتقال إلى سيو الأقسام</button>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
@@ -587,15 +584,66 @@ if ($appBasePath === '/') {
       <div class="card">
         <div class="section-head">
           <div>
-            <div class="pill" style="background:#F59E0B;">قريباً</div>
-            <h2 style="margin:12px 0 8px;">إدارة SEO الأقسام</h2>
-            <p class="muted" style="margin:0;">قسم تحسين Meta Title و Meta Description لأقسام المتجر. قريباً!</p>
+            <div class="pill">سيو الأقسام</div>
+            <h2 style="margin:12px 0 8px;">إدارة SEO أقسام المتجر</h2>
+            <p class="muted" style="margin:0;">اختر قسمًا وقم بتحسين Meta Title و Meta Description بالذكاء الاصطناعي.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="refresh-categories" class="btn btn-secondary" type="button">تحديث القائمة</button>
           </div>
         </div>
-        <div class="card surface-soft" style="box-shadow:none;text-align:center;padding:60px 20px;">
-          <div style="font-size:64px;margin-bottom:20px;">🚧</div>
-          <h3 style="margin:0 0 12px;">قريباً</h3>
-          <p class="muted" style="margin:0;">هذا القسم قيد التطوير وسيكون متاحاً قريباً.</p>
+        <div id="category-seo-alert"></div>
+        <div class="toolbar" style="margin-top:16px;">
+          <div class="toolbar-row">
+            <div>
+              <label for="category-filter-name"><strong>بحث باسم القسم</strong></label>
+              <input id="category-filter-name" type="text" placeholder="اكتب اسم القسم">
+            </div>
+            <div>
+              <label for="category-filter-status"><strong>الحالة</strong></label>
+              <select id="category-filter-status">
+                <option value="all">جميع الأقسام</option>
+                <option value="has_seo">لها SEO</option>
+                <option value="no_seo">بدون SEO</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="categories-list"></div>
+
+      <div id="category-seo-editor" style="display:none;">
+        <div class="card">
+          <div class="section-head">
+            <div>
+              <h2 id="category-editor-title" style="margin:0;">تحرير SEO القسم</h2>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button id="generate-category-seo" class="btn btn-sky" type="button">توليد بالذكاء الاصطناعي</button>
+              <button id="save-category-seo" class="btn" type="button">حفظ في المتجر</button>
+              <button id="cancel-category-seo" class="btn btn-secondary" type="button">إلغاء</button>
+            </div>
+          </div>
+          <div id="category-editor-alert"></div>
+          <div class="grid" style="margin-top:16px;">
+            <div>
+              <label for="category-current-meta-title"><strong>Meta Title الحالي</strong></label>
+              <input id="category-current-meta-title" type="text" readonly style="margin-top:8px;">
+            </div>
+            <div>
+              <label for="category-optimized-meta-title"><strong>Meta Title بعد التحسين</strong></label>
+              <input id="category-optimized-meta-title" type="text" style="margin-top:8px;">
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <label for="category-current-meta-description"><strong>Meta Description الحالي</strong></label>
+            <textarea id="category-current-meta-description" readonly rows="2" style="margin-top:8px;"></textarea>
+          </div>
+          <div style="margin-top:16px;">
+            <label for="category-optimized-meta-description"><strong>Meta Description بعد التحسين</strong></label>
+            <textarea id="category-optimized-meta-description" rows="2" style="margin-top:8px;"></textarea>
+          </div>
         </div>
       </div>
     </section>

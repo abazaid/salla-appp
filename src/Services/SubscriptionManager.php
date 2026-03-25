@@ -84,6 +84,7 @@ final class SubscriptionManager
             'keyword_research' => ['keyword_research'],
             'domain_seo' => ['domain_seo'],
             'brand_seo' => ['brand_seo'],
+            'category_seo' => ['category_seo'],
         ];
 
         $quotaTypes = $modeToQuota[$mode] ?? ['product_description'];
