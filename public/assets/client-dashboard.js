@@ -22,10 +22,14 @@
     const merchantIdParam = merchantId ? `${separator}merchant_id=${encodeURIComponent(merchantId)}` : '';
     const fullPath = `${path}${merchantIdParam}`;
 
+    console.log('apiFetch called:', { path, fullPath, merchantId, apiPrefixes });
+
     for (let i = 0; i < apiPrefixes.length; i += 1) {
       const prefix = apiPrefixes[i].replace(/\/+$/, '');
       try {
-        const response = await fetch(`${prefix}${fullPath}`, options);
+        const url = `${prefix}${fullPath}`;
+        console.log('Fetching:', url);
+        const response = await fetch(url, options);
         lastResponse = response;
         if (response.status !== 404) {
           return response;
@@ -1093,9 +1097,12 @@
       root.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p class="muted">جاري تحميل المنتجات...</p></div>';
     }
 
+    console.log('loadProducts called, merchantId:', merchantId);
     try {
       const response = await apiFetch('/products');
+      console.log('Products API response status:', response.status);
       const data = await response.json();
+      console.log('Products API data:', data);
       if (!data.success) {
         if (root) {
           root.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p class="muted">${escapeHtml(normalizeApiMessage(data.message, 'تعذّر تحميل المنتجات.'))}</p></div>`;
@@ -1108,8 +1115,10 @@
       }
 
       state.products = data.products || [];
+      console.log('Products loaded:', state.products.length);
       renderProducts();
     } catch (error) {
+      console.error('loadProducts error:', error);
       if (root) {
         root.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p class="muted">تعذّر تحميل المنتجات.</p></div>';
       }
@@ -1344,15 +1353,6 @@
     }
   }
 
-  function reconnectStore() {
-    const button = document.getElementById('reconnect-store');
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'جاري التحويل...';
-    }
-    window.location.href = '/api/auth/reconnect';
-  }
-
   async function loadStoreSeo() {
     try {
       const data = await apiFetch('/store-seo').then((response) => response.json());
@@ -1427,7 +1427,7 @@
     }
   }
 
-  async function saveStoreSeoLegacy() {
+  async function saveStoreSeo() {
     const button = document.getElementById('save-store-seo');
     const oldText = button?.textContent || 'حفظ في المتجر';
     const title = document.getElementById('store-seo-title')?.value.trim() || '';
@@ -1437,7 +1437,29 @@
     if (!title || !description) {
       setStoreSeoAlert('error', 'أدخل عنوان ووصف المتجر قبل الحفظ.');
       return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
+    }
+    setStoreSeoAlert('success', 'جاري حفظ سيو المتجر...');
+
+    try {
+      const data = await apiFetch('/store-seo/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, keywords })
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setStoreSeoAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ سيو المتجر.'));
+        return;
       }
+
+      setStoreSeoAlert('success', normalizeApiMessage(data.message, 'تم حفظ سيو المتجر بنجاح.'));
+    } catch (error) {
+      setStoreSeoAlert('error', 'حدث خطأ أثناء حفظ سيو المتجر.');
     } finally {
       if (button) {
         button.disabled = false;
@@ -2027,7 +2049,7 @@
             </tbody>
             </table>
           <details style="margin-top:12px;">
-            <summary class="btn btn-sky" style="display:inline-flex;cursor:pointer;">استعراض جميع الكلمات (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
+            <summary style="display:inline-flex;cursor:pointer;color:#0284C7;font-weight:500;">استعراض جميع الكلمات (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
             <div style="margin-top:6px;border:1px solid rgba(202,177,149,.35);border-radius:14px;overflow:auto;max-height:460px;">
               <table style="margin:0;min-width:820px;">
                 <thead>
@@ -2862,7 +2884,7 @@
             </table>
           </div>
           <details style="margin-top:14px;border:1px dashed rgba(202,177,149,.5);border-radius:14px;padding:12px 12px 8px;">
-            <summary class="btn btn-sky" style="display:inline-flex;cursor:pointer;">استعراض الجميع (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
+            <summary style="display:inline-flex;cursor:pointer;color:#0284C7;font-weight:500;">استعراض الجميع (${escapeHtml(formatKeywordNumber(allKeywords.length))})</summary>
             <div style="margin-top:6px;border:1px solid rgba(202,177,149,.35);border-radius:14px;overflow:auto;max-height:460px;">
               <table style="margin:0;min-width:820px;">
                 <thead>
@@ -2944,8 +2966,6 @@
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
     
     document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
-    document.getElementById('reconnect-store')?.addEventListener('click', reconnectStore);
-
     // Brand SEO events
     const refreshBtn = document.getElementById('refresh-brands');
     console.log('Refresh brands button:', refreshBtn);

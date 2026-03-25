@@ -556,30 +556,30 @@ if ($appBasePath === '/') {
           <div id="brand-editor-alert"></div>
           <div class="grid" style="margin-top:16px;">
             <div>
-              <label><strong>الوصف الحالي</strong></label>
+              <label for="brand-current-description"><strong>الوصف الحالي</strong></label>
               <textarea id="brand-current-description" readonly rows="4" style="margin-top:8px;"></textarea>
             </div>
             <div>
-              <label><strong>الوصف بعد التحسين</strong></label>
+              <label for="brand-optimized-description"><strong>الوصف بعد التحسين</strong></label>
               <textarea id="brand-optimized-description" rows="4" style="margin-top:8px;"></textarea>
             </div>
           </div>
           <div class="grid" style="margin-top:16px;">
             <div>
-              <label><strong>Meta Title الحالي</strong></label>
+              <label for="brand-current-meta-title"><strong>Meta Title الحالي</strong></label>
               <input id="brand-current-meta-title" type="text" readonly style="margin-top:8px;">
             </div>
             <div>
-              <label><strong>Meta Title بعد التحسين</strong></label>
+              <label for="brand-optimized-meta-title"><strong>Meta Title بعد التحسين</strong></label>
               <input id="brand-optimized-meta-title" type="text" style="margin-top:8px;">
             </div>
           </div>
           <div style="margin-top:16px;">
-            <label><strong>Meta Description الحالي</strong></label>
+            <label for="brand-current-meta-description"><strong>Meta Description الحالي</strong></label>
             <textarea id="brand-current-meta-description" readonly rows="2" style="margin-top:8px;"></textarea>
           </div>
           <div style="margin-top:16px;">
-            <label><strong>Meta Description بعد التحسين</strong></label>
+            <label for="brand-optimized-meta-description"><strong>Meta Description بعد التحسين</strong></label>
             <textarea id="brand-optimized-meta-description" rows="2" style="margin-top:8px;"></textarea>
           </div>
         </div>
@@ -945,12 +945,7 @@ if ($appBasePath === '/') {
           <a class="btn" href="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>/logout">تسجيل الخروج</a>
         </div>
 
-        <div class="card surface-soft" style="box-shadow:none;margin-top:20px;border:1px solid #FCD34D;">
-          <h3 style="margin:0 0 8px;color:#92400E;">🔄 إعادة ربط المتجر</h3>
-          <p class="muted" style="margin:0 0 12px;">إذا أضفت صلاحيات جديدة للتطبيق (مثل Brands أو Categories)، يجب إعادة ربط المتجر لتحديث الصلاحيات.</p>
-          <button id="reconnect-store" class="btn btn-sky" type="button">إعادة ربط المتجر الآن</button>
-          <div id="reconnect-alert" style="margin-top:10px;"></div>
-        </div>
+
       </div>
 
       <div id="usage-card" class="card">
@@ -1003,8 +998,8 @@ if ($appBasePath === '/') {
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
     var candidates = [
-      base + '/public/assets/client-dashboard.js?v=products-v30',
-      base + '/assets/client-dashboard.js?v=products-v30'
+      base + '/public/assets/client-dashboard.js?v=products-v32',
+      base + '/assets/client-dashboard.js?v=products-v32'
     ];
     var index = 0;
 
