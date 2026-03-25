@@ -401,6 +401,90 @@ Rules:
         ];
     }
 
+    public function generateCategorySeo(array $category, array $settings = []): array
+    {
+        $apiKey = Config::get('OPENAI_API_KEY');
+
+        if (!$apiKey) {
+            throw new RuntimeException('OPENAI_API_KEY is missing.');
+        }
+
+        $model = Config::get('OPENAI_MODEL', 'gpt-5-mini');
+        $reasoningEffort = Config::get('OPENAI_REASONING_EFFORT', 'low');
+        $language = trim((string) ($settings['output_language'] ?? ''));
+        if ($language === '') {
+            $language = 'ar';
+        }
+        $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
+        $categorySeoInstructions = trim((string) ($settings['category_seo_instructions'] ?? ''));
+
+        $response = $this->httpClient->post(self::API_BASE . '/responses', [
+            'model' => $model,
+            'reasoning' => [
+                'effort' => $reasoningEffort,
+            ],
+            'input' => [
+                [
+                    'role' => 'system',
+                    'content' => [
+                        [
+                            'type' => 'input_text',
+                            'text' => 'You are an expert ecommerce SEO specialist writing category SEO content in Arabic for Saudi customers. Return ONLY valid JSON.',
+                        ],
+                    ],
+                ],
+                [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'input_text',
+                            'text' => "Generate SEO-optimized meta tags for a category in language={$language}.
+
+Category Information:
+- Name: " . ($category['name'] ?? 'Category') . "
+- Current Meta Title: " . ($category['meta_title'] ?? 'None') . "
+- Current Meta Description: " . ($category['meta_description'] ?? 'None') . "
+
+Rules:
+- Write compelling meta_title (max 60 characters)
+- Write meta_description (max 160 characters)
+- Target Saudi Arabian market
+- Use natural Arabic
+- Focus on the category name and what products it contains
+"
+                                . $this->buildInstructionBlock('Global instructions', $globalInstructions)
+                                . $this->buildInstructionBlock('Category SEO instructions', $categorySeoInstructions)
+                                . "\nReturn ONLY JSON: {\"meta_title\": \"...\", \"meta_description\": \"...\"}",
+                        ],
+                    ],
+                ],
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Accept' => 'application/json',
+        ], 90);
+
+        $body = $response['body'];
+        $text = $this->extractText($body);
+
+        if ($text === '') {
+            throw new RuntimeException('OpenAI returned empty category SEO content.');
+        }
+
+        $decoded = json_decode($text, true);
+
+        if (!is_array($decoded)) {
+            throw new RuntimeException('OpenAI returned invalid JSON for category SEO.');
+        }
+
+        return [
+            'meta_title' => $this->limitText(trim((string) ($decoded['meta_title'] ?? '')), 60),
+            'meta_description' => $this->limitText(trim((string) ($decoded['meta_description'] ?? '')), 160),
+            '_usage' => is_array($body['usage'] ?? null) ? $body['usage'] : [],
+            '_model' => $model,
+        ];
+    }
+
     private function normalizeKeywords(string $keywords): string
     {
         $keywords = trim($keywords);
