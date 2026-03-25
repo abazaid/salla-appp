@@ -961,7 +961,7 @@ if ($appBasePath === '/') {
         <h2 id="manual-edit-title" style="margin:10px 0 6px;">تحرير يدوي للمنتج</h2>
         <p class="muted" style="margin:0;">عدّل الوصف و Meta Tags يدويًا ثم احفظ.</p>
       </div>
-      <button id="close-manual-edit" class="btn btn-secondary" type="button" onclick="closeManualEdit()">إغلاق</button>
+      <button id="close-manual-edit" class="btn btn-secondary" type="button">إغلاق</button>
     </div>
     <div id="manual-edit-alert" style="margin:16px;"></div>
     <div style="padding:0 24px 24px;">
@@ -995,7 +995,7 @@ if ($appBasePath === '/') {
         <textarea id="manual-edit-optimized-meta-description" rows="2" maxlength="160" style="margin-top:8px;width:100%;padding:12px;border-radius:8px;border:1px solid #E5E7EB;" placeholder="وصف مختصر يحفز العميل على الشراء"></textarea>
       </div>
       <div style="margin-top:20px;text-align:left;">
-        <button id="save-manual-edit" class="btn btn-sky" type="button" onclick="saveManualEdit()">💾 حفظ في المتجر</button>
+        <button id="save-manual-edit" class="btn btn-sky" type="button">💾 حفظ في المتجر</button>
       </div>
     </div>
   </div>

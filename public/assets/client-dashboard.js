@@ -3073,6 +3073,7 @@
     document.getElementById('clear-filters')?.addEventListener('click', clearFilters);
     document.getElementById('close-editor')?.addEventListener('click', closeEditor);
     document.getElementById('close-manual-edit')?.addEventListener('click', closeManualEdit);
+    document.getElementById('save-manual-edit')?.addEventListener('click', saveManualEdit);
     document.getElementById('operations-apply-filter')?.addEventListener('click', () => loadOperations());
     document.getElementById('operations-show-all')?.addEventListener('click', () => loadOperations('all'));
     document.getElementById('keyword-search-btn')?.addEventListener('click', searchKeywordResearch);
