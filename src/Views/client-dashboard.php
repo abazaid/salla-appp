@@ -997,7 +997,8 @@ if ($appBasePath === '/') {
 <script>
   (function () {
     var base = <?= json_encode($appBasePath, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || '';
-    var jsVersion = <?= json_encode((string) filemtime(__DIR__ . '/../../public/assets/client-dashboard.js')) ?>;
+    var jsVersion = <?= json_encode((string) (int) @filemtime(realpath(__DIR__ . '/../../public/assets/client-dashboard.js'))) ?>;
+    if (!jsVersion) jsVersion = String(Date.now());
     var candidates = [
       base + '/public/assets/client-dashboard.js?v=' + jsVersion,
       base + '/assets/client-dashboard.js?v=' + jsVersion
