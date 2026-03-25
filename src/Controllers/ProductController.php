@@ -84,10 +84,17 @@ final class ProductController
             return;
         }
 
-        if (!$subscriptionManager->canOptimize($store)) {
+        $modeToQuota = [
+            'description' => 'product_description',
+            'seo' => 'product_seo',
+            'all' => 'product_description',
+        ];
+        $quotaType = $modeToQuota[$mode] ?? 'product_description';
+        
+        if (!$subscriptionManager->canOptimize($store, $quotaType)) {
             Response::json([
                 'success' => false,
-                'message' => 'Optimization quota reached or subscription inactive.',
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
                 'subscription' => $subscriptionManager->summary($store),
             ], 402);
             return;
@@ -151,10 +158,10 @@ final class ProductController
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
 
-        if (!$subscriptionManager->canOptimize($store)) {
+        if (!$subscriptionManager->canOptimize($store, 'product_description')) {
             Response::json([
                 'success' => false,
-                'message' => 'Optimization quota reached or subscription inactive.',
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
                 'subscription' => $subscriptionManager->summary($store),
             ], 402);
             return;
@@ -325,6 +332,18 @@ final class ProductController
             return;
         }
 
+        $subscriptionManager = new SubscriptionManager();
+        $store = $subscriptionManager->refreshPeriodIfNeeded($store);
+
+        if (!$subscriptionManager->canOptimize($store, 'brand_seo')) {
+            Response::json([
+                'success' => false,
+                'message' => 'انتهت صلاحية تحسين الماركات. قم بالترقية للحصول على المزيد.',
+                'subscription' => $subscriptionManager->summary($store),
+            ], 402);
+            return;
+        }
+
         $brandId = (int) ($params['id'] ?? 0);
         if ($brandId <= 0) {
             Response::json([
@@ -384,6 +403,18 @@ final class ProductController
                 'success' => false,
                 'message' => 'لم يتم العثور على متجر مرتبط.',
             ], 404);
+            return;
+        }
+
+        $subscriptionManager = new SubscriptionManager();
+        $store = $subscriptionManager->refreshPeriodIfNeeded($store);
+
+        if (!$subscriptionManager->canOptimize($store, 'brand_seo')) {
+            Response::json([
+                'success' => false,
+                'message' => 'انتهت صلاحية تحسين الماركات. قم بالترقية للحصول على المزيد.',
+                'subscription' => $subscriptionManager->summary($store),
+            ], 402);
             return;
         }
 
@@ -893,6 +924,18 @@ final class ProductController
             return;
         }
 
+        $subscriptionManager = new SubscriptionManager();
+        $store = $subscriptionManager->refreshPeriodIfNeeded($store);
+
+        if (!$subscriptionManager->canOptimize($store, 'keyword_research')) {
+            Response::json([
+                'success' => false,
+                'message' => 'انتهت صلاحية البحث عن الكلمات المفتاحية. قم بالترقية للحصول على المزيد.',
+                'subscription' => $subscriptionManager->summary($store),
+            ], 402);
+            return;
+        }
+
         $input = Request::input();
         $keyword = trim((string) ($input['keyword'] ?? ''));
         $country = strtolower(trim((string) ($input['country'] ?? 'sa')));
@@ -1068,6 +1111,18 @@ final class ProductController
             return;
         }
 
+        $subscriptionManager = new SubscriptionManager();
+        $store = $subscriptionManager->refreshPeriodIfNeeded($store);
+
+        if (!$subscriptionManager->canOptimize($store, 'domain_seo')) {
+            Response::json([
+                'success' => false,
+                'message' => 'انتهت صلاحية تحليل سيو الدومين. قم بالترقية للحصول على المزيد.',
+                'subscription' => $subscriptionManager->summary($store),
+            ], 402);
+            return;
+        }
+
         $input = Request::input();
         $settings = (array) ($store['settings'] ?? []);
         $existing = $this->normalizeDomainSeoSettings((array) ($settings['domain_seo'] ?? []));
@@ -1175,10 +1230,10 @@ final class ProductController
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
 
-        if (!$subscriptionManager->canOptimize($store)) {
+        if (!$subscriptionManager->canOptimize($store, 'product_seo')) {
             Response::json([
                 'success' => false,
-                'message' => 'Optimization quota reached or subscription inactive.',
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
                 'subscription' => $subscriptionManager->summary($store),
             ], 402);
             return;
@@ -1264,10 +1319,10 @@ final class ProductController
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
 
-        if (!$subscriptionManager->canOptimize($store)) {
+        if (!$subscriptionManager->canOptimize($store, 'product_seo')) {
             Response::json([
                 'success' => false,
-                'message' => 'Optimization quota reached or subscription inactive.',
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
                 'subscription' => $subscriptionManager->summary($store),
             ], 402);
             return;
@@ -1454,10 +1509,10 @@ final class ProductController
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
 
-        if (!$subscriptionManager->canOptimize($store)) {
+        if (!$subscriptionManager->canOptimize($store, 'image_alt')) {
             Response::json([
                 'success' => false,
-                'message' => 'Optimization quota reached or subscription inactive.',
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
                 'subscription' => $subscriptionManager->summary($store),
             ], 402);
             return;
@@ -1519,10 +1574,10 @@ final class ProductController
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
 
-        if (!$subscriptionManager->canOptimize($store)) {
+        if (!$subscriptionManager->canOptimize($store, 'image_alt')) {
             Response::json([
                 'success' => false,
-                'message' => 'Optimization quota reached or subscription inactive.',
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
                 'subscription' => $subscriptionManager->summary($store),
             ], 402);
             return;
@@ -1605,10 +1660,10 @@ final class ProductController
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
 
-        if (!$subscriptionManager->canOptimize($store)) {
+        if (!$subscriptionManager->canOptimize($store, 'image_alt')) {
             Response::json([
                 'success' => false,
-                'message' => 'Optimization quota reached or subscription inactive.',
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
                 'subscription' => $subscriptionManager->summary($store),
             ], 402);
             return;
@@ -1691,6 +1746,16 @@ final class ProductController
 
         $subscriptionManager = new SubscriptionManager();
         $store = $subscriptionManager->refreshPeriodIfNeeded($store);
+
+        if (!$subscriptionManager->canOptimize($store, 'product_description')) {
+            Response::json([
+                'success' => false,
+                'message' => 'انتهت صلاحية التحسينات لهذه العملية. قم بالترقية للحصول على المزيد.',
+                'subscription' => $subscriptionManager->summary($store),
+            ], 402);
+            return;
+        }
+
         $accessToken = $store['token_payload']['access_token'] ?? null;
         $settings = $store['settings'] ?? [];
 
@@ -1710,8 +1775,8 @@ final class ProductController
         }
 
         foreach ($productIds as $productId) {
-            if (!$subscriptionManager->canOptimize($store)) {
-                $errors[] = ['product_id' => $productId, 'message' => 'Quota reached before finishing all selected products.'];
+            if (!$subscriptionManager->canOptimize($store, 'image_alt')) {
+                $errors[] = ['product_id' => $productId, 'message' => 'انتهت صلاحية التحسينات. قم بالترقية للحصول على المزيد.'];
                 break;
             }
 

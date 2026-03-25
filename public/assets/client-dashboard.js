@@ -2319,25 +2319,80 @@
       }
 
       const sub = data.subscription || {};
+      const plan = sub.plan || {};
+      const quotas = sub.quotas || {};
+      
+      const quotaLabels = {
+        'product_description': 'تحسين وصف منتج',
+        'product_seo': 'تحسين SEO منتج',
+        'image_alt': 'تحسين ALT صور',
+        'keyword_research': 'كلمات مفتاحية',
+        'domain_seo': 'تحليل سيو دومين',
+        'brand_seo': 'تحسين SEO ماركة',
+      };
+      
+      const quotaRows = Object.entries(quotas).map(([key, q]) => {
+        const label = quotaLabels[key] || key;
+        const percentage = q.quota > 0 ? Math.round((q.used / q.quota) * 100) : 0;
+        const barColor = percentage >= 90 ? '#EF4444' : percentage >= 70 ? '#F59E0B' : '#10B981';
+        return `
+          <tr>
+            <td style="padding:10px 8px;">${escapeHtml(label)}</td>
+            <td style="padding:10px 8px;text-align:center;">${q.used}</td>
+            <td style="padding:10px 8px;text-align:center;">${q.quota}</td>
+            <td style="padding:10px 8px;text-align:center;">${q.remaining}</td>
+            <td style="padding:10px 8px;min-width:120px;">
+              <div style="background:#E5E7EB;border-radius:4px;height:8px;overflow:hidden;">
+                <div style="width:${percentage}%;background:${barColor};height:100%;"></div>
+              </div>
+              <span style="font-size:11px;color:#6B7280;">${percentage}%</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const statusLabel = sub.status === 'active' ? 'نشط' : sub.status === 'trial' ? 'تجربة' : 'غير نشط';
+      const statusColor = sub.status === 'active' ? '#10B981' : sub.status === 'trial' ? '#3B82F6' : '#EF4444';
+
       root.innerHTML = `
         <h2 style="margin:0 0 8px;">الاستهلاك</h2>
-        <p class="muted" style="margin:0 0 14px;">ملخص حالة الباقة واستهلاك التحسينات.</p>
+        <p class="muted" style="margin:0 0 16px;">ملخص حالة الباقة واستهلاك التحسينات.</p>
         <div class="grid" style="margin-top:0;">
           <div class="card surface-soft stat" style="min-height:auto;">
-            <span class="stat-label">الحالة</span>
-            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.status || '-')}</span>
+            <span class="stat-label">الباقة</span>
+            <span class="stat-value" style="font-size:18px;">${escapeHtml(sub.plan_name || '-')}</span>
           </div>
           <div class="card surface-soft stat" style="min-height:auto;">
-            <span class="stat-label">الباقة</span>
-            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.plan_name || '-')}</span>
+            <span class="stat-label">الحالة</span>
+            <span class="stat-value" style="font-size:18px;color:${statusColor};">${statusLabel}</span>
           </div>
           <div class="card surface-soft stat" style="min-height:auto;">
             <span class="stat-label">المستخدم</span>
-            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.used_products ?? 0)}</span>
+            <span class="stat-value" style="font-size:18px;">${sub.used_products ?? 0}</span>
           </div>
           <div class="card surface-soft stat" style="min-height:auto;">
             <span class="stat-label">المتبقي</span>
-            <span class="stat-value" style="font-size:24px;">${escapeHtml(sub.remaining_products ?? 0)}</span>
+            <span class="stat-value" style="font-size:18px;">${sub.remaining_products ?? 0}</span>
+          </div>
+        </div>
+        
+        <div class="card surface-soft" style="box-shadow:none;margin-top:16px;padding:0;">
+          <h3 style="margin:0 0 12px;padding:16px 16px 0;">تفاصيل الاستهلاك حسب العملية</h3>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;margin:0;">
+              <thead>
+                <tr style="background:#F9FAFB;">
+                  <th style="padding:10px 8px;text-align:right;font-size:12px;color:#6B7280;">العملية</th>
+                  <th style="padding:10px 8px;text-align:center;font-size:12px;color:#6B7280;">المستخدم</th>
+                  <th style="padding:10px 8px;text-align:center;font-size:12px;color:#6B7280;">المسموح</th>
+                  <th style="padding:10px 8px;text-align:center;font-size:12px;color:#6B7280;">المتبقي</th>
+                  <th style="padding:10px 8px;text-align:center;font-size:12px;color:#6B7280;">نسبة الاستهلاك</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${quotaRows || '<tr><td colspan="5" style="padding:20px;text-align:center;" class="muted">لا توجد بيانات</td></tr>'}
+              </tbody>
+            </table>
           </div>
         </div>
       `;
