@@ -397,14 +397,18 @@ final class ProductController
             $brandsData = $brandsResponse['data'] ?? [];
             
             $brands = array_map(static function (array $brand): array {
+                $metadata = is_array($brand['metadata'] ?? null) ? (array) $brand['metadata'] : [];
+                $metaTitle = trim((string) ($metadata['title'] ?? ($brand['metadata_title'] ?? ($brand['meta_title'] ?? ''))));
+                $metaDescription = trim((string) ($metadata['description'] ?? ($brand['metadata_description'] ?? ($brand['meta_description'] ?? ''))));
+
                 return [
                     'id' => (int) ($brand['id'] ?? 0),
                     'name' => (string) ($brand['name'] ?? ''),
                     'description' => (string) ($brand['description'] ?? ''),
                     'logo' => (string) ($brand['logo'] ?? ''),
                     'products_count' => (int) ($brand['products_count'] ?? 0),
-                    'meta_title' => (string) ($brand['meta_title'] ?? ''),
-                    'meta_description' => (string) ($brand['meta_description'] ?? ''),
+                    'meta_title' => $metaTitle,
+                    'meta_description' => $metaDescription,
                 ];
             }, $brandsData);
 
@@ -468,6 +472,9 @@ final class ProductController
         try {
             $brandResponse = (new SallaApiClient())->brandDetails($accessToken, $brandId);
             $brandData = $brandResponse['data'] ?? [];
+            $metadata = is_array($brandData['metadata'] ?? null) ? (array) $brandData['metadata'] : [];
+            $currentMetaTitle = trim((string) ($metadata['title'] ?? ($brandData['metadata_title'] ?? ($brandData['meta_title'] ?? ''))));
+            $currentMetaDescription = trim((string) ($metadata['description'] ?? ($brandData['metadata_description'] ?? ($brandData['meta_description'] ?? ''))));
             
             $brand = [
                 'id' => (int) ($brandData['id'] ?? 0),
@@ -481,8 +488,8 @@ final class ProductController
             Response::json([
                 'success' => true,
                 'current_description' => $brand['description'],
-                'current_meta_title' => (string) ($brandData['meta_title'] ?? ''),
-                'current_meta_description' => (string) ($brandData['meta_description'] ?? ''),
+                'current_meta_title' => $currentMetaTitle,
+                'current_meta_description' => $currentMetaDescription,
                 'optimized_description' => $generated['description'] ?? '',
                 'optimized_meta_title' => $generated['meta_title'] ?? '',
                 'optimized_meta_description' => $generated['meta_description'] ?? '',
@@ -544,7 +551,8 @@ final class ProductController
         $metaDescription = trim((string) ($input['meta_description'] ?? ''));
 
         try {
-            $result = (new SallaApiClient())->updateBrandSeo(
+            $client = new SallaApiClient();
+            $result = $client->updateBrandSeo(
                 $accessToken,
                 $brandId,
                 $description,

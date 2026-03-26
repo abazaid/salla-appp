@@ -93,11 +93,11 @@ final class SallaApiClient
         ];
 
         if ($metaTitle !== null) {
-            $payload['meta_title'] = trim($metaTitle);
+            $payload['metadata_title'] = trim($metaTitle);
         }
 
         if ($metaDescription !== null) {
-            $payload['meta_description'] = trim($metaDescription);
+            $payload['metadata_description'] = trim($metaDescription);
         }
 
         $response = $this->httpClient->put(self::API_BASE . '/brands/' . $brandId, $payload, $this->headers($accessToken));
