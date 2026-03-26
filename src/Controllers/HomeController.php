@@ -370,12 +370,13 @@ final class HomeController
           <div style="font-size:32px;font-weight:800;margin:10px 0;">5 ر.س<span style="font-size:16px;color:var(--muted);font-weight:400;">/شهر</span></div>
           <p style="color:var(--muted);font-size:14px;">جرّب المنصة بسعر رمزي</p>
           <ul class="list" style="font-size:15px;">
-            <li>25 تحسين وصف منتج</li>
-            <li>15 تحسين SEO منتج</li>
-            <li>25 تحسين ALT صور</li>
+            <li>10 تحسين وصف منتج</li>
+            <li>10 تحسين SEO منتج</li>
+            <li>10 تحسين ALT صور</li>
             <li>5 كلمات مفتاحية</li>
             <li>1 تحليل دومين</li>
-            <li>10 تحسين ماركات</li>
+            <li>5 تحسين ماركات</li>
+            <li>5 تحسين الأقسام</li>
           </ul>
           <a class="btn btn-primary" href="{$loginHref}" style="margin-top:12px;background:#10B981;">ابدأ الآن</a>
         </article>
@@ -385,11 +386,12 @@ final class HomeController
           <p style="color:var(--muted);font-size:14px;">للمتاجر الصغيرة والمتوسطة</p>
           <ul class="list" style="font-size:15px;">
             <li>80 تحسين وصف منتج</li>
-            <li>40 تحسين SEO منتج</li>
-            <li>80 تحسين ALT صور</li>
+            <li>80 تحسين SEO منتج</li>
+            <li>30 تحسين ALT صور</li>
             <li>10 كلمات مفتاحية</li>
             <li>3 تحليل دومين</li>
-            <li>20 تحسين ماركات</li>
+            <li>تحسين الماركات غير مفعّل (رقّي الاشتراك)</li>
+            <li>تحسين الأقسام غير مفعّل (رقّي الاشتراك)</li>
           </ul>
           <a class="btn btn-primary" href="{$loginHref}" style="margin-top:12px;background:#3B82F6;">ابدأ الآن</a>
         </article>
@@ -404,7 +406,8 @@ final class HomeController
             <li>260 تحسين ALT صور</li>
             <li>40 كلمة مفتاحية</li>
             <li>12 تحليل دومين</li>
-            <li>60 تحسين ماركات</li>
+            <li>50 تحسين ماركات</li>
+            <li>50 تحسين الأقسام</li>
             <li>+ سجل النشاطات</li>
             <li>+ تصدير البيانات</li>
             <li>+ أداء أسرع</li>
@@ -417,11 +420,12 @@ final class HomeController
           <p style="color:var(--muted);font-size:14px;">للمتاجر الكبيرة والوكالات</p>
           <ul class="list" style="font-size:15px;">
             <li>700 تحسين وصف منتج</li>
-            <li>350 تحسين SEO منتج</li>
+            <li>700 تحسين SEO منتج</li>
             <li>700 تحسين ALT صور</li>
             <li>120 كلمة مفتاحية</li>
             <li>35 تحليل دومين</li>
             <li>150 تحسين ماركات</li>
+            <li>100 تحسين الأقسام</li>
             <li>+ دعم أولوي</li>
             <li>+ حدود أعلى</li>
             <li>+ كل مميزات المتقدمة</li>

@@ -385,14 +385,14 @@ HTML;
               نقدم 4 باقات تناسب احتياجات مختلفة:
               <ul>
                 <li><strong>🟢 التجربة الاقتصادية (5 ر.س/شهر):</strong> للم تجربة المنصة
-                  <br>25 تحسين وصف | 15 تحسين SEO | 25 ALT صور | 5 كلمات مفتاحية | 1 تحليل دومين | 10 تحسين ماركات</li>
+                  <br>10 تحسين وصف | 10 تحسين SEO | 10 ALT صور | 5 كلمات مفتاحية | 1 تحليل دومين | 5 تحسين ماركات | 5 تحسين أقسام</li>
                 <li><strong>🔵 الخطة الأساسية (29 ر.س/شهر):</strong> للمتاجر الصغيرة
-                  <br>80 تحسين وصف | 40 تحسين SEO | 80 ALT صور | 10 كلمات مفتاحية | 3 تحليل دومين | 20 تحسين ماركات</li>
+                  <br>80 تحسين وصف | 80 تحسين SEO | 30 ALT صور | 10 كلمات مفتاحية | 3 تحليل دومين | تحسين الماركات والأقسام غير مفعّل (رقّي الاشتراك)</li>
                 <li><strong>🟣 الخطة المتقدمة (79 ر.س/شهر):</strong> للمتاجر المتنامية ⭐
-                  <br>260 تحسين وصف | 140 تحسين SEO | 260 ALT صور | 40 كلمات مفتاحية | 12 تحليل دومين | 60 تحسين ماركات
+                  <br>260 تحسين وصف | 140 تحسين SEO | 260 ALT صور | 40 كلمات مفتاحية | 12 تحليل دومين | 50 تحسين ماركات | 50 تحسين أقسام
                   <br>+ سجل النشاطات | تصدير البيانات | أداء أسرع</li>
                 <li><strong>🔴 الخطة الاحترافية (149 ر.س/شهر):</strong> للمتاجر الكبيرة
-                  <br>700 تحسين وصف | 350 تحسين SEO | 700 ALT صور | 120 كلمة مفتاحية | 35 تحليل دومين | 150 تحسين ماركات
+                  <br>700 تحسين وصف | 700 تحسين SEO | 700 ALT صور | 120 كلمة مفتاحية | 35 تحليل دومين | 150 تحسين ماركات | 100 تحسين أقسام
                   <br>+ دعم أولوي | حدود أعلى | سجل النشاطات | تصدير | أداء أسرع</li>
               </ul>
             </div>
@@ -978,6 +978,10 @@ HTML;
 
             $quotasHtml = '';
             foreach ($plan['quotas'] as $key => $value) {
+                if ($value === 0 && in_array($key, ['brand_seo', 'category_seo'], true)) {
+                    $quotasHtml .= '<li>غير مفعلة - رقّي الاشتراك</li>';
+                    continue;
+                }
                 $quotasHtml .= '<li>' . $value . ' ' . Plans::quotaLabel($key) . '</li>';
             }
 
@@ -1131,52 +1135,52 @@ HTML;
           <tbody>
             <tr>
               <td>تحسين وصف المنتج</td>
-              <td>20</td>
-              <td>75</td>
-              <td class="plan-highlight">240</td>
-              <td>620</td>
+              <td>10</td>
+              <td>80</td>
+              <td class="plan-highlight">260</td>
+              <td>700</td>
             </tr>
             <tr>
               <td>تحسين SEO المنتج</td>
-              <td>12</td>
-              <td>38</td>
-              <td class="plan-highlight">130</td>
-              <td>330</td>
+              <td>10</td>
+              <td>80</td>
+              <td class="plan-highlight">140</td>
+              <td>700</td>
             </tr>
             <tr>
               <td>تحسين ALT الصور</td>
-              <td>20</td>
-              <td>75</td>
-              <td class="plan-highlight">240</td>
-              <td>620</td>
+              <td>10</td>
+              <td>30</td>
+              <td class="plan-highlight">260</td>
+              <td>700</td>
             </tr>
             <tr>
               <td>عمليات الكلمات المفتاحية</td>
-              <td>4</td>
-              <td>9</td>
-              <td class="plan-highlight">32</td>
-              <td>90</td>
+              <td>5</td>
+              <td>10</td>
+              <td class="plan-highlight">40</td>
+              <td>120</td>
             </tr>
             <tr>
               <td>تحليل سيو الدومين</td>
               <td>1</td>
-              <td>2</td>
-              <td class="plan-highlight">10</td>
-              <td>28</td>
+              <td>3</td>
+              <td class="plan-highlight">12</td>
+              <td>35</td>
             </tr>
             <tr>
               <td>تحسين SEO الماركات</td>
-              <td>8</td>
-              <td>18</td>
+              <td>5</td>
+              <td>غير مفعلة (رقّي)</td>
               <td class="plan-highlight">50</td>
-              <td>130</td>
+              <td>150</td>
             </tr>
             <tr>
               <td>تحسين SEO الأقسام</td>
-              <td>8</td>
-              <td>18</td>
+              <td>5</td>
+              <td>غير مفعلة (رقّي)</td>
               <td class="plan-highlight">50</td>
-              <td>130</td>
+              <td>100</td>
             </tr>
             <tr>
               <td>سجل العمليات</td>
