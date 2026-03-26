@@ -1289,12 +1289,33 @@
     });
   }
 
-  function setOptimizationSettingsAlert(type, message, source = 'products') {
-    const root = source === 'alt'
-      ? document.getElementById('optimization-settings-alt-alert')
-      : document.getElementById('optimization-settings-alert');
-    if (!root) return;
-    root.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+  function setOptimizationSettingsAlert(type, message, source = 'global') {
+    const roots = [];
+    if (source === 'global') {
+      roots.push(document.getElementById('global-seo-settings-alert'));
+      roots.push(document.getElementById('optimization-settings-alert'));
+      roots.push(document.getElementById('optimization-settings-alt-alert'));
+    } else if (source === 'alt') {
+      roots.push(document.getElementById('optimization-settings-alt-alert'));
+    } else {
+      roots.push(document.getElementById('optimization-settings-alert'));
+    }
+    const html = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : '';
+    roots.forEach((root) => {
+      if (root) {
+        root.innerHTML = html;
+      }
+    });
+  }
+
+  function readFromAnySetting(ids, fallback = '') {
+    for (const id of ids) {
+      const element = document.getElementById(id);
+      if (element) {
+        return element.value || '';
+      }
+    }
+    return fallback;
   }
 
   function fillOptimizationSettings(settings) {
@@ -1308,6 +1329,8 @@
     if (document.getElementById('setting-image-alt-instructions')) document.getElementById('setting-image-alt-instructions').value = settings.image_alt_instructions || '';
     if (document.getElementById('alt-setting-image-alt-instructions')) document.getElementById('alt-setting-image-alt-instructions').value = settings.image_alt_instructions || '';
     if (document.getElementById('setting-store-seo-instructions')) document.getElementById('setting-store-seo-instructions').value = settings.store_seo_instructions || '';
+    if (document.getElementById('setting-business-brand-name')) document.getElementById('setting-business-brand-name').value = settings.business_brand_name || '';
+    if (document.getElementById('setting-business-overview')) document.getElementById('setting-business-overview').value = settings.business_overview || '';
     if (document.getElementById('setting-sitemap-url')) document.getElementById('setting-sitemap-url').value = settings.sitemap_url || '';
     if (document.getElementById('setting-sitemap-links-count')) {
       const count = Number(settings.sitemap_links_count || 0);
@@ -2839,13 +2862,11 @@
       const data = await apiFetch('/settings').then((response) => response.json());
       if (!data.success) {
         const message = normalizeApiMessage(data.message, 'تعذر جلب إعدادات التحسين.');
-        setOptimizationSettingsAlert('error', message, 'products');
-        setOptimizationSettingsAlert('error', message, 'alt');
+        setOptimizationSettingsAlert('error', message, 'global');
         return;
       }
       fillOptimizationSettings(data.settings || {});
-      setOptimizationSettingsAlert('', '', 'products');
-      setOptimizationSettingsAlert('', '', 'alt');
+      setOptimizationSettingsAlert('', '', 'global');
     } catch (error) {
       setOptimizationSettingsAlert('error', 'تعذر جلب إعدادات التحسين.', 'products');
       setOptimizationSettingsAlert('error', 'تعذر جلب إعدادات التحسين.', 'alt');
@@ -3282,7 +3303,8 @@
     document.getElementById('generate-store-seo')?.addEventListener('click', optimizeStoreSeo);
     document.getElementById('save-store-seo')?.addEventListener('click', saveStoreSeo);
     document.getElementById('save-store-seo-instructions')?.addEventListener('click', saveStoreSeoInstructions);
-    document.getElementById('save-optimization-settings')?.addEventListener('click', saveOptimizationSettings);
+    document.getElementById('save-global-seo-settings')?.addEventListener('click', () => saveOptimizationSettings('global'));
+    document.getElementById('save-optimization-settings')?.addEventListener('click', () => saveOptimizationSettings('global'));
     document.getElementById('save-optimization-settings-alt')?.addEventListener('click', () => saveOptimizationSettings('alt'));
     
     document.getElementById('save-sitemap-settings')?.addEventListener('click', saveSitemapSettings);
@@ -3343,49 +3365,97 @@
     });
   }
 
-  function removeAltGeneralInstructionsField() {
-    const input = document.getElementById('alt-setting-global-instructions');
-    if (!input) return;
-    const wrapper = input.closest('div');
-    if (wrapper) {
-      wrapper.remove();
-    } else {
-      input.remove();
+  function moveSeoSettingsToGlobalSection() {
+    const target = document.getElementById('global-seo-settings-content');
+    if (!target) return;
+
+    const productsSection = document.getElementById('section-products');
+    if (productsSection) {
+      const cards = Array.from(productsSection.querySelectorAll('details.card'));
+      cards.forEach((card) => {
+        target.appendChild(card);
+      });
+    }
+
+    const altSection = document.getElementById('section-alt-images');
+    if (altSection) {
+      const altSettingsCard = altSection.querySelector('#optimization-settings-alt-alert')?.closest('.card');
+      if (altSettingsCard) {
+        altSettingsCard.remove();
+      }
+    }
+
+    const storeInstructionButton = document.getElementById('save-store-seo-instructions');
+    if (storeInstructionButton) {
+      storeInstructionButton.remove();
     }
   }
 
-  function removeProductsAltInstructionsField() {
-    const input = document.getElementById('setting-image-alt-instructions');
-    if (!input) return;
-    const wrapper = input.closest('div');
-    if (wrapper) {
-      wrapper.remove();
-    } else {
-      input.remove();
+  async function loadOptimizationSettings() {
+    try {
+      const data = await apiFetch('/settings').then((response) => response.json());
+      if (!data.success) {
+        const message = normalizeApiMessage(data.message, 'تعذر جلب إعدادات السيو العامة.');
+        setOptimizationSettingsAlert('error', message, 'global');
+        return;
+      }
+      fillOptimizationSettings(data.settings || {});
+      setOptimizationSettingsAlert('', '', 'global');
+    } catch (error) {
+      setOptimizationSettingsAlert('error', 'تعذر جلب إعدادات السيو العامة.', 'global');
     }
   }
 
-  function moveStoreSeoInstructionsFieldToStoreSeoSection() {
-    const input = document.getElementById('setting-store-seo-instructions');
-    if (!input) return;
+  async function saveOptimizationSettings(source = 'global') {
+    const button = source === 'alt'
+      ? document.getElementById('save-optimization-settings-alt')
+      : (document.getElementById('save-global-seo-settings') || document.getElementById('save-optimization-settings'));
+    const oldText = button?.textContent || 'حفظ الإعدادات';
 
-    const fieldWrapper = input.closest('div');
-    if (!fieldWrapper) return;
+    const payload = {
+      output_language: getOutputLanguage(source),
+      global_instructions: readFromAnySetting(['setting-global-instructions', 'alt-setting-global-instructions'], ''),
+      product_description_instructions: readFromAnySetting(['setting-product-description-instructions'], ''),
+      meta_title_instructions: readFromAnySetting(['setting-meta-title-instructions'], ''),
+      meta_description_instructions: readFromAnySetting(['setting-meta-description-instructions'], ''),
+      image_alt_instructions: readFromAnySetting(['setting-image-alt-instructions', 'alt-setting-image-alt-instructions'], ''),
+      store_seo_instructions: readFromAnySetting(['setting-store-seo-instructions'], ''),
+      business_brand_name: readFromAnySetting(['setting-business-brand-name'], ''),
+      business_overview: readFromAnySetting(['setting-business-overview'], ''),
+      sitemap_url: readFromAnySetting(['setting-sitemap-url'], ''),
+    };
 
-    const storeSeoGrid = document.querySelector('#section-store-seo .grid');
-    if (!storeSeoGrid) return;
-
-    if (fieldWrapper.parentElement === storeSeoGrid) {
-      return;
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'جاري الحفظ...';
     }
+    setOptimizationSettingsAlert('success', 'جاري حفظ إعدادات السيو العامة...', 'global');
 
-    fieldWrapper.style.gridColumn = '1 / -1';
-    storeSeoGrid.insertBefore(fieldWrapper, storeSeoGrid.firstChild);
+    try {
+      const data = await apiFetch('/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then((response) => response.json());
+
+      if (!data.success) {
+        setOptimizationSettingsAlert('error', normalizeApiMessage(data.message, 'تعذر حفظ إعدادات السيو العامة.'), 'global');
+        return;
+      }
+
+      fillOptimizationSettings(data.settings || payload);
+      setOptimizationSettingsAlert('success', normalizeApiMessage(data.message, 'تم حفظ إعدادات السيو العامة.'), 'global');
+    } catch (error) {
+      setOptimizationSettingsAlert('error', 'حدث خطأ أثناء حفظ إعدادات السيو العامة.', 'global');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
   }
 
-  removeAltGeneralInstructionsField();
-  removeProductsAltInstructionsField();
-  moveStoreSeoInstructionsFieldToStoreSeoSection();
+  moveSeoSettingsToGlobalSection();
   bindEvents();
   switchSection('home');
   renderEditorBody();

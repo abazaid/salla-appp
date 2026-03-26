@@ -129,9 +129,11 @@ final class OpenAIClient
         }
         $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
         $imageAltInstructions = trim((string) ($settings['image_alt_instructions'] ?? ''));
+        $businessContextBlock = $this->buildBusinessContextBlock($settings);
 
         $userContentText = "Generate one ALT text in language={$language} as an SEO professional.\nRules:\n- Length target: 55-70 characters.\n- Mention the product clearly and naturally.\n- Must be a complete, readable phrase (not cut off).\n- No keyword stuffing.\n- No promotional phrases.\n- Use letters, numbers and spaces only.\n- Return only ALT text.\n"
             . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
+            . $this->buildInstructionBlock('Merchant business profile', $businessContextBlock)
             . $this->buildInstructionBlock('Image ALT instructions', $imageAltInstructions)
             . "\nProduct name: " . (string) ($product['name'] ?? 'Product') . "\nCurrent image alt: " . (string) ($image['alt'] ?? '');
 
@@ -246,6 +248,7 @@ final class OpenAIClient
         }
         $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
         $storeSeoInstructions = trim((string) ($settings['store_seo_instructions'] ?? ''));
+        $businessContextBlock = $this->buildBusinessContextBlock($settings);
 
         $response = $this->httpClient->post(self::API_BASE . '/responses', [
             'model' => $model,
@@ -269,6 +272,7 @@ final class OpenAIClient
                             'type' => 'input_text',
                             'text' => "Generate homepage SEO settings in language={$language}. Return JSON only.\nRules:\n- Title should be around 35-65 characters and include core intent.\n- Description should be around 120-160 characters, compelling but factual.\n- Keywords should be 6-12 high-intent terms, comma-separated, no stuffing.\n- Reuse useful existing terms if they are relevant.\n- Reflect the actual store activity from products sample/topics.\n"
                                 . $this->buildInstructionBlock('Global merchant instructions', $globalInstructions)
+                                . $this->buildInstructionBlock('Merchant business profile', $businessContextBlock)
                                 . $this->buildInstructionBlock('Store SEO instructions', $storeSeoInstructions)
                                 . "\nStore context:\n" . json_encode([
                                     'store_name' => $storeContext['store_name'] ?? null,
@@ -332,6 +336,7 @@ final class OpenAIClient
         }
         $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
         $brandSeoInstructions = trim((string) ($settings['brand_seo_instructions'] ?? ''));
+        $businessContextBlock = $this->buildBusinessContextBlock($settings);
 
         $response = $this->httpClient->post(self::API_BASE . '/responses', [
             'model' => $model,
@@ -368,6 +373,7 @@ Rules:
 - Use natural Arabic
 "
                                 . $this->buildInstructionBlock('Global instructions', $globalInstructions)
+                                . $this->buildInstructionBlock('Merchant business profile', $businessContextBlock)
                                 . $this->buildInstructionBlock('Brand SEO instructions', $brandSeoInstructions)
                                 . "\nReturn ONLY JSON: {\"meta_title\": \"...\", \"meta_description\": \"...\", \"description\": \"...\"}",
                         ],
@@ -417,6 +423,7 @@ Rules:
         }
         $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
         $categorySeoInstructions = trim((string) ($settings['category_seo_instructions'] ?? ''));
+        $businessContextBlock = $this->buildBusinessContextBlock($settings);
 
         $response = $this->httpClient->post(self::API_BASE . '/responses', [
             'model' => $model,
@@ -453,6 +460,7 @@ Rules:
 - Focus on the category name and what products it contains
 "
                                 . $this->buildInstructionBlock('Global instructions', $globalInstructions)
+                                . $this->buildInstructionBlock('Merchant business profile', $businessContextBlock)
                                 . $this->buildInstructionBlock('Category SEO instructions', $categorySeoInstructions)
                                 . "\nReturn ONLY JSON: {\"meta_title\": \"...\", \"meta_description\": \"...\"}",
                         ],
@@ -518,6 +526,7 @@ Rules:
         }
         $globalInstructions = trim((string) ($settings['global_instructions'] ?? ''));
         $productInstructions = trim((string) ($settings['product_description_instructions'] ?? ''));
+        $businessContextBlock = $this->buildBusinessContextBlock($settings);
 
         $productSummary = [
             'id' => $product['id'] ?? null,
@@ -575,6 +584,7 @@ Return ONLY clean HTML without any labels, comments, or explanations.',
                             'text' => "Generate a detailed product description in language={$language}.\n\nFollow the merchant's specific instructions EXACTLY and maintain the mandatory section order shown in the system prompt.\n\n"
                             . $this->buildInstructionBlock('Internal links', $this->buildInternalLinksPromptBlock($product, $settings, true))
                             . $this->buildInstructionBlock('Merchant Style Guide', $globalInstructions)
+                            . $this->buildInstructionBlock('Merchant business profile', $businessContextBlock)
                             . $this->buildInstructionBlock('Description Template & Rules', $productInstructions)
                             . "\nProduct Data (use ONLY provided data, do NOT fabricate):\n" . json_encode($productSummary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
                     ],
@@ -638,6 +648,7 @@ Return ONLY clean HTML without any labels, comments, or explanations.',
         $productInstructions = trim((string) ($settings['product_description_instructions'] ?? ''));
         $metaTitleInstructions = trim((string) ($settings['meta_title_instructions'] ?? ''));
         $metaDescriptionInstructions = trim((string) ($settings['meta_description_instructions'] ?? ''));
+        $businessContextBlock = $this->buildBusinessContextBlock($settings);
 
         $productSummary = [
             'id' => $product['id'] ?? null,
@@ -703,6 +714,7 @@ METADATA: metadata_title (50-60 chars, start with product name), metadata_descri
                             'text' => "Generate product content in language={$language}. {$modeInstruction} Return valid JSON only.\n"
                             . $this->buildInstructionBlock('Internal links', $this->buildInternalLinksPromptBlock($product, $settings, $mode !== 'seo'))
                             . $this->buildInstructionBlock('Style Guide', $globalInstructions)
+                            . $this->buildInstructionBlock('Merchant business profile', $businessContextBlock)
                             . $this->buildInstructionBlock('Description Template', $productInstructions)
                             . $this->buildInstructionBlock('Meta Title Rules', $metaTitleInstructions)
                             . $this->buildInstructionBlock('Meta Description Rules', $metaDescriptionInstructions)
@@ -721,6 +733,26 @@ METADATA: metadata_title (50-60 chars, start with product name), metadata_descri
         }
 
         return "\n{$label}:\n{$instructions}\n";
+    }
+
+    private function buildBusinessContextBlock(array $settings): string
+    {
+        $brandName = trim((string) ($settings['business_brand_name'] ?? ''));
+        $overview = trim((string) ($settings['business_overview'] ?? ''));
+
+        if ($brandName === '' && $overview === '') {
+            return '';
+        }
+
+        $lines = [];
+        if ($brandName !== '') {
+            $lines[] = 'Store/Brand Name: ' . $brandName;
+        }
+        if ($overview !== '') {
+            $lines[] = 'Business Overview: ' . $overview;
+        }
+
+        return implode("\n", $lines);
     }
 
     /**

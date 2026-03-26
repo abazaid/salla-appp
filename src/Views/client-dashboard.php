@@ -16,6 +16,7 @@ if ($appBasePath === '/') {
 
     <nav class="sidebar-nav">
       <button type="button" class="sidebar-link is-active" data-section-target="home">الرئيسية</button>
+      <button type="button" class="sidebar-link" data-section-target="seo-settings">إعدادات السيو العامة</button>
       <button type="button" class="sidebar-link" data-section-target="products">سيو المنتجات</button>
       <button type="button" class="sidebar-link" data-section-target="alt-images">كاتب ALT للصور</button>
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
@@ -150,6 +151,37 @@ if ($appBasePath === '/') {
           </div>
         </div>
       </div>
+    </section>
+
+    <section id="section-seo-settings" data-app-section="seo-settings" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">الإعدادات العامة</div>
+            <h2 style="margin:12px 0 8px;">إعدادات السيو العامة</h2>
+            <p class="muted" style="margin:0;max-width:980px;">
+              هذه الصفحة موحدة لكل إعدادات السيو (المنتجات، الصور، وسيو المتجر). يفضّل تعبئة بيانات النشاط التجاري مرة واحدة عند أول استخدام
+              حتى تكون كل عمليات التوليد أدق وأكثر اتساقًا. إذا لم تتم تعبئتها، سيستمر النظام بالعمل على الإعدادات الافتراضية.
+            </p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="save-global-seo-settings" class="btn btn-sky" type="button">حفظ الإعدادات العامة</button>
+          </div>
+        </div>
+        <div id="global-seo-settings-alert"></div>
+        <div class="grid" style="margin-top:0;">
+          <div>
+            <label for="setting-business-brand-name"><strong>اسم المتجر / البراند</strong></label>
+            <input id="setting-business-brand-name" type="text" placeholder="مثال: نايك السعودية">
+          </div>
+          <div style="grid-column:1/-1;">
+            <label for="setting-business-overview"><strong>وصف مختصر للخدمات والمنتجات</strong></label>
+            <textarea id="setting-business-overview" rows="4" placeholder="اكتب نبذة قصيرة عن نشاطك، فئات المنتجات، والجمهور المستهدف..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div id="global-seo-settings-content" class="panel-stack"></div>
     </section>
 
     <section id="section-products" data-app-section="products" class="panel-stack">
