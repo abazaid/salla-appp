@@ -594,10 +594,16 @@ final class ProductController
             $categoriesData = $categoriesResponse['data'] ?? [];
             
             $categories = array_map(static function (array $category): array {
+                $metadata = is_array($category['metadata'] ?? null) ? (array) $category['metadata'] : [];
+                $metaTitle = trim((string) ($metadata['title'] ?? ($category['metadata_title'] ?? ($category['meta_title'] ?? ''))));
+                $metaDescription = trim((string) ($metadata['description'] ?? ($category['metadata_description'] ?? ($category['meta_description'] ?? ''))));
+
                 return [
                     'id' => (int) ($category['id'] ?? 0),
                     'name' => (string) ($category['name'] ?? ''),
                     'products_count' => (int) ($category['products_count'] ?? 0),
+                    'meta_title' => $metaTitle,
+                    'meta_description' => $metaDescription,
                 ];
             }, $categoriesData);
 
@@ -661,6 +667,9 @@ final class ProductController
         try {
             $categoryResponse = (new SallaApiClient())->categoryDetails($accessToken, $categoryId);
             $categoryData = $categoryResponse['data'] ?? [];
+            $metadata = is_array($categoryData['metadata'] ?? null) ? (array) $categoryData['metadata'] : [];
+            $currentMetaTitle = trim((string) ($metadata['title'] ?? ($categoryData['metadata_title'] ?? ($categoryData['meta_title'] ?? ''))));
+            $currentMetaDescription = trim((string) ($metadata['description'] ?? ($categoryData['metadata_description'] ?? ($categoryData['meta_description'] ?? ''))));
             
             $category = [
                 'id' => (int) ($categoryData['id'] ?? 0),
@@ -671,8 +680,8 @@ final class ProductController
 
             Response::json([
                 'success' => true,
-                'current_meta_title' => (string) ($categoryData['meta_title'] ?? ''),
-                'current_meta_description' => (string) ($categoryData['meta_description'] ?? ''),
+                'current_meta_title' => $currentMetaTitle,
+                'current_meta_description' => $currentMetaDescription,
                 'optimized_meta_title' => $generated['meta_title'] ?? '',
                 'optimized_meta_description' => $generated['meta_description'] ?? '',
             ]);
@@ -734,14 +743,40 @@ final class ProductController
         try {
             error_log('saveCategorySeo - categoryId: ' . $categoryId . ', metaTitle: ' . $metaTitle . ', metaDesc: ' . $metaDescription);
             
-            $result = (new SallaApiClient())->updateCategorySeo(
+            $client = new SallaApiClient();
+            $result = $client->updateCategorySeo(
                 $accessToken,
                 $categoryId,
                 $metaTitle,
                 $metaDescription
             );
-            
+
             error_log('saveCategorySeo - result: ' . json_encode($result));
+
+            $fetched = $client->categoryDetails($accessToken, $categoryId);
+            $fetchedData = is_array($fetched['data'] ?? null) ? (array) $fetched['data'] : [];
+            $fetchedMetadata = is_array($fetchedData['metadata'] ?? null) ? (array) $fetchedData['metadata'] : [];
+            $appliedMetaTitle = trim((string) ($fetchedMetadata['title'] ?? ($fetchedData['metadata_title'] ?? ($fetchedData['meta_title'] ?? ''))));
+            $appliedMetaDescription = trim((string) ($fetchedMetadata['description'] ?? ($fetchedData['metadata_description'] ?? ($fetchedData['meta_description'] ?? ''))));
+
+            if ($appliedMetaTitle !== $metaTitle || $appliedMetaDescription !== $metaDescription) {
+                Response::json([
+                    'success' => false,
+                    'message' => 'لم يتم تأكيد حفظ سيو القسم داخل سلة. راجع الصلاحيات أو المتجر المرتبط ثم أعد المحاولة.',
+                    'expected_seo' => [
+                        'meta_title' => $metaTitle,
+                        'meta_description' => $metaDescription,
+                    ],
+                    'applied_seo' => [
+                        'meta_title' => $appliedMetaTitle,
+                        'meta_description' => $appliedMetaDescription,
+                    ],
+                    'update_response' => $result,
+                    'fetch_response' => $fetched,
+                    'subscription' => $subscriptionManager->summary($store),
+                ], 409);
+                return;
+            }
 
             $categoryName = 'قسم';
             $store = $subscriptionManager->recordOptimization($store, $categoryId, $categoryName, 'category_seo', 'completed');

@@ -61,7 +61,10 @@ final class SallaApiClient
     public function updateCategorySeo(string $accessToken, int $categoryId, string $metaTitle, string $metaDescription): array
     {
         $url = self::API_BASE . '/categories/' . $categoryId;
-        $payload = ['meta_title' => $metaTitle, 'meta_description' => $metaDescription];
+        $payload = [
+            'metadata_title' => $metaTitle,
+            'metadata_description' => $metaDescription,
+        ];
         
         error_log('Salla API updateCategorySeo: PUT ' . $url);
         error_log('Salla API updateCategorySeo payload: ' . json_encode($payload));
