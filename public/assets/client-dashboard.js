@@ -1329,6 +1329,8 @@
     if (document.getElementById('setting-image-alt-instructions')) document.getElementById('setting-image-alt-instructions').value = settings.image_alt_instructions || '';
     if (document.getElementById('alt-setting-image-alt-instructions')) document.getElementById('alt-setting-image-alt-instructions').value = settings.image_alt_instructions || '';
     if (document.getElementById('setting-store-seo-instructions')) document.getElementById('setting-store-seo-instructions').value = settings.store_seo_instructions || '';
+    if (document.getElementById('setting-brand-seo-instructions')) document.getElementById('setting-brand-seo-instructions').value = settings.brand_seo_instructions || '';
+    if (document.getElementById('setting-category-seo-instructions')) document.getElementById('setting-category-seo-instructions').value = settings.category_seo_instructions || '';
     if (document.getElementById('setting-business-brand-name')) document.getElementById('setting-business-brand-name').value = settings.business_brand_name || '';
     if (document.getElementById('setting-business-overview')) document.getElementById('setting-business-overview').value = settings.business_overview || '';
     if (document.getElementById('setting-sitemap-url')) document.getElementById('setting-sitemap-url').value = settings.sitemap_url || '';
@@ -3420,6 +3422,8 @@
       meta_description_instructions: readFromAnySetting(['setting-meta-description-instructions'], ''),
       image_alt_instructions: readFromAnySetting(['setting-image-alt-instructions', 'alt-setting-image-alt-instructions'], ''),
       store_seo_instructions: readFromAnySetting(['setting-store-seo-instructions'], ''),
+      brand_seo_instructions: readFromAnySetting(['setting-brand-seo-instructions'], ''),
+      category_seo_instructions: readFromAnySetting(['setting-category-seo-instructions'], ''),
       business_brand_name: readFromAnySetting(['setting-business-brand-name'], ''),
       business_overview: readFromAnySetting(['setting-business-overview'], ''),
       sitemap_url: readFromAnySetting(['setting-sitemap-url'], ''),

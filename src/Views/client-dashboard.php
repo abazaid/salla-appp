@@ -450,6 +450,14 @@ if ($appBasePath === '/') {
             <label for="setting-store-seo-instructions"><strong>تعليمات سيو المتجر</strong></label>
             <textarea id="setting-store-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد عنوان/وصف/كلمات سيو المتجر..."></textarea>
           </div>
+          <div>
+            <label for="setting-brand-seo-instructions"><strong>تعليمات سيو الماركات</strong></label>
+            <textarea id="setting-brand-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد سيو الماركات..."></textarea>
+          </div>
+          <div>
+            <label for="setting-category-seo-instructions"><strong>تعليمات سيو الأقسام</strong></label>
+            <textarea id="setting-category-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد سيو الأقسام..."></textarea>
+          </div>
         </div>
       </details>
 
