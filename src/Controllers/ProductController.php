@@ -1542,6 +1542,14 @@ final class ProductController
         try {
             $client = new SallaApiClient();
             $updateResponse = $client->updateSeoSettings($accessToken, $title, $description, $keywords, null, $languageCode);
+            $secondaryLanguageCode = $languageCode === 'ar' ? 'en' : 'ar';
+            $secondaryUpdateResponse = null;
+            try {
+                // Keep both Arabic and English SEO metadata in sync so it appears consistently in Salla dashboard.
+                $secondaryUpdateResponse = $client->updateSeoSettings($accessToken, $title, $description, $keywords, null, $secondaryLanguageCode);
+            } catch (\Throwable) {
+                $secondaryUpdateResponse = null;
+            }
 
             $refreshSitemapUrl = '';
             $updateData = is_array($updateResponse['data'] ?? null) ? (array) $updateResponse['data'] : [];
@@ -1601,9 +1609,11 @@ final class ProductController
                 'applied_seo' => $appliedSeo,
                 'store_domain' => $store['store']['domain'] ?? ($store['store']['url'] ?? null),
                 'language_code' => $languageCode,
+                'secondary_language_code' => $secondaryLanguageCode,
                 'refresh_sitemap_url' => $refreshSitemapUrl !== '' ? $refreshSitemapUrl : null,
                 'refresh_triggered' => $refreshTriggered,
                 'salla_response' => $updateResponse,
+                'secondary_salla_response' => $secondaryUpdateResponse,
                 'subscription' => $subscriptionManager->summary($store),
             ]);
         } catch (\Throwable $exception) {
