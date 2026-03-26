@@ -1131,38 +1131,52 @@ HTML;
           <tbody>
             <tr>
               <td>تحسين وصف المنتج</td>
-              <td>25</td>
-              <td>80</td>
-              <td class="plan-highlight">260</td>
-              <td>700</td>
+              <td>20</td>
+              <td>75</td>
+              <td class="plan-highlight">240</td>
+              <td>620</td>
             </tr>
             <tr>
               <td>تحسين SEO المنتج</td>
-              <td>15</td>
-              <td>40</td>
-              <td class="plan-highlight">140</td>
-              <td>350</td>
+              <td>12</td>
+              <td>38</td>
+              <td class="plan-highlight">130</td>
+              <td>330</td>
             </tr>
             <tr>
               <td>تحسين ALT الصور</td>
-              <td>25</td>
-              <td>80</td>
-              <td class="plan-highlight">260</td>
-              <td>700</td>
+              <td>20</td>
+              <td>75</td>
+              <td class="plan-highlight">240</td>
+              <td>620</td>
             </tr>
             <tr>
               <td>عمليات الكلمات المفتاحية</td>
-              <td>5</td>
-              <td>10</td>
-              <td class="plan-highlight">40</td>
-              <td>120</td>
+              <td>4</td>
+              <td>9</td>
+              <td class="plan-highlight">32</td>
+              <td>90</td>
             </tr>
             <tr>
               <td>تحليل سيو الدومين</td>
               <td>1</td>
-              <td>3</td>
-              <td class="plan-highlight">12</td>
-              <td>35</td>
+              <td>2</td>
+              <td class="plan-highlight">10</td>
+              <td>28</td>
+            </tr>
+            <tr>
+              <td>تحسين SEO الماركات</td>
+              <td>8</td>
+              <td>18</td>
+              <td class="plan-highlight">50</td>
+              <td>130</td>
+            </tr>
+            <tr>
+              <td>تحسين SEO الأقسام</td>
+              <td>8</td>
+              <td>18</td>
+              <td class="plan-highlight">50</td>
+              <td>130</td>
             </tr>
             <tr>
               <td>سجل العمليات</td>
