@@ -22,8 +22,14 @@ if ($appBasePath === '/') {
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
       <button type="button" class="sidebar-link" data-section-target="domain-seo">سيو الدومين</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
-      <button type="button" class="sidebar-link" data-section-target="brand-seo">سيو الماركات</button>
-      <button type="button" class="sidebar-link" data-section-target="category-seo">سيو الأقسام</button>
+      <button type="button" class="sidebar-link" data-section-target="brand-seo">
+        <span>سيو الماركات</span>
+        <span id="sidebar-note-brand" class="sidebar-lock-note" style="display:none;"></span>
+      </button>
+      <button type="button" class="sidebar-link" data-section-target="category-seo">
+        <span>سيو الأقسام</span>
+        <span id="sidebar-note-category" class="sidebar-lock-note" style="display:none;"></span>
+      </button>
       <button type="button" class="sidebar-link" data-section-target="operations">سجل العمليات</button>
       <button type="button" class="sidebar-link" data-section-target="account-settings">الحساب والإعدادات</button>
     </nav>
@@ -555,6 +561,7 @@ if ($appBasePath === '/') {
           </div>
         </div>
         <div id="brand-seo-alert"></div>
+        <div id="brand-plan-note"></div>
         <div class="toolbar" style="margin-top:16px;">
           <div class="toolbar-row">
             <div>
@@ -633,6 +640,7 @@ if ($appBasePath === '/') {
           </div>
         </div>
         <div id="category-seo-alert"></div>
+        <div id="category-plan-note"></div>
         <div class="toolbar" style="margin-top:16px;">
           <div class="toolbar-row">
             <div>

@@ -2849,14 +2849,87 @@
       loadOperations();
     }
     if (section === 'brand-seo') {
+      syncPlanNotesForSeoSections();
       if (!state.brands.list.length) {
         loadBrands();
       }
     }
     if (section === 'category-seo') {
+      syncPlanNotesForSeoSections();
       if (!state.categories.length) {
         loadCategories();
       }
+    }
+  }
+
+  async function syncPlanNotesForSeoSections() {
+    try {
+      const data = await apiFetch('/subscription').then((response) => response.json());
+      const quotas = data && data.subscription && data.subscription.quotas ? data.subscription.quotas : {};
+
+      const brandQuota = Number((quotas.brand_seo && quotas.brand_seo.quota) || 0);
+      const categoryQuota = Number((quotas.category_seo && quotas.category_seo.quota) || 0);
+
+      const brandNote = document.getElementById('brand-plan-note');
+      const categoryNote = document.getElementById('category-plan-note');
+
+      if (brandNote) {
+        brandNote.innerHTML = brandQuota <= 0
+          ? '<div class="notice error">تحسين سيو الماركات غير مفعّل في باقتك الحالية. رقّي الاشتراك لتفعيله.</div>'
+          : '';
+      }
+
+      if (categoryNote) {
+        categoryNote.innerHTML = categoryQuota <= 0
+          ? '<div class="notice error">تحسين سيو الأقسام غير مفعّل في باقتك الحالية. رقّي الاشتراك لتفعيله.</div>'
+          : '';
+      }
+
+      const brandSidebarBtn = document.querySelector('[data-section-target="brand-seo"]');
+      const categorySidebarBtn = document.querySelector('[data-section-target="category-seo"]');
+      const brandSidebarNote = document.getElementById('sidebar-note-brand');
+      const categorySidebarNote = document.getElementById('sidebar-note-category');
+
+      const brandLocked = brandQuota <= 0;
+      const categoryLocked = categoryQuota <= 0;
+
+      if (brandSidebarBtn) {
+        brandSidebarBtn.disabled = brandLocked;
+        brandSidebarBtn.classList.toggle('is-disabled', brandLocked);
+      }
+      if (categorySidebarBtn) {
+        categorySidebarBtn.disabled = categoryLocked;
+        categorySidebarBtn.classList.toggle('is-disabled', categoryLocked);
+      }
+
+      if (brandSidebarNote) {
+        brandSidebarNote.textContent = brandLocked ? 'رقّي' : '';
+        brandSidebarNote.style.display = brandLocked ? 'inline-flex' : 'none';
+      }
+      if (categorySidebarNote) {
+        categorySidebarNote.textContent = categoryLocked ? 'رقّي' : '';
+        categorySidebarNote.style.display = categoryLocked ? 'inline-flex' : 'none';
+      }
+    } catch (error) {
+      const brandNote = document.getElementById('brand-plan-note');
+      const categoryNote = document.getElementById('category-plan-note');
+      if (brandNote) brandNote.innerHTML = '';
+      if (categoryNote) categoryNote.innerHTML = '';
+
+      const brandSidebarBtn = document.querySelector('[data-section-target="brand-seo"]');
+      const categorySidebarBtn = document.querySelector('[data-section-target="category-seo"]');
+      const brandSidebarNote = document.getElementById('sidebar-note-brand');
+      const categorySidebarNote = document.getElementById('sidebar-note-category');
+      if (brandSidebarBtn) {
+        brandSidebarBtn.disabled = false;
+        brandSidebarBtn.classList.remove('is-disabled');
+      }
+      if (categorySidebarBtn) {
+        categorySidebarBtn.disabled = false;
+        categorySidebarBtn.classList.remove('is-disabled');
+      }
+      if (brandSidebarNote) brandSidebarNote.style.display = 'none';
+      if (categorySidebarNote) categorySidebarNote.style.display = 'none';
     }
   }
 
@@ -3473,6 +3546,7 @@
   loadOperations();
   loadStoreSeo();
   loadUsage();
+  syncPlanNotesForSeoSections();
 
   window.openManualEdit = openManualEdit;
   window.closeManualEdit = closeManualEdit;

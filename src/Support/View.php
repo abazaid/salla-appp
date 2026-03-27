@@ -11,12 +11,16 @@ final class View
     public static function render(string $title, string $content): string
     {
         $safeAppUrl = htmlspecialchars(rtrim((string) Config::get('APP_URL', 'http://localhost:8000'), '/'), ENT_QUOTES, 'UTF-8');
+        $logoSrc = 'https://rankxseo.com/logo.png';
+        $faviconSrc = 'https://rankxseo.com/favicon.png';
         return <<<HTML
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{$faviconSrc}">
+  <link rel="apple-touch-icon" href="{$faviconSrc}">
   <title>{$title}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
@@ -228,7 +232,10 @@ final class View
       gap: 8px;
     }
     .sidebar-link {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
       width: 100%;
       border: 1px solid rgba(202, 177, 149, 0.55);
       border-radius: 14px;
@@ -249,6 +256,31 @@ final class View
       background: var(--gradient-main);
       color: #fff;
       box-shadow: var(--glow-primary);
+    }
+    .sidebar-link.is-disabled {
+      opacity: .65;
+      cursor: not-allowed;
+      transform: none !important;
+      border-color: var(--border-color) !important;
+      box-shadow: none !important;
+    }
+    .sidebar-link.is-disabled:hover {
+      transform: none;
+      border-color: var(--border-color);
+    }
+    .sidebar-lock-note {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #FEE2E2;
+      color: #B91C1C;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.6;
+      white-space: nowrap;
     }
     .section-head {
       display: flex;
@@ -565,7 +597,7 @@ final class View
   <div class="wrap">
     <div class="section-head" style="margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <img src="/assets/rankxseo-logo.svg" alt="RankX SEO" style="width:min(100%,280px);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))">
+        <img src="{$logoSrc}" alt="RankX SEO" style="width:min(100%,280px);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))">
         <div>
           <div class="pill">RankX SEO</div>
           <div class="muted" style="margin-top:10px;">منصة تحسين محتوى منتجات سلة وربطها بلوحة خارجية احترافية.</div>

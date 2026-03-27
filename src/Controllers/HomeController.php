@@ -14,7 +14,8 @@ final class HomeController
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
         $loginHref = $safeAppUrl . '/login';
-        $logoSrc = $safeAppUrl . '/assets/rankxseo-logo.svg';
+        $logoSrc = 'https://rankxseo.com/logo.png';
+        $faviconSrc = 'https://rankxseo.com/favicon.png';
 
         $html = <<<HTML
 <!doctype html>
@@ -22,6 +23,8 @@ final class HomeController
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{$faviconSrc}">
+  <link rel="apple-touch-icon" href="{$faviconSrc}">
   <title>RankX SEO | منصة احترافية لتحسين محتوى متاجر سلة</title>
   <meta name="description" content="منصة RankX SEO تساعدك على تحسين وصف المنتجات، سيو المنتجات، النص البديل ALT للصور، وتحليل الكلمات المفتاحية والدومين لمتاجر سلة عبر لوحة واحدة احترافية.">
   <meta name="robots" content="index,follow,max-image-preview:large">
@@ -440,17 +443,6 @@ final class HomeController
       <p>الهدف ليس فقط "إنشاء نص"، بل بناء نظام محتوى كامل يساعد متجرك على النمو بشكل مستمر.</p>
       <div class="kpis">
         <div class="kpi">واجهة موحدة<strong>8</strong>أقسام تشغيل</div>
-        <div class="kpi">تحسين قابل للقياس<strong>100%</strong>سجل عمليات</div>
-        <div class="kpi">تحكم كامل<strong>يدوي + AI</strong>قبل الحفظ</div>
-        <div class="kpi">جاهز للنشر<strong>مباشر</strong>داخل سلة</div>
-      </div>
-    </section>
-
-    <section class="surface section">
-      <h2>لماذا هذه المنصة تفرق فعليًا؟</h2>
-      <p>الهدف ليس فقط “إنشاء نص”، بل بناء نظام محتوى كامل يساعد متجرك على النمو بشكل مستمر.</p>
-      <div class="kpis">
-        <div class="kpi">واجهة موحدة<strong>7</strong>أقسام تشغيل</div>
         <div class="kpi">تحسين قابل للقياس<strong>100%</strong>سجل عمليات</div>
         <div class="kpi">تحكم كامل<strong>يدوي + AI</strong>قبل الحفظ</div>
         <div class="kpi">جاهز للنشر<strong>مباشر</strong>داخل سلة</div>

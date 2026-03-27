@@ -14,7 +14,8 @@ final class PageController
     {
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
-        $logoSrc = $safeAppUrl . '/assets/rankxseo-logo.svg';
+        $logoSrc = 'https://rankxseo.com/logo.png';
+        $faviconSrc = 'https://rankxseo.com/favicon.png';
 
         $html = <<<HTML
 <!doctype html>
@@ -22,6 +23,8 @@ final class PageController
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{$faviconSrc}">
+  <link rel="apple-touch-icon" href="{$faviconSrc}">
   <title>من نحن | RankX SEO</title>
   <meta name="description" content="تعرف على RankX SEO - منصة متخصصة في تحسين محتوى متاجر سلة باستخدام الذكاء الاصطناعي. نساعد التجار على رفع ترتيب متاجرهم وزيادة التحويل.">
   <link rel="canonical" href="{$safeAppUrl}/about">
@@ -184,7 +187,8 @@ HTML;
     {
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
-        $logoSrc = $safeAppUrl . '/assets/rankxseo-logo.svg';
+        $logoSrc = 'https://rankxseo.com/logo.png';
+        $faviconSrc = 'https://rankxseo.com/favicon.png';
         $loginHref = $safeAppUrl . '/login';
 
         $html = <<<HTML
@@ -193,6 +197,8 @@ HTML;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{$faviconSrc}">
+  <link rel="apple-touch-icon" href="{$faviconSrc}">
   <title>الأسئلة الشائعة | RankX SEO</title>
   <meta name="description" content="إجابات شاملة على أهم الأسئلة حول RankX SEO - تحسين محتوى متاجر سلة باستخدام الذكاء الاصطناعي.">
   <link rel="canonical" href="{$safeAppUrl}/faq">
@@ -622,7 +628,8 @@ HTML;
     {
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
-        $logoSrc = $safeAppUrl . '/assets/rankxseo-logo.svg';
+        $logoSrc = 'https://rankxseo.com/logo.png';
+        $faviconSrc = 'https://rankxseo.com/favicon.png';
 
         $html = <<<HTML
 <!doctype html>
@@ -630,6 +637,8 @@ HTML;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{$faviconSrc}">
+  <link rel="apple-touch-icon" href="{$faviconSrc}">
   <title>سياسة الخصوصية | RankX SEO</title>
   <meta name="description" content="سياسة الخصوصية الخاصة بمنصة RankX SEO - كيف نحمي بياناتك ونستخدمها.">
   <link rel="canonical" href="{$safeAppUrl}/privacy">
@@ -775,7 +784,8 @@ HTML;
     {
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
-        $logoSrc = $safeAppUrl . '/assets/rankxseo-logo.svg';
+        $logoSrc = 'https://rankxseo.com/logo.png';
+        $faviconSrc = 'https://rankxseo.com/favicon.png';
 
         $html = <<<HTML
 <!doctype html>
@@ -783,6 +793,8 @@ HTML;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{$faviconSrc}">
+  <link rel="apple-touch-icon" href="{$faviconSrc}">
   <title>الشروط والأحكام | RankX SEO</title>
   <meta name="description" content="الشروط والأحكام الخاصة باستخدام منصة RankX SEO.">
   <link rel="canonical" href="{$safeAppUrl}/terms">
@@ -957,7 +969,8 @@ HTML;
     {
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
-        $logoSrc = $safeAppUrl . '/assets/rankxseo-logo.svg';
+        $logoSrc = 'https://rankxseo.com/logo.png';
+        $faviconSrc = 'https://rankxseo.com/favicon.png';
         $loginHref = $safeAppUrl . '/login';
 
         $plans = Plans::all();
@@ -1029,6 +1042,8 @@ HTML;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{$faviconSrc}">
+  <link rel="apple-touch-icon" href="{$faviconSrc}">
   <title>الباقات والأسعار | RankX SEO</title>
   <meta name="description" content="اختر الباقة المناسبة لمتجرك - باقات مرنة تبدأ من 5 ر.س فقط لتحسين محتوى متجرك وزيادة المبيعات.">
   <link rel="canonical" href="{$safeAppUrl}/pricing">
