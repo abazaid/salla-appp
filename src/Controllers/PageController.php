@@ -1203,7 +1203,7 @@ HTML;
     h1{font-size:clamp(28px,4vw,42px);margin:0 0 16px;background:var(--gradient-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
     .subtitle{font-size:20px;color:var(--muted);margin:0;line-height:1.8}
     .plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:32px}
-    .plan-card{background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:28px;text-align:center;position:relative;transition:transform .3s,box-shadow .3s}
+    .plan-card{background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:28px;text-align:center;position:relative;transition:transform .3s,box-shadow .3s;display:flex;flex-direction:column}
     .plan-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(15,23,42,.1)}
     .plan-card.featured{border-color:var(--primary-2);box-shadow:0 0 30px rgba(99,102,241,.2)}
     .featured-badge{position:absolute;top:-14px;right:50%;transform:translateX(50%);background:var(--gradient-main);color:#fff;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:700}
@@ -1226,12 +1226,12 @@ HTML;
     .price-number{font-size:48px;font-weight:900;color:var(--primary-2)}
     .price-currency{font-size:16px;color:var(--muted);margin-right:4px}
     .price-usd{font-size:14px;color:var(--muted);margin:0 0 24px}
-    .plan-features{list-style:none;padding:0;margin:0 0 24px;text-align:right}
+    .plan-features{list-style:none;padding:0;margin:0 0 24px;text-align:right;flex:1 1 auto}
     .plan-features li{padding:10px 0;border-bottom:1px solid var(--border);font-size:15px;color:#475569}
     .plan-features li:last-child{border-bottom:none}
     .plan-features li::before{content:"✓";color:var(--success);margin-left:8px;font-weight:700}
     .extra-feature{color:var(--primary-2)!important;font-weight:600}
-    .plan-cta{display:inline-block;width:100%;padding:14px 24px;background:var(--gradient-main);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:var(--glow-primary);transition:transform .2s,box-shadow .2s}
+    .plan-cta{display:inline-block;width:100%;padding:14px 24px;background:var(--gradient-main);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:var(--glow-primary);transition:transform .2s,box-shadow .2s;margin-top:auto}
     .plan-cta:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(99,102,241,.4)}
     .plan-card:not(.featured) .plan-cta{background:#F1F5F9;color:var(--ink);box-shadow:none}
     .plan-card:not(.featured) .plan-cta:hover{background:#E2E8F0;box-shadow:none}
