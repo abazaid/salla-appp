@@ -196,7 +196,7 @@ HTML));
         $merchantId = htmlspecialchars((string) ($store['merchant_id'] ?? '-'), ENT_QUOTES, 'UTF-8');
         $status = htmlspecialchars((string) ($store['subscription_status'] ?? 'trial'), ENT_QUOTES, 'UTF-8');
         $planId = (string) ($store['plan_name'] ?? Plans::BUDGET_TRIAL);
-        $currentPlan = Plans::get($planId);
+        $currentPlan = Plans::get($planId) ?? Plans::get(Plans::BUDGET_TRIAL);
         $periodStart = htmlspecialchars((string) ($store['period_started_at'] ?? date('Y-m-d H:i:s')), ENT_QUOTES, 'UTF-8');
         $periodEnd = htmlspecialchars((string) ($store['period_ends_at'] ?? date('Y-m-d H:i:s', strtotime('+30 days'))), ENT_QUOTES, 'UTF-8');
         $used = (int) ($store['used_products'] ?? 0);
@@ -230,6 +230,12 @@ HTML));
         }
         $currentUsedJson = json_encode($currentUsed);
         $currentQuotaJson = json_encode($currentQuota);
+        $planName = $currentPlan !== null
+            ? ($currentPlan['icon'] . ' ' . $currentPlan['name_ar'])
+            : htmlspecialchars($planId, ENT_QUOTES, 'UTF-8');
+        $aiUsage = $repository->storeAiUsageSummary($storeId);
+        $aiUsageByMode = $repository->storeAiUsageSummaryByMode($storeId);
+        $aiUsageLogs = $repository->listStoreAiUsageLogs($storeId, 200);
 
         Response::html(View::render('Admin Store', <<<HTML
 <div class="card">
