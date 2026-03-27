@@ -168,10 +168,10 @@
   const BUSINESS_REMINDER_INTERVAL_MS = 2 * 24 * 60 * 60 * 1000;
 
   function getBusinessReminderStorageKey() {
-    return `rankx_business_reminder_last_seen_${merchantId || 'default'}`;
+    return `rankx_business_reminder_dismissed_at_${merchantId || 'default'}`;
   }
 
-  function getBusinessReminderLastSeen() {
+  function getBusinessReminderDismissedAt() {
     try {
       const value = Number(localStorage.getItem(getBusinessReminderStorageKey()) || 0);
       return Number.isFinite(value) ? value : 0;
@@ -180,7 +180,7 @@
     }
   }
 
-  function setBusinessReminderLastSeen(timestamp = Date.now()) {
+  function setBusinessReminderDismissedAt(timestamp = Date.now()) {
     try {
       localStorage.setItem(getBusinessReminderStorageKey(), String(timestamp));
     } catch (error) {
@@ -211,13 +211,12 @@
     }
 
     const now = Date.now();
-    const lastSeen = getBusinessReminderLastSeen();
-    if (lastSeen > 0 && now - lastSeen < BUSINESS_REMINDER_INTERVAL_MS) {
+    const dismissedAt = getBusinessReminderDismissedAt();
+    if (dismissedAt > 0 && now - dismissedAt < BUSINESS_REMINDER_INTERVAL_MS) {
       hideBusinessReminder();
       return;
     }
 
-    setBusinessReminderLastSeen(now);
     root.style.display = '';
     root.innerHTML = `
       <div class="card" style="border:1px solid #FCD34D;background:#FFFBEB;margin-bottom:12px;box-shadow:none;">
@@ -241,12 +240,11 @@
     const closeButton = document.getElementById('business-reminder-close');
 
     goButton?.addEventListener('click', () => {
-      setBusinessReminderLastSeen(Date.now());
       switchSection('seo-settings');
     });
 
     closeButton?.addEventListener('click', () => {
-      setBusinessReminderLastSeen(Date.now());
+      setBusinessReminderDismissedAt(Date.now());
       hideBusinessReminder();
     });
   }
