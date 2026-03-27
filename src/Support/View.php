@@ -21,9 +21,11 @@ final class View
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{$faviconSrc}">
   <link rel="apple-touch-icon" href="{$faviconSrc}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>{$title}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root {
       --primary-1: #3B82F6;
       --primary-2: #6366F1;
@@ -607,7 +609,7 @@ final class View
   <div class="wrap">
     <div class="section-head" style="margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <img src="{$logoSrc}" alt="RankX SEO" style="width:min(100%,280px);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))">
+        <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async" style="width:min(100%,280px);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))">
         <div>
           <div class="pill">RankX SEO</div>
           <div class="muted" style="margin-top:10px;">منصة تحسين محتوى منتجات سلة وربطها بلوحة خارجية احترافية.</div>

@@ -25,6 +25,9 @@ final class HomeController
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{$faviconSrc}">
   <link rel="apple-touch-icon" href="{$faviconSrc}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>RankX SEO | منصة احترافية لتحسين محتوى متاجر سلة</title>
   <meta name="description" content="منصة RankX SEO تساعدك على تحسين وصف المنتجات، سيو المنتجات، النص البديل ALT للصور، وتحليل الكلمات المفتاحية والدومين لمتاجر سلة عبر لوحة واحدة احترافية.">
   <meta name="robots" content="index,follow,max-image-preview:large">
@@ -39,7 +42,6 @@ final class HomeController
   <meta name="twitter:description" content="وصف منتجات أقوى، سيو أدق، وقرارات مبنية على بيانات حقيقية من لوحة واحدة.">
   <meta name="twitter:image" content="{$logoSrc}">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root{
       --primary-1:#3B82F6;
       --primary-2:#6366F1;
@@ -276,7 +278,7 @@ final class HomeController
     <div class="surface">
       <div class="top">
         <div class="brand">
-          <img src="{$logoSrc}" alt="RankX SEO">
+          <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async">
           <span class="pill">منصة متخصصة لمتاجر سلة</span>
         </div>
       </div>

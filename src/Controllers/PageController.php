@@ -25,11 +25,13 @@ final class PageController
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{$faviconSrc}">
   <link rel="apple-touch-icon" href="{$faviconSrc}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>من نحن | RankX SEO</title>
   <meta name="description" content="تعرف على RankX SEO - منصة متخصصة في تحسين محتوى متاجر سلة باستخدام الذكاء الاصطناعي. نساعد التجار على رفع ترتيب متاجرهم وزيادة التحويل.">
   <link rel="canonical" href="{$safeAppUrl}/about">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root{
       --primary-1:#3B82F6;
       --primary-2:#6366F1;
@@ -87,7 +89,7 @@ final class PageController
   <div class="wrap">
     <div class="surface">
       <div class="brand">
-        <img src="{$logoSrc}" alt="RankX SEO">
+        <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async">
       </div>
 
       <h1>من نحن - RankX SEO</h1>
@@ -199,11 +201,13 @@ HTML;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{$faviconSrc}">
   <link rel="apple-touch-icon" href="{$faviconSrc}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>الأسئلة الشائعة | RankX SEO</title>
   <meta name="description" content="إجابات شاملة على أهم الأسئلة حول RankX SEO - تحسين محتوى متاجر سلة باستخدام الذكاء الاصطناعي.">
   <link rel="canonical" href="{$safeAppUrl}/faq">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root{
       --primary-1:#3B82F6;
       --primary-2:#6366F1;
@@ -268,7 +272,7 @@ HTML;
   <div class="wrap">
     <div class="surface">
       <div class="brand">
-        <img src="{$logoSrc}" alt="RankX SEO">
+        <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async">
       </div>
 
       <h1>الأسئلة الشائعة</h1>
@@ -639,11 +643,13 @@ HTML;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{$faviconSrc}">
   <link rel="apple-touch-icon" href="{$faviconSrc}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>سياسة الخصوصية | RankX SEO</title>
   <meta name="description" content="سياسة الخصوصية الخاصة بمنصة RankX SEO - كيف نحمي بياناتك ونستخدمها.">
   <link rel="canonical" href="{$safeAppUrl}/privacy">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root{
       --primary-1:#3B82F6;
       --primary-2:#6366F1;
@@ -682,7 +688,7 @@ HTML;
   <div class="wrap">
     <div class="surface">
       <div class="brand">
-        <img src="{$logoSrc}" alt="RankX SEO">
+        <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async">
       </div>
 
       <h1>سياسة الخصوصية</h1>
@@ -795,11 +801,13 @@ HTML;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{$faviconSrc}">
   <link rel="apple-touch-icon" href="{$faviconSrc}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>الشروط والأحكام | RankX SEO</title>
   <meta name="description" content="الشروط والأحكام الخاصة باستخدام منصة RankX SEO.">
   <link rel="canonical" href="{$safeAppUrl}/terms">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root{
       --primary-1:#3B82F6;
       --primary-2:#6366F1;
@@ -841,7 +849,7 @@ HTML;
   <div class="wrap">
     <div class="surface">
       <div class="brand">
-        <img src="{$logoSrc}" alt="RankX SEO">
+        <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async">
       </div>
 
       <h1>الشروط والأحكام</h1>
@@ -1044,11 +1052,13 @@ HTML;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{$faviconSrc}">
   <link rel="apple-touch-icon" href="{$faviconSrc}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>الباقات والأسعار | RankX SEO</title>
   <meta name="description" content="اختر الباقة المناسبة لمتجرك - باقات مرنة تبدأ من 5 ر.س فقط لتحسين محتوى متجرك وزيادة المبيعات.">
   <link rel="canonical" href="{$safeAppUrl}/pricing">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
     :root{
       --primary-1:#3B82F6;
       --primary-2:#6366F1;
@@ -1123,7 +1133,7 @@ HTML;
   <div class="wrap">
     <div class="surface">
       <div class="brand">
-        <img src="{$logoSrc}" alt="RankX SEO">
+        <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async">
       </div>
 
       <div class="hero">
