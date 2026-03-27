@@ -2827,30 +2827,32 @@ TEXT;
 
     private function resolveStore(): ?array
     {
-        $merchantId = Request::query('merchant_id');
-        $stores = (new StoreRepository())->all();
-
-        if ($merchantId !== null && isset($stores[(string) $merchantId])) {
-            return $stores[(string) $merchantId];
-        }
-
+        $sessionUserId = (int) ($_SESSION['user_id'] ?? 0);
         $sessionStoreId = (int) ($_SESSION['store_id'] ?? 0);
 
-        if ($sessionStoreId > 0 && Database::isAvailable()) {
-            $dbStore = (new SaaSRepository())->findStoreById($sessionStoreId);
-            $dbMerchantId = (string) ($dbStore['merchant_id'] ?? '');
-
-            if ($dbMerchantId !== '' && isset($stores[$dbMerchantId])) {
-                return $stores[$dbMerchantId];
-            }
+        // API endpoints are private: never resolve a store without an authenticated client session.
+        if ($sessionUserId <= 0 || $sessionStoreId <= 0 || !Database::isAvailable()) {
+            return null;
         }
 
-        // If only one store exists and user is logged in, use it
-        if (count($stores) === 1) {
-            return array_values($stores)[0];
+        $dbStore = (new SaaSRepository())->findStoreById($sessionStoreId);
+        $dbMerchantId = (string) ($dbStore['merchant_id'] ?? '');
+
+        if ($dbMerchantId === '') {
+            return null;
         }
 
-        // Don't return random store - return null instead
+        // If merchant_id is passed in query, it must match the logged-in store only.
+        $merchantId = trim((string) Request::query('merchant_id', ''));
+        if ($merchantId !== '' && $merchantId !== $dbMerchantId) {
+            return null;
+        }
+
+        $stores = (new StoreRepository())->all();
+        if (isset($stores[$dbMerchantId])) {
+            return $stores[$dbMerchantId];
+        }
+
         return null;
     }
 }
