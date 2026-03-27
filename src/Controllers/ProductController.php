@@ -2072,6 +2072,7 @@ final class ProductController
             'store_seo_instructions' => $this->getDefaultStoreSeoInstructions(),
             'brand_seo_instructions' => $this->getDefaultBrandSeoInstructions(),
             'category_seo_instructions' => $this->getDefaultCategorySeoInstructions(),
+            'blog_seo_instructions' => $this->getDefaultBlogSeoInstructions(),
             'business_brand_name' => '',
             'business_overview' => '',
             'sitemap_url' => '',
@@ -2095,6 +2096,7 @@ final class ProductController
             'store_seo_instructions' => $this->normalizeOptimizationText($this->pickInstructionWithDefault($settings, 'store_seo_instructions', (string) $defaults['store_seo_instructions']), 5000),
             'brand_seo_instructions' => $this->normalizeOptimizationText($this->pickInstructionWithDefault($settings, 'brand_seo_instructions', (string) $defaults['brand_seo_instructions']), 3000),
             'category_seo_instructions' => $this->normalizeOptimizationText($this->pickInstructionWithDefault($settings, 'category_seo_instructions', (string) $defaults['category_seo_instructions']), 3000),
+            'blog_seo_instructions' => $this->normalizeOptimizationText($this->pickInstructionWithDefault($settings, 'blog_seo_instructions', (string) $defaults['blog_seo_instructions']), 5000),
             'business_brand_name' => $this->normalizeOptimizationText((string) ($settings['business_brand_name'] ?? ''), 160),
             'business_overview' => $this->normalizeOptimizationText((string) ($settings['business_overview'] ?? ''), 1500),
             'sitemap_url' => $this->normalizeSitemapUrl((string) ($settings['sitemap_url'] ?? '')),
@@ -2340,6 +2342,27 @@ Description:
 
 FAQ:
 ...
+TEXT;
+    }
+
+    private function getDefaultBlogSeoInstructions(): string
+    {
+        return <<<'TEXT'
+تعليمات كتابة مقالات المدونة (قريبًا)
+🎯 الهدف:
+إنشاء مقالات متوافقة مع تحسين محركات البحث وجاهزة للنشر في مدونة سلة.
+
+🧠 آلية العمل:
+- اختيار كلمة مفتاحية رئيسية للمقال
+- استخراج كلمات طويلة داعمة (Long-tail)
+- بناء هيكل H1 / H2 / H3 واضح
+- إضافة ربط داخلي مع المنتجات والأقسام ذات الصلة
+
+✍️ القواعد:
+✔️ محتوى مفيد وعملي للقارئ
+✔️ لغة طبيعية بدون حشو
+✔️ مراعاة نية البحث
+✔️ خاتمة مع CTA واضح
 TEXT;
     }
 

@@ -88,9 +88,32 @@ final class PageController
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
-  <title>من نحن | RankX SEO</title>
-  <meta name="description" content="تعرف على RankX SEO - منصة متخصصة في تحسين محتوى متاجر سلة باستخدام الذكاء الاصطناعي. نساعد التجار على رفع ترتيب متاجرهم وزيادة التحويل.">
+  <title>من نحن | RankX SEO منصة تحسين محركات البحث لمتاجر سلة</title>
+  <meta name="description" content="تعرف على RankX SEO، منصة متخصصة في تحسين محركات البحث لمتاجر سلة: تحسين وصف المنتجات، سيو المتجر، ALT الصور، الكلمات المفتاحية، وتحليل الدومين لزيادة الزيارات والتحويل.">
+  <meta name="keywords" content="من نحن RankX SEO, تحسين محركات البحث سلة, سيو سلة, تطبيق سيو سلة, تحسين وصف المنتجات, سيو المتجر, تحليل الكلمات المفتاحية">
+  <meta name="robots" content="index,follow,max-image-preview:large">
   <link rel="canonical" href="{$safeAppUrl}/about">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ar_SA">
+  <meta property="og:title" content="من نحن | RankX SEO منصة SEO لمتاجر سلة">
+  <meta property="og:description" content="منصة متخصصة لتحسين محتوى متاجر سلة ورفع الزيارات من محركات البحث عبر أدوات عملية مدعومة بالذكاء الاصطناعي.">
+  <meta property="og:url" content="{$safeAppUrl}/about">
+  <meta property="og:image" content="{$logoSrc}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="من نحن | RankX SEO">
+  <meta name="twitter:description" content="نساعد متاجر سلة على بناء نمو SEO فعلي عبر تحسين المحتوى والكلمات المفتاحية والربط الداخلي.">
+  <meta name="twitter:image" content="{$logoSrc}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "RankX SEO",
+    "url": "{$safeAppUrl}",
+    "logo": "{$logoSrc}",
+    "email": "seo@rankxseo.com",
+    "description": "منصة متخصصة في تحسين محركات البحث لمتاجر سلة."
+  }
+  </script>
   <style>
     :root{
       --primary-1:#3B82F6;
@@ -122,6 +145,9 @@ final class PageController
     .feature-icon{width:56px;height:56px;background:var(--gradient-main);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px}
     .feature h3{margin:0 0 10px;font-size:20px}
     .feature p{margin:0;font-size:15px}
+    .list{margin:0;padding-right:20px;line-height:2;color:#475569}
+    .list li{margin-bottom:8px}
+    .note-box{background:#EEF2FF;border:1px solid #C7D2FE;border-radius:14px;padding:16px;margin:16px 0}
     .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:32px 0}
     .stat{text-align:center;padding:24px;background:var(--gradient-main);border-radius:16px;color:#fff}
     .stat strong{display:block;font-size:42px;font-weight:800;margin-bottom:8px}
@@ -154,25 +180,26 @@ final class PageController
 
       <h1>من نحن - RankX SEO</h1>
       <p class="lead">
-        RankX SEO هي منصة متخصصة صُممت خصيصًا لأصحاب متاجر سلة، نقدم لهم حلولًا ذكية لتحسين المحتوى باستخدام الذكاء الاصطناعي.
+        RankX SEO هي منصة متخصصة صُممت خصيصًا لأصحاب متاجر سلة. نساعد التاجر على تطبيق تحسين محركات البحث (SEO) بشكل عملي، سريع، وقابل للقياس من لوحة واحدة.
       </p>
 
-      <h2>رؤيتنا</h2>
+      <h2>رؤيتنا في تحسين محركات البحث لمتاجر سلة</h2>
       <p>
-        نؤمن أن كل متجر يستحق أن يظهر في نتائج البحث الأولى. لكن كتابة محتوى احترافي متوافق مع SEO تحتاج وقت وجهد كبير. هدفنا هو أتمتة هذه العملية وجعلها في متناول الجميع - من المتجر الصغير إلى المؤسسة الكبيرة.
+        نؤمن أن كل متجر يستحق أن يظهر في نتائج البحث الأولى. لكن تنفيذ SEO بشكل صحيح يحتاج وقتًا وخبرة وتكرارًا مستمرًا. هدفنا هو تبسيط هذه العملية
+        وتحويلها إلى خطوات واضحة يمكن تنفيذها يوميًا، من المتجر الصغير إلى العلامات الكبيرة.
       </p>
 
-      <h2>ماذا نقدم؟</h2>
+      <h2>ماذا نقدم داخل RankX SEO؟</h2>
       <div class="features">
         <div class="feature">
           <div class="feature-icon">📝</div>
           <h3>تحسين وصف المنتجات</h3>
-          <p>صياغة أوصاف احترافية متوافق مع SEO بذكاء اصطناعي متطور</p>
+          <p>صياغة أوصاف احترافية متوافقة مع SEO وتركّز على نية الشراء</p>
         </div>
         <div class="feature">
           <div class="feature-icon">🔍</div>
-          <h3>تحسين ظهور متجرك</h3>
-          <p>تحسين Meta Title و Description لرفع ترتيب متجرك في البحث</p>
+          <h3>سيو المتجر والصفحات الأساسية</h3>
+          <p>تحسين Meta Title و Meta Description بما يدعم الظهور في جوجل</p>
         </div>
         <div class="feature">
           <div class="feature-icon">🖼️</div>
@@ -186,6 +213,27 @@ final class PageController
         </div>
       </div>
 
+      <h2>كيف نحقق نتائج SEO فعلية؟</h2>
+      <p>
+        في RankX SEO لا نعتمد على “نص جميل” فقط. نحن نبني نظام تحسين متكامل: اختيار كلمات مفتاحية مناسبة، كتابة محتوى يخدم نية البحث،
+        تحسين عناصر الميتا، ثم تطبيق الربط الداخلي بين المنتجات والأقسام. هذا التسلسل هو ما يصنع أثرًا تراكميًا واضحًا في الظهور.
+      </p>
+      <div class="note-box">
+        <h3 style="margin:0 0 8px;">النتيجة التي نستهدفها</h3>
+        <ul class="list">
+          <li>زيادة الزيارات العضوية من الكلمات ذات النية الشرائية.</li>
+          <li>رفع معدل التحويل عبر محتوى أوضح وأكثر إقناعًا.</li>
+          <li>تقليل وقت إنتاج المحتوى مع الحفاظ على الجودة.</li>
+        </ul>
+      </div>
+
+      <h2>لمن هذه المنصة؟</h2>
+      <ul class="list">
+        <li>أصحاب متاجر سلة الذين يريدون تحسين ترتيب المتجر في البحث.</li>
+        <li>فرق التسويق والمحتوى التي تحتاج إنتاج أسرع ومخرجات قابلة للمراجعة.</li>
+        <li>الوكالات التي تدير أكثر من متجر وتحتاج تدفق عمل ثابت.</li>
+      </ul>
+
       <h2>أرقام تتحدث عنا</h2>
       <div class="stats">
         <div class="stat"><strong>+500</strong><span>متجر نشط</span></div>
@@ -195,7 +243,10 @@ final class PageController
       </div>
 
       <h2>فريقنا</h2>
-      <p>فريقنا يضم خبراء في تحسين محركات البحث (SEO) وتطوير البرمجيات والذكاء الاصطناعي، جميعنا نعمل لتحقيق هدف واحد: مساعدتك على نمو متجرك.</p>
+      <p>
+        فريقنا يضم خبراء في تحسين محركات البحث (SEO) وتطوير البرمجيات والذكاء الاصطناعي. نعمل معًا لتحقيق هدف واحد:
+        تمكينك من بناء نمو قابل للاستمرار في متجرك، وليس مجرد تحسينات مؤقتة.
+      </p>
       <div class="team">
         <div class="team-member">
           <div class="avatar">R</div>
@@ -219,9 +270,16 @@ final class PageController
         </div>
       </div>
 
+      <h2>لماذا يثق بنا أصحاب المتاجر؟</h2>
+      <ul class="list">
+        <li>حل متخصص لمتاجر سلة بدل أدوات عامة لا تراعي طبيعة المتجر.</li>
+        <li>مراجعة كاملة قبل الحفظ: AI + تعديل يدوي + حفظ مباشر.</li>
+        <li>تطوير مستمر للخصائص بناءً على استخدام العملاء الفعلي.</li>
+      </ul>
+
       <h2>تواصل معنا</h2>
       <div class="contact-box">
-        <p>نسعد بتواصلك معنا لأي استفسار أو اقتراح.</p>
+        <p>نسعد بتواصلك معنا لأي استفسار، شراكة، أو طلب تطوير خاص بمتجرك.</p>
         <a class="contact-email" href="mailto:seo@rankxseo.com">
           <span>📧</span> seo@rankxseo.com
         </a>
@@ -1086,8 +1144,10 @@ HTML;
         <div class="plan-card{$featuredClass}" style="--plan-bg:{$colors['bg']};--plan-text:{$colors['text']};--plan-border:{$colors['border']};">
           {$featuredBadge}
           <div class="plan-header">
-            <span class="plan-icon">{$plan['icon']}</span>
-            <h3 class="plan-name">{$plan['name_ar']}</h3>
+            <div class="plan-title-row">
+              <h3 class="plan-name">{$plan['name_ar']}</h3>
+              <span class="plan-icon" aria-hidden="true">{$plan['icon']}</span>
+            </div>
             <p class="plan-description">{$plan['description_ar']}</p>
           </div>
           <div class="plan-price">
@@ -1147,9 +1207,20 @@ HTML;
     .plan-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(15,23,42,.1)}
     .plan-card.featured{border-color:var(--primary-2);box-shadow:0 0 30px rgba(99,102,241,.2)}
     .featured-badge{position:absolute;top:-14px;right:50%;transform:translateX(50%);background:var(--gradient-main);color:#fff;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:700}
-    .plan-icon{font-size:48px;display:block;margin-bottom:12px}
     .plan-header{margin-bottom:20px}
-    .plan-name{font-size:24px;font-weight:800;margin:0 0 8px;color:var(--ink)}
+    .plan-title-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 8px}
+    .plan-icon{
+      font-size:28px;
+      line-height:1;
+      width:30px;
+      height:30px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transform:translateY(1px);
+      flex:0 0 auto;
+    }
+    .plan-name{font-size:24px;font-weight:800;margin:0;color:var(--ink);line-height:1.2}
     .plan-description{font-size:15px;color:var(--muted);margin:0;line-height:1.6}
     .plan-price{margin:24px 0 4px}
     .price-number{font-size:48px;font-weight:900;color:var(--primary-2)}
@@ -1166,7 +1237,8 @@ HTML;
     .plan-card:not(.featured) .plan-cta:hover{background:#E2E8F0;box-shadow:none}
     .compare-section{margin-top:48px;padding-top:48px;border-top:1px solid var(--border)}
     .compare-section h2{text-align:center;font-size:28px;margin:0 0 32px}
-    .compare-table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:16px;border:1px solid var(--border)}
+    .compare-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:16px}
+    .compare-table{width:100%;min-width:760px;border-collapse:collapse;overflow:hidden;border-radius:16px;border:1px solid var(--border)}
     .compare-table th,.compare-table td{padding:14px 16px;text-align:center;border-bottom:1px solid var(--border)}
     .compare-table th{background:#EEF2FF;font-weight:700;font-size:14px}
     .compare-table th:first-child,.compare-table td:first-child{text-align:right}
@@ -1183,7 +1255,12 @@ HTML;
     .footer a:hover{text-decoration:underline}
     @media(max-width:768px){
       .plans-grid{grid-template-columns:1fr}
-      .plan-card{max-width:400px;margin:0 auto}
+      .plan-card{max-width:420px;margin:0 auto;padding:22px}
+      .plan-title-row{gap:8px}
+      .plan-icon{font-size:24px;width:26px;height:26px}
+      .plan-name{font-size:22px}
+      .price-number{font-size:42px}
+      .plan-features li{font-size:14px;padding:8px 0}
       .compare-table{font-size:13px}
       .compare-table th,.compare-table td{padding:10px 8px}
     }
@@ -1207,6 +1284,7 @@ HTML;
 
       <div class="compare-section">
         <h2>مقارنة الباقات</h2>
+        <div class="compare-table-wrap">
         <table class="compare-table">
           <thead>
             <tr>
@@ -1297,6 +1375,7 @@ HTML;
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <div class="cta-box">

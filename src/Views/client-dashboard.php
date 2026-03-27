@@ -43,6 +43,7 @@ if ($appBasePath === '/') {
     <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 8l1.5-4h13L20 8"></path><path d="M5 8h14v11H5z"></path><path d="M9 19v-5h6v5"></path></symbol>
     <symbol id="i-brand" viewBox="0 0 24 24"><path d="M4 7h16v10H4z"></path><path d="M9 7V5h6v2"></path><path d="M8 12h8"></path></symbol>
     <symbol id="i-category" viewBox="0 0 24 24"><path d="M4 4h7v7H4z"></path><path d="M13 4h7v7h-7z"></path><path d="M4 13h7v7H4z"></path><path d="M13 13h7v7h-7z"></path></symbol>
+    <symbol id="i-blog" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"></path><path d="M8 8h8"></path><path d="M8 12h8"></path><path d="M8 16h5"></path></symbol>
     <symbol id="i-manage" viewBox="0 0 24 24"><path d="M12 3v4"></path><path d="M12 17v4"></path><path d="M3 12h4"></path><path d="M17 12h4"></path><path d="M6.3 6.3l2.8 2.8"></path><path d="M14.9 14.9l2.8 2.8"></path><path d="M17.7 6.3l-2.8 2.8"></path><path d="M9.1 14.9l-2.8 2.8"></path><path d="M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6z"></path></symbol>
   </svg>
   <aside class="card dashboard-sidebar">
@@ -66,6 +67,10 @@ if ($appBasePath === '/') {
       <button type="button" class="sidebar-link has-note" data-section-target="category-seo">
         <span>سيو الأقسام</span>
         <span id="sidebar-note-category" class="sidebar-lock-note" style="display:none;"></span>
+      </button>
+      <button type="button" class="sidebar-link has-note" data-section-target="blog-seo">
+        <span>كتابة مقالات مدونة</span>
+        <span class="sidebar-lock-note" style="display:inline-flex;">قريبًا</span>
       </button>
       <button type="button" class="sidebar-link" data-section-target="operations">سجل العمليات</button>
       <button type="button" class="sidebar-link" data-section-target="account-settings">الحساب والإعدادات</button>
@@ -195,6 +200,20 @@ if ($appBasePath === '/') {
             <li>حفظ مباشر في سلة</li>
           </ul>
           <button class="btn btn-sky" type="button" data-home-go="category-seo">الانتقال إلى سيو الأقسام</button>
+        </div>
+
+        <div class="card surface-soft" style="box-shadow:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div class="card-head" style="margin-bottom:0;"><span class="icon-badge"><svg><use href="#i-blog"></use></svg></span><h3 style="margin:0;">قسم كتابة مقالات مدونة</h3></div>
+            <span class="sidebar-lock-note" style="display:inline-flex;">قريبًا</span>
+          </div>
+          <p class="muted" style="margin:0 0 12px;">كتابة مقالات متوافقة مع تحسين محركات البحث جاهزة للنشر داخل مدونة سلة.</p>
+          <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
+            <li>تركيز على كلمة مفتاحية رئيسية + كلمات طويلة داعمة</li>
+            <li>بناء المقالة بهدف تصدر نتائج البحث في قوقل</li>
+            <li>ربط داخلي ذكي مع المنتجات والأقسام</li>
+          </ul>
+          <button class="btn btn-secondary" type="button" data-home-go="blog-seo">استعراض القسم</button>
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
@@ -513,6 +532,10 @@ if ($appBasePath === '/') {
             <label for="setting-category-seo-instructions"><strong>تعليمات سيو الأقسام</strong></label>
             <textarea id="setting-category-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد سيو الأقسام..."></textarea>
           </div>
+          <div>
+            <label for="setting-blog-seo-instructions"><strong>تعليمات كتابة مقالات المدونة</strong></label>
+            <textarea id="setting-blog-seo-instructions" rows="4" placeholder="تعليمات خاصة بتوليد مقالات المدونة المتوافقة مع SEO..."></textarea>
+          </div>
         </div>
       </details>
 
@@ -777,6 +800,31 @@ if ($appBasePath === '/') {
             <div class="helper-row"><span>الموصى به 120-160 حرفًا</span><span id="store-seo-description-count">0 حرف</span></div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section id="section-blog-seo" data-app-section="blog-seo" class="panel-stack" style="display:none;">
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="pill">قريبًا</div>
+            <h2 style="margin:12px 0 8px;">كتابة مقالات مدونة</h2>
+            <p class="muted" style="margin:0;max-width:980px;">
+              هذا القسم قيد الإطلاق. الهدف منه إنشاء مقالات متوافقة مع تحسين محركات البحث، جاهزة للنشر في مدونة سلة،
+              مع التركيز على كلمة مفتاحية رئيسية، واستخدام كلمات طويلة (Long-tail)، وربط داخلي مع المنتجات والأقسام
+              لتحسين فرص الترتيب في نتائج قوقل.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card surface-soft" style="box-shadow:none;">
+        <h3 style="margin:0 0 8px;">ما الذي سيقدمه القسم عند التفعيل؟</h3>
+        <ul style="margin:0;padding-right:18px;line-height:2;">
+          <li>اقتراح الكلمات المفتاحية الأنسب حسب نشاط المتجر.</li>
+          <li>توليد H1/H2/H3 وصياغة مقالة كاملة متوافقة مع SEO.</li>
+          <li>إدراج CTA وروابط داخلية للمنتجات والأقسام ذات الصلة.</li>
+          <li>إخراج جاهز للنشر مع إمكانية المراجعة قبل الحفظ.</li>
+        </ul>
       </div>
     </section>
 

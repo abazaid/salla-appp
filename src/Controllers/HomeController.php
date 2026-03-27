@@ -32,19 +32,19 @@ final class HomeController
   <link rel="preconnect" href="https://rankxseo.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
   <title>تحسين محركات البحث سلة | تحسين محركات البحث SEO للمتجر الإلكتروني - RankX SEO</title>
-  <meta name="description" content="RankX SEO هو تطبيق سيو سلة يساعدك على تحسين محركات البحث SEO للمتجر الإلكتروني عبر تحسين وصف المنتجات، سيو المتجر، ALT الصور، وتحليل الكلمات المفتاحية والدومين لزيادة الزيارات والتحويل.">
-  <meta name="keywords" content="تحسين محركات البحث, تحسين محركات البحث seo, تحسين محركات البحث سلة, سيو سلة, تطبيق سيو, تطبيق سيو سلة, تحسين محركات البحث seo للمتجر الإلكتروني, خدمات تحسين محركات البحث, خدمة تحسين محركات البحث, جوجل سلة, قوقل سلة">
+  <meta name="description" content="RankX SEO هو تطبيق سيو سلة يساعدك على تحسين محركات البحث SEO للمتجر الإلكتروني عبر تحسين وصف المنتجات، سيو المتجر، ALT الصور، تحليل الكلمات المفتاحية والدومين، وكتابة مقالات مدونة متوافقة مع SEO.">
+  <meta name="keywords" content="تحسين محركات البحث, تحسين محركات البحث seo, تحسين محركات البحث سلة, سيو سلة, تطبيق سيو, تطبيق سيو سلة, تحسين محركات البحث seo للمتجر الإلكتروني, كتابة مقالات مدونة, كتابة مقالات متوافقة مع seo, مدونة سلة seo, خدمات تحسين محركات البحث, خدمة تحسين محركات البحث, جوجل سلة, قوقل سلة">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <link rel="canonical" href="{$safeAppUrl}/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ar_SA">
   <meta property="og:title" content="تحسين محركات البحث سلة | تحسين محركات البحث SEO - RankX SEO">
-  <meta property="og:description" content="تطبيق سيو سلة عملي لتحسين محركات البحث SEO للمتجر الإلكتروني: سيو المنتجات، سيو المتجر، ALT الصور، وتحليل الكلمات المفتاحية والدومين.">
+  <meta property="og:description" content="تطبيق سيو سلة عملي لتحسين محركات البحث SEO للمتجر الإلكتروني: سيو المنتجات، سيو المتجر، ALT الصور، تحليل الكلمات المفتاحية والدومين، وكتابة مقالات مدونة متوافقة مع SEO.">
   <meta property="og:url" content="{$safeAppUrl}/">
   <meta property="og:image" content="{$logoSrc}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="تحسين محركات البحث سلة | سيو سلة - RankX SEO">
-  <meta name="twitter:description" content="ابدأ تحسين محركات البحث SEO في سلة بخطوات عملية: تحسين المنتجات، سيو المتجر، ALT الصور، والكلمات المفتاحية.">
+  <meta name="twitter:description" content="ابدأ تحسين محركات البحث SEO في سلة بخطوات عملية: تحسين المنتجات، سيو المتجر، ALT الصور، الكلمات المفتاحية، وكتابة مقالات المدونة.">
   <meta name="twitter:image" content="{$logoSrc}">
   <script type="application/ld+json">
   {
@@ -330,6 +330,7 @@ final class HomeController
     <symbol id="i-keyword" viewBox="0 0 24 24"><path d="M10 14a4 4 0 1 1 2.6-7l7.4 7.4l-2 2l-1.5-1.5l-1.5 1.5l-1.8-1.8"></path><path d="M8.5 10.5h.01"></path></symbol>
     <symbol id="i-domain" viewBox="0 0 24 24"><path d="M3 12h18"></path><path d="M12 3a9 9 0 0 0 0 18"></path><path d="M12 3a9 9 0 0 1 0 18"></path><path d="M6 7.5c1.8 1 4 1.5 6 1.5s4.2-.5 6-1.5"></path><path d="M6 16.5c1.8-1 4-1.5 6-1.5s4.2.5 6 1.5"></path></symbol>
     <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 8l1.5-4h13L20 8"></path><path d="M5 8h14v11H5z"></path><path d="M9 19v-5h6v5"></path></symbol>
+    <symbol id="i-blog" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"></path><path d="M8 8h8"></path><path d="M8 12h8"></path><path d="M8 16h5"></path></symbol>
     <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l10-10l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></symbol>
   </svg>
   <div class="wrap">
@@ -345,7 +346,7 @@ final class HomeController
         <h1>تحسين محركات البحث سلة لرفع الزيارات وزيادة التحويل</h1>
         <p class="lead">
           RankX SEO هو تطبيق سيو سلة يجمع أدوات تحسين محركات البحث SEO في لوحة واحدة: كتابة وصف منتجات متوافق مع SEO،
-          تحسين سيو المتجر، إنشاء ALT احترافي للصور، تحليل الكلمات المفتاحية، ومتابعة المنافسين
+          تحسين سيو المتجر، إنشاء ALT احترافي للصور، تحليل الكلمات المفتاحية، كتابة مقالات مدونة متوافقة مع SEO، ومتابعة المنافسين
           بخطوات عملية واضحة تناسب المتاجر التي تريد نتائج حقيقية في جوجل سلة وقوقل سلة.
         </p>
         <div class="hero-actions">
@@ -414,6 +415,7 @@ final class HomeController
             <li>تحسين محركات البحث seo للمتجر الإلكتروني</li>
             <li>خدمة تحسين محركات البحث لمتجر سلة</li>
             <li>كيفية تحسين محركات البحث في سلة خطوة بخطوة</li>
+            <li>كتابة مقالات مدونة متوافقة مع seo لمتاجر سلة</li>
           </ul>
         </article>
       </div>
@@ -475,6 +477,14 @@ final class HomeController
             <li>توليد صياغات قوية لصفحة المتجر الرئيسية.</li>
             <li>تحسين Meta Title / Description / Keywords للمتجر.</li>
             <li>تحديث فوري من اللوحة إلى إعدادات SEO في سلة.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-blog"></use></svg></span><h3>كتابة مقالات المدونة (قريبًا)</h3></div>
+          <ul class="list">
+            <li>إنشاء مقالات متوافقة مع تحسين محركات البحث وجاهزة للنشر في مدونة سلة.</li>
+            <li>التركيز على كلمة مفتاحية رئيسية وكلمات طويلة داعمة.</li>
+            <li>ربط داخلي ذكي مع المنتجات والأقسام لتحسين فرص التصدر في قوقل.</li>
           </ul>
         </article>
         <article class="card">
@@ -566,7 +576,7 @@ final class HomeController
       <h2>لماذا هذه المنصة تفرق فعليًا؟</h2>
       <p>الهدف ليس فقط "إنشاء نص"، بل بناء نظام محتوى كامل يساعد متجرك على النمو بشكل مستمر.</p>
       <div class="kpis">
-        <div class="kpi">واجهة موحدة<strong>8</strong>أقسام تشغيل</div>
+        <div class="kpi">واجهة موحدة<strong>9</strong>أقسام (منها قسم قريبًا)</div>
         <div class="kpi">تحسين قابل للقياس<strong>100%</strong>سجل عمليات</div>
         <div class="kpi">تحكم كامل<strong>يدوي + AI</strong>قبل الحفظ</div>
         <div class="kpi">جاهز للنشر<strong>مباشر</strong>داخل سلة</div>
@@ -614,6 +624,10 @@ final class HomeController
         <details>
           <summary>هل RankX SEO مناسب كخدمة تحسين محركات البحث لمتاجر سلة؟</summary>
           <p>نعم، لأنه مصمم خصيصًا لمتاجر سلة ويغطي سيو المنتجات، سيو الماركات، سيو الأقسام، سيو المتجر، وتحليل الكلمات المفتاحية والدومين.</p>
+        </details>
+        <details>
+          <summary>متى يتوفر قسم كتابة مقالات المدونة؟</summary>
+          <p>القسم قيد الإطلاق قريبًا، وسيقدم كتابة مقالات متوافقة مع SEO تركز على كلمة مفتاحية رئيسية مع ربط داخلي بالمنتجات والأقسام داخل سلة.</p>
         </details>
         <details>
           <summary>هل أقدر أعدّل النص قبل الحفظ؟</summary>
