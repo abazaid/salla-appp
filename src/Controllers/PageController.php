@@ -10,6 +10,66 @@ use App\Support\Plans;
 
 final class PageController
 {
+    public function sitemap(): void
+    {
+        $appUrl = rtrim((string) Config::get('APP_URL', 'http://localhost:8000'), '/');
+        $now = gmdate('Y-m-d\TH:i:s\Z');
+
+        $pages = [
+            ['path' => '/', 'changefreq' => 'weekly', 'priority' => '1.0'],
+            ['path' => '/pricing', 'changefreq' => 'weekly', 'priority' => '0.9'],
+            ['path' => '/about', 'changefreq' => 'monthly', 'priority' => '0.7'],
+            ['path' => '/faq', 'changefreq' => 'weekly', 'priority' => '0.8'],
+            ['path' => '/privacy', 'changefreq' => 'yearly', 'priority' => '0.4'],
+            ['path' => '/terms', 'changefreq' => 'yearly', 'priority' => '0.4'],
+        ];
+
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+
+        foreach ($pages as $page) {
+            $loc = htmlspecialchars($appUrl . $page['path'], ENT_QUOTES | ENT_XML1, 'UTF-8');
+            $changefreq = htmlspecialchars($page['changefreq'], ENT_QUOTES | ENT_XML1, 'UTF-8');
+            $priority = htmlspecialchars($page['priority'], ENT_QUOTES | ENT_XML1, 'UTF-8');
+
+            $xml .= "  <url>\n";
+            $xml .= "    <loc>{$loc}</loc>\n";
+            $xml .= "    <lastmod>{$now}</lastmod>\n";
+            $xml .= "    <changefreq>{$changefreq}</changefreq>\n";
+            $xml .= "    <priority>{$priority}</priority>\n";
+            $xml .= "  </url>\n";
+        }
+
+        $xml .= "</urlset>";
+
+        http_response_code(200);
+        header('Content-Type: application/xml; charset=utf-8');
+        header('X-Robots-Tag: index, follow');
+        echo $xml;
+    }
+
+    public function robots(): void
+    {
+        $appUrl = rtrim((string) Config::get('APP_URL', 'http://localhost:8000'), '/');
+        $sitemapUrl = $appUrl . '/sitemap.xml';
+
+        $content = "User-agent: *\n";
+        $content .= "Allow: /\n";
+        $content .= "Disallow: /admin\n";
+        $content .= "Disallow: /dashboard\n";
+        $content .= "Disallow: /login\n";
+        $content .= "Disallow: /logout\n";
+        $content .= "Disallow: /forgot-password\n";
+        $content .= "Disallow: /set-password\n";
+        $content .= "Disallow: /embedded\n";
+        $content .= "Disallow: /api/\n";
+        $content .= "Sitemap: {$sitemapUrl}\n";
+
+        http_response_code(200);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo $content;
+    }
+
     public function about(): void
     {
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');

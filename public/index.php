@@ -22,6 +22,8 @@ $router->get('/faq', [PageController::class, 'faq']);
 $router->get('/pricing', [PageController::class, 'pricing']);
 $router->get('/privacy', [PageController::class, 'privacy']);
 $router->get('/terms', [PageController::class, 'terms']);
+$router->get('/sitemap.xml', [PageController::class, 'sitemap']);
+$router->get('/robots.txt', [PageController::class, 'robots']);
 $router->get('/admin/login', [AdminController::class, 'loginForm']);
 $router->post('/admin/login', [AdminController::class, 'loginSubmit']);
 $router->get('/admin/logout', [AdminController::class, 'logout']);

@@ -8,6 +8,43 @@ if ($appBasePath === '/') {
 }
 ?>
 <div class="dashboard-shell" data-app-base-path="<?= htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8') ?>" data-merchant-id="<?= htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') ?>">
+  <style>
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #EEF2FF 0%, #E0E7FF 100%);
+      border: 1px solid #CFD8FF;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+    .icon-badge svg {
+      width: 20px;
+      height: 20px;
+      stroke: #4F46E5;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;left:-9999px;overflow:hidden">
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M8 4h7l4 4v12H8z"></path><path d="M15 4v4h4"></path><path d="M10 13h7M10 17h5"></path></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><path d="M4 6h16v12H4z"></path><path d="M8 14l3-3l4 4l2-2l3 3"></path><path d="M9 9h.01"></path></symbol>
+    <symbol id="i-keyword" viewBox="0 0 24 24"><path d="M10 14a4 4 0 1 1 2.6-7l7.4 7.4l-2 2l-1.5-1.5l-1.5 1.5l-1.8-1.8"></path><path d="M8.5 10.5h.01"></path></symbol>
+    <symbol id="i-domain" viewBox="0 0 24 24"><path d="M3 12h18"></path><path d="M12 3a9 9 0 0 0 0 18"></path><path d="M12 3a9 9 0 0 1 0 18"></path><path d="M6 7.5c1.8 1 4 1.5 6 1.5s4.2-.5 6-1.5"></path><path d="M6 16.5c1.8-1 4-1.5 6-1.5s4.2.5 6 1.5"></path></symbol>
+    <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 8l1.5-4h13L20 8"></path><path d="M5 8h14v11H5z"></path><path d="M9 19v-5h6v5"></path></symbol>
+    <symbol id="i-brand" viewBox="0 0 24 24"><path d="M4 7h16v10H4z"></path><path d="M9 7V5h6v2"></path><path d="M8 12h8"></path></symbol>
+    <symbol id="i-category" viewBox="0 0 24 24"><path d="M4 4h7v7H4z"></path><path d="M13 4h7v7h-7z"></path><path d="M4 13h7v7H4z"></path><path d="M13 13h7v7h-7z"></path></symbol>
+    <symbol id="i-manage" viewBox="0 0 24 24"><path d="M12 3v4"></path><path d="M12 17v4"></path><path d="M3 12h4"></path><path d="M17 12h4"></path><path d="M6.3 6.3l2.8 2.8"></path><path d="M14.9 14.9l2.8 2.8"></path><path d="M17.7 6.3l-2.8 2.8"></path><path d="M9.1 14.9l-2.8 2.8"></path><path d="M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6z"></path></symbol>
+  </svg>
   <aside class="card dashboard-sidebar">
     <div>
       <h3 style="margin:0 0 8px;">أدوات المتجر</h3>
@@ -80,7 +117,7 @@ if ($appBasePath === '/') {
 
       <div class="grid">
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">قسم سيو المنتجات</h3>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-doc"></use></svg></span><h3 style="margin:0;">قسم سيو المنتجات</h3></div>
           <p class="muted" style="margin:0 0 12px;">تحسين وصف المنتج أو سيو المنتج أو الاثنين معًا مع مراجعة قبل الحفظ.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
             <li>بحث وفلاتر متقدمة</li>
@@ -91,7 +128,7 @@ if ($appBasePath === '/') {
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">قسم كاتب ALT للصور</h3>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-image"></use></svg></span><h3 style="margin:0;">قسم كاتب ALT للصور</h3></div>
           <p class="muted" style="margin:0 0 12px;">كتابة نص بديل احترافي للصور لتحسين الظهور في محركات البحث وتجربة المستخدم.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
             <li>تحسين صورة واحدة أو كل صور المنتج</li>
@@ -102,7 +139,7 @@ if ($appBasePath === '/') {
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">قسم الكلمات المفتاحية</h3>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-keyword"></use></svg></span><h3 style="margin:0;">قسم الكلمات المفتاحية</h3></div>
           <p class="muted" style="margin:0 0 12px;">تحليل الكلمة المستهدفة (حجم البحث، المنافسة، كلمات ذات صلة، اقتراحات).</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
             <li>اختيار الدولة واللغة ونوع المتصفح</li>
@@ -113,7 +150,7 @@ if ($appBasePath === '/') {
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">قسم سيو الدومين</h3>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-domain"></use></svg></span><h3 style="margin:0;">قسم سيو الدومين</h3></div>
           <p class="muted" style="margin:0 0 12px;">تحليل دومين المتجر ومنافسيه لفهم ترتيب الكلمات وفرص النمو.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
             <li>حفظ الدومين بشكل دائم</li>
@@ -124,7 +161,7 @@ if ($appBasePath === '/') {
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">قسم سيو المتجر</h3>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-store"></use></svg></span><h3 style="margin:0;">قسم سيو المتجر</h3></div>
           <p class="muted" style="margin:0 0 12px;">توليد أو تعديل عنوان المتجر، الوصف، والكلمات المفتاحية للموقع بالكامل.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
             <li>قراءة البيانات الحالية</li>
@@ -136,7 +173,7 @@ if ($appBasePath === '/') {
 
         <div class="card surface-soft" style="box-shadow:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h3 style="margin:0;">قسم سيو الماركات</h3>
+            <div class="card-head" style="margin-bottom:0;"><span class="icon-badge"><svg><use href="#i-brand"></use></svg></span><h3 style="margin:0;">قسم سيو الماركات</h3></div>
           </div>
           <p class="muted" style="margin:0 0 12px;">تحسين وصف الماركات التجارية و Meta Tags بالذكاء الاصطناعي.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
@@ -149,7 +186,7 @@ if ($appBasePath === '/') {
 
         <div class="card surface-soft" style="box-shadow:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h3 style="margin:0;">قسم سيو الأقسام</h3>
+            <div class="card-head" style="margin-bottom:0;"><span class="icon-badge"><svg><use href="#i-category"></use></svg></span><h3 style="margin:0;">قسم سيو الأقسام</h3></div>
           </div>
           <p class="muted" style="margin:0 0 12px;">تحسين Meta Title و Meta Description لأقسام المتجر بالذكاء الاصطناعي.</p>
           <ul style="margin:0 0 14px;padding-right:18px;line-height:1.9;">
@@ -161,7 +198,7 @@ if ($appBasePath === '/') {
         </div>
 
         <div class="card surface-soft" style="box-shadow:none;">
-          <h3 style="margin:0 0 8px;">المتابعة والإدارة</h3>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-manage"></use></svg></span><h3 style="margin:0;">المتابعة والإدارة</h3></div>
           <p class="muted" style="margin:0 0 12px;">تابع كل العمليات المنفذة، وادخل على الحساب والاشتراك والإعدادات من مكان واحد.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button class="btn btn-secondary" type="button" data-home-go="operations">سجل العمليات</button>
