@@ -77,3 +77,15 @@ CREATE TABLE IF NOT EXISTS ai_usage_logs (
   created_at DATETIME NOT NULL,
   CONSTRAINT fk_ai_usage_logs_store_id FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS dataforseo_usage_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  store_id BIGINT UNSIGNED NOT NULL,
+  mode VARCHAR(50) NULL,
+  target VARCHAR(255) NULL,
+  requests_count INT NOT NULL DEFAULT 0,
+  total_cost_usd DECIMAL(12,6) NOT NULL DEFAULT 0,
+  details_json LONGTEXT NULL,
+  created_at DATETIME NOT NULL,
+  CONSTRAINT fk_dataforseo_usage_logs_store_id FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+);

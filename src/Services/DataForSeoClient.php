@@ -14,6 +14,8 @@ final class DataForSeoClient
     private HttpClient $http;
     private string $login;
     private string $password;
+    /** @var array<int, array<string, mixed>> */
+    private array $usageEvents = [];
 
     public function __construct(?HttpClient $http = null)
     {
@@ -24,6 +26,7 @@ final class DataForSeoClient
 
     public function keywordOverview(string $keyword, string $device = 'desktop', string $country = 'sa', ?string $language = null): array
     {
+        $this->usageEvents = [];
         $this->assertCredentials();
 
         $normalizedKeyword = trim($keyword);
@@ -103,12 +106,14 @@ final class DataForSeoClient
             'serp' => $serp,
             'related_keywords' => $relatedKeywords,
             'keyword_suggestions' => $keywordSuggestions,
+            '_usage' => $this->usageSummary(),
             'fetched_at' => date(DATE_ATOM),
         ];
     }
 
     public function domainOverview(string $domain, string $device = 'desktop'): array
     {
+        $this->usageEvents = [];
         $this->assertCredentials();
 
         $normalizedDomain = $this->normalizeDomain($domain);
@@ -156,6 +161,7 @@ final class DataForSeoClient
             'competitors' => $competitors,
             'top_keywords' => array_slice($allKeywords, 0, 12),
             'all_keywords' => $allKeywords,
+            '_usage' => $this->usageSummary(),
             'fetched_at' => date(DATE_ATOM),
         ];
     }
@@ -182,7 +188,65 @@ final class DataForSeoClient
             throw new RuntimeException($message);
         }
 
+        $this->usageEvents[] = [
+            'endpoint' => $path,
+            'cost_usd' => $this->extractResponseCostUsd($body),
+        ];
+
         return $body;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function usageSummary(): array
+    {
+        $requestsCount = count($this->usageEvents);
+        $totalCost = 0.0;
+        $byEndpoint = [];
+
+        foreach ($this->usageEvents as $event) {
+            $endpoint = (string) ($event['endpoint'] ?? 'unknown');
+            $cost = (float) ($event['cost_usd'] ?? 0);
+            $totalCost += $cost;
+
+            if (!isset($byEndpoint[$endpoint])) {
+                $byEndpoint[$endpoint] = [
+                    'endpoint' => $endpoint,
+                    'requests_count' => 0,
+                    'total_cost_usd' => 0.0,
+                ];
+            }
+
+            $byEndpoint[$endpoint]['requests_count']++;
+            $byEndpoint[$endpoint]['total_cost_usd'] += $cost;
+        }
+
+        return [
+            'provider' => 'dataforseo',
+            'requests_count' => $requestsCount,
+            'total_cost_usd' => round($totalCost, 6),
+            'by_endpoint' => array_values(array_map(static function (array $row): array {
+                $row['total_cost_usd'] = round((float) ($row['total_cost_usd'] ?? 0), 6);
+                return $row;
+            }, $byEndpoint)),
+        ];
+    }
+
+    private function extractResponseCostUsd(array $body): float
+    {
+        $totalCost = 0.0;
+        $tasks = array_values(array_filter((array) ($body['tasks'] ?? []), 'is_array'));
+
+        foreach ($tasks as $task) {
+            $totalCost += (float) ($task['cost'] ?? 0);
+        }
+
+        if ($totalCost <= 0.0) {
+            $totalCost = (float) ($body['cost'] ?? 0);
+        }
+
+        return round($totalCost, 6);
     }
 
     private function assertCredentials(): void

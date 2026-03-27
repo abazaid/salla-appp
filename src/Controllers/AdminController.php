@@ -72,6 +72,9 @@ HTML));
         $aiUsage = $repository->aiUsageSummary();
         $aiUsageByMode = $repository->aiUsageSummaryByMode();
         $aiUsageLogs = $repository->listAiUsageLogs(200);
+        $dataForSeoUsage = $repository->dataForSeoUsageSummary();
+        $dataForSeoUsageByMode = $repository->dataForSeoUsageSummaryByMode();
+        $dataForSeoUsageLogs = $repository->listDataForSeoUsageLogs(200);
         $stores = array_slice($repository->listStores(), 0, 6);
         $rows = '';
 
@@ -103,10 +106,14 @@ HTML));
     <div class="card"><h2>الاستهلاك</h2><p>{$stats['total_used']} / {$stats['total_quota']}</p></div>
     <div class="card"><h2>تكلفة OpenAI</h2><p>$ {$aiUsage['total_cost_usd']}</p></div>
     <div class="card"><h2>AI Runs</h2><p>{$aiUsage['runs_count']}</p></div>
+    <div class="card"><h2>تكلفة DataForSEO</h2><p>$ {$dataForSeoUsage['total_cost_usd']}</p></div>
+    <div class="card"><h2>DataForSEO Requests</h2><p>{$dataForSeoUsage['requests_count']}</p></div>
   </div>
   {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI حسب نوع التوليد')}
   {$this->renderAiPricingTypeSummaryCard($aiUsageByMode, 'ملخص التسعير لكل نوع')}
   {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية AI')}
+  {$this->renderDataForSeoUsageByModeCard($dataForSeoUsageByMode, 'تكلفة DataForSEO حسب نوع العملية')}
+  {$this->renderDataForSeoUsageLogsCard($dataForSeoUsageLogs, 'تفاصيل تكلفة كل عملية DataForSEO')}
   <div class="card" style="margin-top:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
       <h2>آخر المتاجر</h2>
@@ -236,6 +243,9 @@ HTML));
         $aiUsage = $repository->storeAiUsageSummary($storeId);
         $aiUsageByMode = $repository->storeAiUsageSummaryByMode($storeId);
         $aiUsageLogs = $repository->listStoreAiUsageLogs($storeId, 200);
+        $dataForSeoUsage = $repository->storeDataForSeoUsageSummary($storeId);
+        $dataForSeoUsageByMode = $repository->storeDataForSeoUsageSummaryByMode($storeId);
+        $dataForSeoUsageLogs = $repository->listStoreDataForSeoUsageLogs($storeId, 200);
 
         Response::html(View::render('Admin Store', <<<HTML
 <div class="card">
@@ -251,10 +261,13 @@ HTML));
     <div class="card"><h2>الباقة</h2><p>{$planName}</p></div>
     <div class="card"><h2>الاستهلاك</h2><p>{$used} / {$quota}</p></div>
     <div class="card"><h2>تكلفة OpenAI</h2><p>$ {$aiUsage['total_cost_usd']}</p></div>
+    <div class="card"><h2>تكلفة DataForSEO</h2><p>$ {$dataForSeoUsage['total_cost_usd']}</p></div>
   </div>
   {$this->renderAiUsageByModeCard($aiUsageByMode, 'تكلفة OpenAI لهذا المتجر حسب النوع')}
   {$this->renderAiPricingTypeSummaryCard($aiUsageByMode, 'ملخص التسعير لهذا المتجر حسب النوع')}
   {$this->renderAiUsageLogsCard($aiUsageLogs, 'تفاصيل تكلفة كل عملية لهذا المتجر')}
+  {$this->renderDataForSeoUsageByModeCard($dataForSeoUsageByMode, 'تكلفة DataForSEO لهذا المتجر حسب النوع')}
+  {$this->renderDataForSeoUsageLogsCard($dataForSeoUsageLogs, 'تفاصيل تكلفة DataForSEO لهذا المتجر')}
     <div class="card" style="margin-top:16px;">
     <h2>تعديل الاشتراك</h2>
     <form method="post" id="subscription-form">
@@ -724,6 +737,105 @@ HTML));
             . '<h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2>'
             . '<p class="muted">هذا الملخص يساعدك في التسعير لاحقًا بحسب كل نوع توليد.</p>'
             . '<div class="grid" style="margin-top:12px;">' . $cards . '</div>'
+            . '</div>';
+    }
+
+    private function renderDataForSeoUsageByModeCard(array $rows, string $title): string
+    {
+        if ($rows === []) {
+            return '<div class="card" style="margin-top:16px;"><h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2><p class="muted">لا توجد بيانات تكلفة DataForSEO بعد.</p></div>';
+        }
+
+        $tableRows = '';
+        $totalRuns = 0;
+        $totalRequests = 0;
+        $totalCost = 0.0;
+
+        foreach ($rows as $row) {
+            $label = htmlspecialchars((string) ($row['label'] ?? $row['mode'] ?? '-'), ENT_QUOTES, 'UTF-8');
+            $runs = (int) ($row['runs_count'] ?? 0);
+            $requestsCount = (int) ($row['requests_count'] ?? 0);
+            $cost = (float) ($row['total_cost_usd'] ?? 0);
+
+            $totalRuns += $runs;
+            $totalRequests += $requestsCount;
+            $totalCost += $cost;
+
+            $tableRows .= '<tr>'
+                . '<td style="padding:10px;">' . $label . '</td>'
+                . '<td style="padding:10px;">' . number_format($runs) . '</td>'
+                . '<td style="padding:10px;">' . number_format($requestsCount) . '</td>'
+                . '<td style="padding:10px;">$ ' . $this->formatUsd($cost) . '</td>'
+                . '</tr>';
+        }
+
+        $footer = '<tr style="font-weight:700;background:#EEF2FF;">'
+            . '<td style="padding:10px;">الإجمالي</td>'
+            . '<td style="padding:10px;">' . number_format($totalRuns) . '</td>'
+            . '<td style="padding:10px;">' . number_format($totalRequests) . '</td>'
+            . '<td style="padding:10px;">$ ' . $this->formatUsd($totalCost) . '</td>'
+            . '</tr>';
+
+        return '<div class="card" style="margin-top:16px;">'
+            . '<h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2>'
+            . '<table style="width:100%;border-collapse:collapse;margin-top:12px;">'
+            . '<thead><tr>'
+            . '<th style="text-align:right;padding:10px;">النوع</th>'
+            . '<th style="text-align:right;padding:10px;">عدد العمليات</th>'
+            . '<th style="text-align:right;padding:10px;">عدد طلبات API</th>'
+            . '<th style="text-align:right;padding:10px;">التكلفة (USD)</th>'
+            . '</tr></thead>'
+            . '<tbody>' . $tableRows . $footer . '</tbody>'
+            . '</table>'
+            . '</div>';
+    }
+
+    private function renderDataForSeoUsageLogsCard(array $rows, string $title): string
+    {
+        if ($rows === []) {
+            return '<div class="card" style="margin-top:16px;"><h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2><p class="muted">لا توجد عمليات DataForSEO مسجلة بعد.</p></div>';
+        }
+
+        $modeLabels = [
+            'keyword_research' => 'بحث الكلمات المفتاحية',
+            'domain_seo' => 'تحليل سيو دومين',
+            'unknown' => 'غير مصنف',
+        ];
+
+        $tableRows = '';
+        foreach ($rows as $row) {
+            $mode = (string) ($row['mode'] ?? 'unknown');
+            $label = $modeLabels[$mode] ?? $mode;
+            $storeName = (string) ($row['store_name'] ?? '-');
+            $merchantId = (string) ($row['merchant_id'] ?? '-');
+            $target = (string) ($row['target'] ?? '-');
+            $requestsCount = number_format((int) ($row['requests_count'] ?? 0));
+            $cost = (float) ($row['total_cost_usd'] ?? 0);
+            $createdAt = (string) ($row['created_at'] ?? '-');
+
+            $tableRows .= '<tr>'
+                . '<td style="padding:10px;">' . htmlspecialchars($createdAt, ENT_QUOTES, 'UTF-8') . '</td>'
+                . '<td style="padding:10px;">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</td>'
+                . '<td style="padding:10px;">' . htmlspecialchars($storeName, ENT_QUOTES, 'UTF-8') . '<br><code>' . htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') . '</code></td>'
+                . '<td style="padding:10px;"><code>' . htmlspecialchars($target, ENT_QUOTES, 'UTF-8') . '</code></td>'
+                . '<td style="padding:10px;">' . $requestsCount . '</td>'
+                . '<td style="padding:10px;">$ ' . $this->formatUsd($cost) . '</td>'
+                . '</tr>';
+        }
+
+        return '<div class="card" style="margin-top:16px;">'
+            . '<h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2>'
+            . '<table style="width:100%;border-collapse:collapse;margin-top:12px;">'
+            . '<thead><tr>'
+            . '<th style="text-align:right;padding:10px;">الوقت</th>'
+            . '<th style="text-align:right;padding:10px;">نوع العملية</th>'
+            . '<th style="text-align:right;padding:10px;">المتجر</th>'
+            . '<th style="text-align:right;padding:10px;">القيمة المدخلة</th>'
+            . '<th style="text-align:right;padding:10px;">عدد طلبات API</th>'
+            . '<th style="text-align:right;padding:10px;">التكلفة (USD)</th>'
+            . '</tr></thead>'
+            . '<tbody>' . $tableRows . '</tbody>'
+            . '</table>'
             . '</div>';
     }
 

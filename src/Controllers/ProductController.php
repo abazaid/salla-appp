@@ -1145,12 +1145,26 @@ final class ProductController
         }
 
         try {
-            $result = (new DataForSeoClient())->keywordOverview(
+            $dataForSeoClient = new DataForSeoClient();
+            $result = $dataForSeoClient->keywordOverview(
                 $keyword,
                 $device,
                 $country,
                 $language
             );
+            $dataForSeoUsage = (array) ($result['_usage'] ?? []);
+
+            if (Database::isAvailable()) {
+                $dbStore = (new SaaSRepository())->findStoreByMerchantId((int) ($store['merchant_id'] ?? 0));
+                if ($dbStore) {
+                    (new SaaSRepository())->logDataForSeoUsage(
+                        (int) $dbStore['id'],
+                        $keyword,
+                        'keyword_research',
+                        $dataForSeoUsage
+                    );
+                }
+            }
 
             $historyEntry = [
                 'searched_at' => date(DATE_ATOM),
@@ -1168,6 +1182,7 @@ final class ProductController
                 'success' => true,
                 'merchant_id' => $store['merchant_id'] ?? null,
                 'keyword_data' => $result,
+                'usage_cost' => $dataForSeoUsage,
                 'history_entry' => $historyEntry,
             ]);
         } catch (\Throwable $exception) {
@@ -1332,7 +1347,21 @@ final class ProductController
         }
 
         try {
-            $result = (new DataForSeoClient())->domainOverview($domain, $device);
+            $dataForSeoClient = new DataForSeoClient();
+            $result = $dataForSeoClient->domainOverview($domain, $device);
+            $dataForSeoUsage = (array) ($result['_usage'] ?? []);
+
+            if (Database::isAvailable()) {
+                $dbStore = (new SaaSRepository())->findStoreByMerchantId((int) ($store['merchant_id'] ?? 0));
+                if ($dbStore) {
+                    (new SaaSRepository())->logDataForSeoUsage(
+                        (int) $dbStore['id'],
+                        $domain,
+                        'domain_seo',
+                        $dataForSeoUsage
+                    );
+                }
+            }
 
             $refreshCount = (int) ($existing['refresh_count'] ?? 0) + 1;
             $settings['domain_seo'] = array_merge($existing, [
@@ -1366,6 +1395,7 @@ final class ProductController
                 'success' => true,
                 'message' => 'تم تحديث بيانات سيو الدومين.',
                 'domain_seo' => $settings['domain_seo'],
+                'usage_cost' => $dataForSeoUsage,
                 'history_entry' => $historyEntry,
             ]);
         } catch (\Throwable $exception) {
