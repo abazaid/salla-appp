@@ -37,6 +37,8 @@ if ($appBasePath === '/') {
   </aside>
 
   <main class="panel-stack">
+    <div id="business-reminder-banner" style="display:none;"></div>
+
     <section id="section-home" data-app-section="home" class="panel-stack">
       <div class="card">
         <div class="section-head">
@@ -49,6 +51,16 @@ if ($appBasePath === '/') {
             </p>
           </div>
         </div>
+      </div>
+
+      <div class="card surface-soft" style="box-shadow:none;">
+        <h3 style="margin:0 0 10px;">كيف يبني السيو الزيارات خطوة بخطوة؟</h3>
+        <p class="muted" style="margin:0 0 12px;line-height:1.9;">
+          السيو عملية تراكمية، وكل تحديث صحيح يضيف نتيجة جديدة فوق السابقة. من أهم العوامل: محتوى مميز يخدم العميل، قيمة حقيقية
+          في وصف المنتجات، وتنفيذ منظم لعناصر SEO. منصة RankX SEO تساعدك على تطبيق هذه العوامل بشكل عملي ومستمر من لوحة واحدة،
+          لذلك يتحسن الظهور وتزيد الزيارات تدريجيًا مع الوقت.
+        </p>
+        <img src="https://rankxseo.com/wp-content/uploads/2024/07/باك-لينك-سيو-خدمات-backlinks.gif" alt="رسم يوضح نمو الزيارات تدريجيًا نتيجة تحسينات السيو المتراكمة" loading="lazy" style="display:block;width:100%;max-width:860px;height:auto;margin:0 auto;border-radius:14px;border:1px solid rgba(202,177,149,.35);">
       </div>
 
       <div class="grid">

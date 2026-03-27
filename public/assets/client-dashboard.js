@@ -165,6 +165,92 @@
     }
   };
 
+  const BUSINESS_REMINDER_INTERVAL_MS = 2 * 24 * 60 * 60 * 1000;
+
+  function getBusinessReminderStorageKey() {
+    return `rankx_business_reminder_last_seen_${merchantId || 'default'}`;
+  }
+
+  function getBusinessReminderLastSeen() {
+    try {
+      const value = Number(localStorage.getItem(getBusinessReminderStorageKey()) || 0);
+      return Number.isFinite(value) ? value : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  function setBusinessReminderLastSeen(timestamp = Date.now()) {
+    try {
+      localStorage.setItem(getBusinessReminderStorageKey(), String(timestamp));
+    } catch (error) {
+      // Ignore localStorage write errors.
+    }
+  }
+
+  function hasBusinessProfileData(settings = {}) {
+    const brandName = String(settings.business_brand_name || '').trim();
+    const overview = String(settings.business_overview || '').trim();
+    return brandName !== '' && overview !== '';
+  }
+
+  function hideBusinessReminder() {
+    const root = document.getElementById('business-reminder-banner');
+    if (!root) return;
+    root.style.display = 'none';
+    root.innerHTML = '';
+  }
+
+  function showBusinessReminder(settings = {}) {
+    const root = document.getElementById('business-reminder-banner');
+    if (!root) return;
+
+    if (hasBusinessProfileData(settings)) {
+      hideBusinessReminder();
+      return;
+    }
+
+    const now = Date.now();
+    const lastSeen = getBusinessReminderLastSeen();
+    if (lastSeen > 0 && now - lastSeen < BUSINESS_REMINDER_INTERVAL_MS) {
+      hideBusinessReminder();
+      return;
+    }
+
+    setBusinessReminderLastSeen(now);
+    root.style.display = '';
+    root.innerHTML = `
+      <div class="card" style="border:1px solid #FCD34D;background:#FFFBEB;margin-bottom:12px;box-shadow:none;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div class="pill" style="background:#FEF3C7;color:#92400E;">تنبيه مهم</div>
+            <h3 style="margin:10px 0 6px;color:#78350F;">يفضّل تحديث بيانات النشاط التجاري عند أول استخدام</h3>
+            <p style="margin:0;color:#92400E;line-height:1.8;">
+              أضف اسم المتجر/البراند ووصف نشاطك التجاري مرة واحدة داخل إعدادات السيو العامة، حتى تكون نتائج التوليد أدق وأكثر اتساقًا.
+            </p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="business-reminder-go" class="btn btn-sky" type="button">تحديث الآن</button>
+            <button id="business-reminder-close" class="btn btn-secondary" type="button">إخفاء</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const goButton = document.getElementById('business-reminder-go');
+    const closeButton = document.getElementById('business-reminder-close');
+
+    goButton?.addEventListener('click', () => {
+      setBusinessReminderLastSeen(Date.now());
+      switchSection('seo-settings');
+    });
+
+    closeButton?.addEventListener('click', () => {
+      setBusinessReminderLastSeen(Date.now());
+      hideBusinessReminder();
+    });
+  }
+
   function readSettingValue(primaryId, secondaryId, fallback = '') {
     const primary = document.getElementById(primaryId)?.value;
     if (typeof primary === 'string' && primary !== '') return primary;
@@ -1396,6 +1482,7 @@
       }
 
       fillOptimizationSettings(data.settings || payload);
+      showBusinessReminder(data.settings || payload);
       setOptimizationSettingsAlert('success', normalizeApiMessage(data.message, 'تم حفظ إعدادات التحسين.'));
     } catch (error) {
       setOptimizationSettingsAlert('error', 'حدث خطأ أثناء حفظ إعدادات التحسين.');
@@ -2988,6 +3075,7 @@
       }
 
       fillOptimizationSettings(data.settings || payload);
+      showBusinessReminder(data.settings || payload);
       setOptimizationSettingsAlert('success', normalizeApiMessage(data.message, 'تم حفظ إعدادات التحسين.'), source);
     } catch (error) {
       setOptimizationSettingsAlert('error', 'حدث خطأ أثناء حفظ إعدادات التحسين.', source);
@@ -3474,9 +3562,11 @@
       if (!data.success) {
         const message = normalizeApiMessage(data.message, 'تعذر جلب إعدادات السيو العامة.');
         setOptimizationSettingsAlert('error', message, 'global');
+        showBusinessReminder({});
         return;
       }
       fillOptimizationSettings(data.settings || {});
+      showBusinessReminder(data.settings || {});
       setOptimizationSettingsAlert('', '', 'global');
     } catch (error) {
       setOptimizationSettingsAlert('error', 'تعذر جلب إعدادات السيو العامة.', 'global');
@@ -3523,6 +3613,7 @@
       }
 
       fillOptimizationSettings(data.settings || payload);
+      showBusinessReminder(data.settings || payload);
       setOptimizationSettingsAlert('success', normalizeApiMessage(data.message, 'تم حفظ إعدادات السيو العامة.'), 'global');
     } catch (error) {
       setOptimizationSettingsAlert('error', 'حدث خطأ أثناء حفظ إعدادات السيو العامة.', 'global');
@@ -3542,6 +3633,7 @@
   renderKeywordResults(null);
   renderDomainSeoResults(null);
   loadProducts();
+  showBusinessReminder({});
   loadOptimizationSettings();
   loadOperations();
   loadStoreSeo();

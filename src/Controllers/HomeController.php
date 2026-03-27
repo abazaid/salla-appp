@@ -298,6 +298,19 @@ final class HomeController
     </div>
 
     <section class="surface section">
+      <h2>كيف تزيد الزيارات مع السيو التراكمي؟</h2>
+      <p>
+        السيو ليس خطوة واحدة، بل عملية متراكمة تُبنى مع الوقت. كل تحسين صغير في المحتوى وجودته، وفهم نية الباحث، وتنظيم الصفحة،
+        يضيف أثرًا فوق الأثر السابق. أهم عوامل النمو: محتوى مميز ومفيد فعليًا للعميل، وصف واضح للمنتجات، وعناصر SEO دقيقة.
+        منصة RankX SEO توفر هذه العناصر في مكان واحد وتحوّلها إلى تنفيذ عملي مستمر، لذلك تظهر النتائج بشكل تدريجي وتزداد الزيارات
+        مع الاستمرار.
+      </p>
+      <div class="card surface-soft" style="box-shadow:none;margin-top:12px;">
+        <img src="https://rankxseo.com/wp-content/uploads/2024/07/باك-لينك-سيو-خدمات-backlinks.gif" alt="مخطط يوضح نمو الزيارات تدريجيًا مع تطبيق تحسينات السيو التراكمية" loading="lazy" style="display:block;width:100%;max-width:860px;height:auto;margin:0 auto;border-radius:14px;border:1px solid var(--border);">
+      </div>
+    </section>
+
+    <section class="surface section">
       <h2>الخدمات الأساسية داخل RankX SEO</h2>
       <p>كل خدمة مصممة لتدعم قرارًا تجاريًا واضحًا: جذب زيارات أعلى، رفع جودة الصفحة، وتحويل الزائر إلى عميل.</p>
       <div class="grid">
