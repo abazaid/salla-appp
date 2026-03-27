@@ -22,11 +22,11 @@ if ($appBasePath === '/') {
       <button type="button" class="sidebar-link" data-section-target="keywords">الكلمات المفتاحية</button>
       <button type="button" class="sidebar-link" data-section-target="domain-seo">سيو الدومين</button>
       <button type="button" class="sidebar-link" data-section-target="store-seo">سيو المتجر</button>
-      <button type="button" class="sidebar-link" data-section-target="brand-seo">
+      <button type="button" class="sidebar-link has-note" data-section-target="brand-seo">
         <span>سيو الماركات</span>
         <span id="sidebar-note-brand" class="sidebar-lock-note" style="display:none;"></span>
       </button>
-      <button type="button" class="sidebar-link" data-section-target="category-seo">
+      <button type="button" class="sidebar-link has-note" data-section-target="category-seo">
         <span>سيو الأقسام</span>
         <span id="sidebar-note-category" class="sidebar-lock-note" style="display:none;"></span>
       </button>

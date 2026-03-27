@@ -70,7 +70,7 @@ final class ProductController
         }
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
-        $settings = $store['settings'] ?? [];
+        $settings = $this->normalizeOptimizationSettings((array) ($store['settings'] ?? []));
         $input = Request::input();
         $mode = $this->normalizeMode((string) ($input['mode'] ?? 'all'));
         $subscriptionManager = new SubscriptionManager();
@@ -459,7 +459,7 @@ final class ProductController
         }
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
-        $settings = $store['settings'] ?? [];
+        $settings = $this->normalizeOptimizationSettings((array) ($store['settings'] ?? []));
 
         if (!$accessToken) {
             Response::json([
@@ -662,7 +662,7 @@ final class ProductController
         }
 
         $accessToken = $store['token_payload']['access_token'] ?? null;
-        $settings = $store['settings'] ?? [];
+        $settings = $this->normalizeOptimizationSettings((array) ($store['settings'] ?? []));
 
         if (!$accessToken) {
             Response::json([
@@ -2039,9 +2039,9 @@ final class ProductController
             'meta_title_instructions' => "🏷️ Meta Title\nالمطلوب:\n- 50-60 حرف\n- يبدأ باسم المنتج\n\nالصيغة: اسم المنتج + الفئة + ميزة قوية\n\nمثال (ملابس):\nفستان سهرة ساتان نسائي تصميم أنيق وقصة مريحة\n\nمثال (إلكترونيات):\nسماعة بلوتوث لاسلكية بجودة صوت عالية وعمر بطارية طويل\n\nتجنب:\n- التكرار\n- الكلمات المبالغ فيها\n- الحشو",
             'meta_description_instructions' => "📝 Meta Description\nالمطلوب:\n- 140-155 حرف\n- يحتوي اسم المنتج\n- يحفّز على الشراء\n\nالصيغة: اشتري + المنتج + ميزة + فائدة + عنصر ثقة\n\nمثال (ملابس):\nاشتري فستان سهرة ساتان نسائي بتصميم أنيق وخامة ناعمة مريحة. مثالي للمناسبات ويوفر لك إطلالة راقية بجودة عالية.\n\nمثال (إلكترونيات):\nاشتري سماعة بلوتوث لاسلكية بصوت واضح ونقي مع عزل ضوضاء متقدم. بطارية تدوم 24 ساعة وشحن سريع عبر USB-C.\n\nتجنب:\n- التكرار\n- الكلمات المبالغ فيها\n- الحشو",
             'image_alt_instructions' => "🖼️ ALT للصور - القاعدة الذهبية:\n\"كل نوع له زاوية بيع مختلفة\"\n\nأمثلة حسب نوع المنتج:\n• ملابس: \"صورة فستان سهرة نسائي ساتان أرجواني، تصميم سهرة أنيق\"\n• إلكترونيات: \"سماعة بلوتوث لاسلكية بيضاء مع علبة شحن\"\n• تجميلي: \"عبوة كريم مرطب للوجه 50ml بتركيبة فيتامين E\"\n\nالقواعد:\n- دقيق: يصف الصورة بشكل صحيح\n- طبيعي: يبدو كجملة عادية\n- واضح: يفهم منه محتوى الصورة\n- يتضمن اسم المنتج عند الإمكان\n- 70-125 حرف تقريبًا",
-            'store_seo_instructions' => '',
-            'brand_seo_instructions' => '',
-            'category_seo_instructions' => '',
+            'store_seo_instructions' => $this->getDefaultStoreSeoInstructions(),
+            'brand_seo_instructions' => $this->getDefaultBrandSeoInstructions(),
+            'category_seo_instructions' => $this->getDefaultCategorySeoInstructions(),
             'business_brand_name' => '',
             'business_overview' => '',
             'sitemap_url' => '',
@@ -2062,15 +2062,255 @@ final class ProductController
             'meta_title_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_title_instructions'] ?? $defaults['meta_title_instructions']), 3000),
             'meta_description_instructions' => $this->normalizeOptimizationText((string) ($settings['meta_description_instructions'] ?? $defaults['meta_description_instructions']), 3000),
             'image_alt_instructions' => $this->normalizeOptimizationText((string) ($settings['image_alt_instructions'] ?? $defaults['image_alt_instructions']), 3000),
-            'store_seo_instructions' => $this->normalizeOptimizationText((string) ($settings['store_seo_instructions'] ?? ''), 5000),
-            'brand_seo_instructions' => $this->normalizeOptimizationText((string) ($settings['brand_seo_instructions'] ?? ''), 3000),
-            'category_seo_instructions' => $this->normalizeOptimizationText((string) ($settings['category_seo_instructions'] ?? ''), 3000),
+            'store_seo_instructions' => $this->normalizeOptimizationText($this->pickInstructionWithDefault($settings, 'store_seo_instructions', (string) $defaults['store_seo_instructions']), 5000),
+            'brand_seo_instructions' => $this->normalizeOptimizationText($this->pickInstructionWithDefault($settings, 'brand_seo_instructions', (string) $defaults['brand_seo_instructions']), 3000),
+            'category_seo_instructions' => $this->normalizeOptimizationText($this->pickInstructionWithDefault($settings, 'category_seo_instructions', (string) $defaults['category_seo_instructions']), 3000),
             'business_brand_name' => $this->normalizeOptimizationText((string) ($settings['business_brand_name'] ?? ''), 160),
             'business_overview' => $this->normalizeOptimizationText((string) ($settings['business_overview'] ?? ''), 1500),
             'sitemap_url' => $this->normalizeSitemapUrl((string) ($settings['sitemap_url'] ?? '')),
             'sitemap_links_count' => (int) ($settings['sitemap_links_count'] ?? count($sitemapLinksCache)),
             'sitemap_last_fetched_at' => (string) ($settings['sitemap_last_fetched_at'] ?? ''),
         ];
+    }
+
+    private function pickInstructionWithDefault(array $settings, string $key, string $default): string
+    {
+        $value = trim((string) ($settings[$key] ?? ''));
+        return $value !== '' ? $value : $default;
+    }
+
+    private function getDefaultStoreSeoInstructions(): string
+    {
+        return <<<'TEXT'
+تعليمات سيو المتجر 
+🎯 الهدف:
+إنشاء محتوى الصفحة الرئيسية لمتجر إلكتروني بطريقة محسنة لمحركات البحث وتزيد معدل التحويل.
+
+🧠 آلية العمل:
+اقرأ بيانات المتجر (اسم، فئات، منتجات)، واستنتج:
+- النشاط
+- الفئة المستهدفة
+- الكلمات المفتاحية الأساسية
+
+━━━━━━━━━━━━━━━
+
+✍️ القواعد:
+
+✔️ اجمع بين SEO + التسويق
+✔️ ركز على الفائدة
+✔️ استخدم كلمات طبيعية
+
+🚫 تجنب:
+- الحشو
+- الكلام العام
+- تكرار نفس الجمل
+
+━━━━━━━━━━━━━━━
+
+🧱 المطلوب:
+
+1️⃣ Meta Title
+- يحتوي:
+اسم المتجر + النشاط + ميزة
+
+2️⃣ Meta Description
+- وصف المتجر + ميزة + CTA
+
+3️⃣ Hero Title
+- جملة قوية تحتوي الكلمة المفتاحية
+
+4️⃣ Hero Description
+- ماذا يقدم المتجر + لماذا تختاره
+
+5️⃣ Sections:
+- الفئات
+- لماذا نحن
+- المنتجات المميزة
+
+6️⃣ SEO Paragraph (150–300 كلمة)
+- كلمات أساسية + طويلة + محلية
+
+7️⃣ CTA
+
+━━━━━━━━━━━━━━━
+
+📤 المخرجات:
+
+Meta Title:
+...
+
+Meta Description:
+...
+
+Hero Title:
+...
+
+Hero Description:
+...
+
+Sections:
+...
+
+SEO Paragraph:
+...
+
+CTA:
+...
+TEXT;
+    }
+
+    private function getDefaultBrandSeoInstructions(): string
+    {
+        return <<<'TEXT'
+تعليمات سيو الماركات 
+🎯 الهدف:
+إنشاء صفحة SEO لبراند داخل متجر إلكتروني بهدف السيطرة على نتائج البحث الخاصة بالبراند.
+
+🧠 آلية العمل:
+اقرأ بيانات البراند والمنتجات المرتبطة به واستنتج:
+- نوع المنتجات
+- شهرة البراند
+- نية البحث (شراء / معلومات)
+
+━━━━━━━━━━━━━━━
+
+✍️ القواعد:
+
+✔️ ركز على اسم البراند + نوع المنتجات
+✔️ اجعل الصفحة مرجع للبراند
+✔️ اكتب محتوى مفيد وليس تسويقي فقط
+
+🚫 تجنب:
+- معلومات غير مؤكدة
+- مبالغة
+- حشو
+
+━━━━━━━━━━━━━━━
+
+🧱 المطلوب:
+
+1️⃣ Meta Title
+- اسم البراند + نوع المنتجات + ميزة
+
+2️⃣ Meta Description
+- تعريف + فائدة + CTA
+
+3️⃣ H1
+- اسم البراند + الفئة
+
+4️⃣ وصف البراند (300–600 كلمة)
+يشمل:
+- تعريف بالبراند
+- نوع المنتجات
+- لماذا مميز
+- الفئة المستهدفة
+
+5️⃣ لماذا تختار هذا البراند
+- نقاط واضحة
+
+6️⃣ منتجات البراند
+- وصف يدعم SEO
+
+7️⃣ FAQ (3–5 أسئلة)
+
+━━━━━━━━━━━━━━━
+
+📤 المخرجات:
+
+Meta Title:
+...
+
+Meta Description:
+...
+
+H1:
+...
+
+Brand Description:
+...
+
+Why This Brand:
+...
+
+FAQ:
+...
+TEXT;
+    }
+
+    private function getDefaultCategorySeoInstructions(): string
+    {
+        return <<<'TEXT'
+تعليمات سيو الأقسام 
+🎯 الهدف:
+إنشاء محتوى SEO احترافي لصفحات الأقسام في متجر إلكتروني يركز على رفع الترتيب في Google وزيادة المبيعات.
+
+🧠 آلية العمل:
+اقرأ بيانات المتجر (الفئات، المنتجات، الأسماء، الوصف) واستنتج:
+- نوع القسم
+- الكلمات المفتاحية الأساسية
+- نية البحث (شراء / تصفح / مقارنة)
+
+━━━━━━━━━━━━━━━
+
+✍️ القواعد:
+
+✔️ ركز على الكلمة المفتاحية الرئيسية للقسم
+✔️ استخدم كلمات طويلة (Long-tail)
+✔️ اكتب محتوى يخدم قرار الشراء
+✔️ النص يكون طبيعي بدون حشو
+
+🚫 تجنب:
+- تكرار اسم المتجر
+- كتابة محتوى عام
+- حشو كلمات مفتاحية
+- نسخ محتوى
+
+━━━━━━━━━━━━━━━
+
+🧱 المطلوب:
+
+1️⃣ Meta Title
+- 50–60 حرف
+- الصيغة:
+اسم القسم + ميزة + موقع (اختياري) + | اسم المتجر (اختياري)
+
+2️⃣ Meta Description
+- 140–155 حرف
+- يحتوي:
+الكلمة + فائدة + CTA
+
+3️⃣ H1
+- يحتوي الكلمة المفتاحية فقط (بدون اسم المتجر)
+
+4️⃣ وصف القسم (200–400 كلمة)
+يجب أن يحتوي:
+- تعريف واضح
+- أنواع المنتجات
+- كيف يختار العميل
+- استخدام الكلمات المفتاحية بشكل طبيعي
+
+5️⃣ FAQ (3–5 أسئلة)
+- أسئلة حقيقية من نية البحث
+
+━━━━━━━━━━━━━━━
+
+📤 المخرجات:
+
+Meta Title:
+...
+
+Meta Description:
+...
+
+H1:
+...
+
+Description:
+...
+
+FAQ:
+...
+TEXT;
     }
 
     private function normalizeSitemapUrl(string $value): string

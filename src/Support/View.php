@@ -257,6 +257,12 @@ final class View
       color: #fff;
       box-shadow: var(--glow-primary);
     }
+    .sidebar-link.has-note {
+      display: grid;
+      grid-template-columns: 1fr;
+      justify-items: start;
+      gap: 4px;
+    }
     .sidebar-link.is-disabled {
       opacity: .65;
       cursor: not-allowed;
@@ -281,6 +287,10 @@ final class View
       font-weight: 700;
       line-height: 1.6;
       white-space: nowrap;
+    }
+    .sidebar-link.is-active .sidebar-lock-note {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
     }
     .section-head {
       display: flex;
