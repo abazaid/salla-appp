@@ -28,18 +28,19 @@ final class HomeController
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap">
-  <title>RankX SEO | منصة احترافية لتحسين محتوى متاجر سلة</title>
-  <meta name="description" content="منصة RankX SEO تساعدك على تحسين وصف المنتجات، سيو المنتجات، النص البديل ALT للصور، وتحليل الكلمات المفتاحية والدومين لمتاجر سلة عبر لوحة واحدة احترافية.">
+  <title>تحسين محركات البحث سلة | تطبيق سيو سلة لزيادة الزيارات - RankX SEO</title>
+  <meta name="description" content="RankX SEO هو تطبيق سيو سلة متكامل لتحسين محركات البحث: تحسين وصف المنتجات، سيو المتجر، ALT للصور، وتحليل الكلمات المفتاحية والدومين لزيادة الزيارات والتحويل.">
+  <meta name="keywords" content="تحسين محركات البحث, تحسين محركات البحث سلة, سيو سلة, تطبيق سيو, تطبيق سيو سلة, قوقل سلة, جوجل سلة">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <link rel="canonical" href="{$safeAppUrl}/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="RankX SEO | تحسين سيو ومحتوى متاجر سلة">
-  <meta property="og:description" content="حل شامل لتحسين وصف المنتجات ورفع جودة سيو المتجر وكتابة ALT احترافي للصور مع أدوات تحليل كلمات ومنافسين.">
+  <meta property="og:title" content="تحسين محركات البحث سلة | تطبيق سيو سلة - RankX SEO">
+  <meta property="og:description" content="منصة عملية لتحسين محركات البحث لمتاجر سلة: سيو المنتجات، سيو المتجر، الكلمات المفتاحية، وتحليل الدومين في لوحة واحدة.">
   <meta property="og:url" content="{$safeAppUrl}/">
   <meta property="og:image" content="{$logoSrc}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="RankX SEO | منصة تحسين متاجر سلة">
-  <meta name="twitter:description" content="وصف منتجات أقوى، سيو أدق، وقرارات مبنية على بيانات حقيقية من لوحة واحدة.">
+  <meta name="twitter:title" content="تحسين محركات البحث سلة | RankX SEO">
+  <meta name="twitter:description" content="تطبيق سيو سلة لرفع الزيارات من جوجل/قوقل عبر محتوى مميز وتنفيذ SEO متراكم خطوة بخطوة.">
   <meta name="twitter:image" content="{$logoSrc}">
   <style>
     :root{
@@ -284,11 +285,11 @@ final class HomeController
       </div>
 
       <section class="hero">
-        <h1>منصة احترافية لرفع نتائج متجرك في البحث وزيادة التحويل</h1>
+        <h1>تحسين محركات البحث سلة لرفع الزيارات وزيادة التحويل</h1>
         <p class="lead">
-          RankX SEO تجمع لك أدوات تحسين المحتوى في لوحة واحدة: كتابة وصف منتجات متوافق مع SEO،
-          تحسين سيو المتجر، إنشاء ALT احترافي للصور، تحليل الكلمات المفتاحية، ومتابعة منافسيك
-          بخطوات عملية واضحة تناسب متاجر سلة التي تريد نموًا فعليًا وليس مجرد نصوص شكلية.
+          RankX SEO هو تطبيق سيو سلة يجمع أدوات تحسين محركات البحث في لوحة واحدة: كتابة وصف منتجات متوافق مع SEO،
+          تحسين سيو المتجر، إنشاء ALT احترافي للصور، تحليل الكلمات المفتاحية، ومتابعة المنافسين
+          بخطوات عملية واضحة تناسب المتاجر التي تريد نتائج حقيقية في جوجل سلة وقوقل سلة.
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="{$loginHref}">تسجيل الدخول</a>
@@ -298,15 +299,29 @@ final class HomeController
     </div>
 
     <section class="surface section">
-      <h2>كيف تزيد الزيارات مع السيو التراكمي؟</h2>
+      <h2>تحسين محركات البحث سلة: كيف يزيد الزيارات مع الوقت؟</h2>
       <p>
-        السيو ليس خطوة واحدة، بل عملية متراكمة تُبنى مع الوقت. كل تحسين صغير في المحتوى وجودته، وفهم نية الباحث، وتنظيم الصفحة،
-        يضيف أثرًا فوق الأثر السابق. أهم عوامل النمو: محتوى مميز ومفيد فعليًا للعميل، وصف واضح للمنتجات، وعناصر SEO دقيقة.
-        منصة RankX SEO توفر هذه العناصر في مكان واحد وتحوّلها إلى تنفيذ عملي مستمر، لذلك تظهر النتائج بشكل تدريجي وتزداد الزيارات
-        مع الاستمرار.
+        السيو ليس إجراءً لحظيًا، بل عملية تراكمية تُبنى خطوة بخطوة. كل تحسين في جودة المحتوى، وضوح نية البحث، وتنظيم الصفحة
+        يضيف أثرًا فوق الأثر السابق. أهم عوامل النمو: محتوى مميز ومفيد، صفحات واضحة، ووصف منتجات يخدم قرار الشراء.
+        لهذا صممنا RankX SEO كتطبيق سيو يربط التوليد الذكي بالتنفيذ المباشر داخل سلة، حتى يتحول التحسين إلى نظام مستمر
+        يرفع فرص الظهور في نتائج البحث مع كل تحديث جديد.
       </p>
       <div class="card surface-soft" style="box-shadow:none;margin-top:12px;">
         <img src="https://rankxseo.com/wp-content/uploads/2024/07/باك-لينك-سيو-خدمات-backlinks.gif" alt="مخطط يوضح نمو الزيارات تدريجيًا مع تطبيق تحسينات السيو التراكمية" loading="lazy" style="display:block;width:100%;max-width:860px;height:auto;margin:0 auto;border-radius:14px;border:1px solid var(--border);">
+      </div>
+      <div class="grid" style="margin-top:14px;">
+        <article class="card">
+          <h3>سيو سلة يبدأ من المحتوى المميز</h3>
+          <p class="muted" style="margin:0;">عندما يكون المحتوى مفيدًا وواضحًا للعميل، تزيد الثقة ويقوى ترتيب الصفحات تدريجيًا في نتائج البحث.</p>
+        </article>
+        <article class="card">
+          <h3>تطبيق سيو سلة للتنفيذ المستمر</h3>
+          <p class="muted" style="margin:0;">بدل العمل المتقطع، تحصل على نظام تحسين متكامل: توليد، مراجعة، ثم حفظ مباشر داخل المتجر.</p>
+        </article>
+        <article class="card">
+          <h3>الظهور في قوقل سلة وجوجل سلة</h3>
+          <p class="muted" style="margin:0;">استهداف الكلمات الصحيحة + تحسين الصفحات الأساسية = فرص أعلى لالتقاط زيارات بحث جاهزة للشراء.</p>
+        </article>
       </div>
     </section>
 
