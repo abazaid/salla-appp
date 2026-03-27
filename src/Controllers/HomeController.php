@@ -393,29 +393,27 @@ final class HomeController
       </p>
       <div class="grid" style="margin-top:14px;">
         <article class="card">
-          <div class="card-head"><span class="icon-badge"><svg><use href="#i-meta"></use></svg></span><h3>Primary Keywords</h3></div>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-meta"></use></svg></span><h3>بحث الكلمات عالي النية</h3></div>
           <ul class="list">
-            <li>تحسين محركات البحث</li>
-            <li>تحسين محركات البحث seo</li>
-            <li>تحسين محركات البحث سلة</li>
+            <li>اختيار الكلمات التي تعبّر عن نية شراء حقيقية.</li>
+            <li>موازنة حجم البحث مع مستوى المنافسة.</li>
+            <li>توجيه الكلمات المناسبة لكل صفحة داخل المتجر.</li>
           </ul>
         </article>
         <article class="card">
-          <div class="card-head"><span class="icon-badge"><svg><use href="#i-keyword"></use></svg></span><h3>Secondary Keywords</h3></div>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-keyword"></use></svg></span><h3>توزيع ذكي داخل المحتوى</h3></div>
           <ul class="list">
-            <li>سيو سلة</li>
-            <li>تطبيق سيو</li>
-            <li>تطبيق سيو سلة</li>
-            <li>خدمات تحسين محركات البحث</li>
+            <li>إدخال الكلمات في عناوين H2/H3 بشكل طبيعي.</li>
+            <li>تحسين Meta Title و Meta Description بما يخدم البحث.</li>
+            <li>تجنب الحشو مع الحفاظ على وضوح الرسالة التسويقية.</li>
           </ul>
         </article>
         <article class="card">
-          <div class="card-head"><span class="icon-badge"><svg><use href="#i-doc"></use></svg></span><h3>Long-tail Keywords</h3></div>
+          <div class="card-head"><span class="icon-badge"><svg><use href="#i-doc"></use></svg></span><h3>تحسين تراكمي مستمر</h3></div>
           <ul class="list">
-            <li>تحسين محركات البحث seo للمتجر الإلكتروني</li>
-            <li>خدمة تحسين محركات البحث لمتجر سلة</li>
-            <li>كيفية تحسين محركات البحث في سلة خطوة بخطوة</li>
-            <li>كتابة مقالات مدونة متوافقة مع seo لمتاجر سلة</li>
+            <li>كل تحديث يضيف أثرًا فوق السابق لرفع الظهور تدريجيًا.</li>
+            <li>ربط داخلي بين المنتجات والأقسام لدعم الصفحات المهمة.</li>
+            <li>تطوير المحتوى مع البيانات الفعلية بدل التخمين.</li>
           </ul>
         </article>
       </div>
