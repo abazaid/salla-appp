@@ -2619,6 +2619,8 @@
         'brand_seo': 'تحسين SEO ماركة',
       };
       
+      quotaLabels.category_seo = 'تحسين SEO الأقسام';
+
       const quotaRows = Object.entries(quotas).map(([key, q]) => {
         const label = quotaLabels[key] || key;
         const percentage = q.quota > 0 ? Math.round((q.used / q.quota) * 100) : 0;

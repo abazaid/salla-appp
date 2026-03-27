@@ -218,7 +218,7 @@ HTML));
 
         $planQuotasJson = json_encode(array_map(fn($p) => $p['quotas'], Plans::all()));
 
-        $quotaKeys = ['product_description', 'product_seo', 'image_alt', 'keyword_research', 'domain_seo', 'brand_seo'];
+        $quotaKeys = ['product_description', 'product_seo', 'image_alt', 'keyword_research', 'domain_seo', 'brand_seo', 'category_seo'];
         $currentUsed = [];
         $currentQuota = [];
         foreach ($quotaKeys as $key) {
@@ -437,7 +437,7 @@ HTML));
             return;
         }
 
-        $quotaKeys = ['product_description', 'product_seo', 'image_alt', 'keyword_research', 'domain_seo', 'brand_seo'];
+        $quotaKeys = ['product_description', 'product_seo', 'image_alt', 'keyword_research', 'domain_seo', 'brand_seo', 'category_seo'];
         $updates = [];
 
         foreach ($quotaKeys as $key) {

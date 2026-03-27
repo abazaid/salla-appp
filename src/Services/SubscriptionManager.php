@@ -28,13 +28,16 @@ final class SubscriptionManager
             $totalQuota = $plan !== null ? array_sum($plan['quotas']) : 0;
 
             $subscription['used_products'] = 0;
-            $subscription['used_product_seo'] = 0;
-            $subscription['used_image_alt'] = 0;
-            $subscription['used_keyword_research'] = 0;
-            $subscription['used_domain_seo'] = 0;
+            if ($plan !== null) {
+                foreach ($plan['quotas'] as $key => $value) {
+                    $subscription['quota_' . $key] = (int) $value;
+                    $subscription['used_' . $key] = 0;
+                }
+            }
             $subscription['product_quota'] = $totalQuota;
             $subscription['period_started_at'] = date('c');
-            $subscription['period_ends_at'] = date('c', strtotime('+30 days'));
+            $intervalDays = max((int) ($subscription['interval_days'] ?? 30), 1);
+            $subscription['period_ends_at'] = date('c', strtotime('+' . $intervalDays . ' days'));
             $subscription['last_event'] = 'period.rolled';
 
             $store['subscription'] = $subscription;
@@ -136,9 +139,7 @@ final class SubscriptionManager
         
         foreach ($plan['quotas'] as $key => $value) {
             $subscription['quota_' . $key] = $value;
-            if (!isset($subscription['used_' . $key])) {
-                $subscription['used_' . $key] = 0;
-            }
+            $subscription['used_' . $key] = 0;
         }
         
         $subscription['product_quota'] = array_sum($plan['quotas']);
@@ -184,9 +185,7 @@ final class SubscriptionManager
         
         foreach ($plan['quotas'] as $key => $value) {
             $subscription['quota_' . $key] = $value;
-            if (!isset($subscription['used_' . $key])) {
-                $subscription['used_' . $key] = 0;
-            }
+            $subscription['used_' . $key] = 0;
         }
         
         $subscription['product_quota'] = array_sum($plan['quotas']);
