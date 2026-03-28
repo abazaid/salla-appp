@@ -2085,6 +2085,7 @@ final class ProductController
     {
         $defaults = $this->getDefaultOptimizationSettings();
         $sitemapLinksCache = is_array($settings['sitemap_links_cache'] ?? null) ? (array) $settings['sitemap_links_cache'] : [];
+        $normalizedSitemapLinksCache = $this->normalizeSitemapLinksCache($sitemapLinksCache);
 
         return [
             'output_language' => $this->normalizeOutputLanguage((string) ($settings['output_language'] ?? $defaults['output_language'])),
@@ -2100,7 +2101,8 @@ final class ProductController
             'business_brand_name' => $this->normalizeOptimizationText((string) ($settings['business_brand_name'] ?? ''), 160),
             'business_overview' => $this->normalizeOptimizationText((string) ($settings['business_overview'] ?? ''), 1500),
             'sitemap_url' => $this->normalizeSitemapUrl((string) ($settings['sitemap_url'] ?? '')),
-            'sitemap_links_count' => (int) ($settings['sitemap_links_count'] ?? count($sitemapLinksCache)),
+            'sitemap_links_cache' => $normalizedSitemapLinksCache,
+            'sitemap_links_count' => (int) ($settings['sitemap_links_count'] ?? count($normalizedSitemapLinksCache)),
             'sitemap_last_fetched_at' => (string) ($settings['sitemap_last_fetched_at'] ?? ''),
         ];
     }
