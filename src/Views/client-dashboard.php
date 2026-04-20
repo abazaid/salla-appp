@@ -102,7 +102,7 @@ if ($appBasePath === '/') {
           في وصف المنتجات، وتنفيذ منظم لعناصر SEO. منصة RankX SEO تساعدك على تطبيق هذه العوامل بشكل عملي ومستمر من لوحة واحدة،
           لذلك يتحسن الظهور وتزيد الزيارات تدريجيًا مع الوقت.
         </p>
-        <img src="https://rankxseo.com/wp-content/uploads/2024/07/باك-لينك-سيو-خدمات-backlinks.gif" alt="رسم يوضح نمو الزيارات تدريجيًا نتيجة تحسينات السيو المتراكمة" loading="lazy" style="display:block;width:100%;max-width:860px;height:auto;margin:0 auto;border-radius:14px;border:1px solid rgba(202,177,149,.35);">
+        <img src="/assets/home-hero.gif" alt="رسم يوضح نمو الزيارات تدريجيًا نتيجة تحسينات السيو المتراكمة" loading="lazy" style="display:block;width:100%;max-width:860px;height:auto;margin:0 auto;border-radius:14px;border:1px solid rgba(202,177,149,.35);">
       </div>
 
       <div class="grid">
