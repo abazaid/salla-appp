@@ -612,17 +612,17 @@ final class View
         <img src="{$logoSrc}" alt="RankX SEO" width="1200" height="400" decoding="async" style="width:min(100%,280px);height:auto;display:block;filter:drop-shadow(0 0 20px rgba(99, 102, 241, 0.3))">
         <div>
           <div class="pill">RankX SEO</div>
-          <div class="muted" style="margin-top:10px;">Ã™â€¦Ã™â€ Ã˜ÂµÃ˜Â© Ã˜ÂªÃ˜Â­Ã˜Â³Ã™Å Ã™â€  Ã™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€° Ã™â€¦Ã™â€ Ã˜ÂªÃ˜Â¬Ã˜Â§Ã˜Âª Ã˜Â³Ã™â€žÃ˜Â© Ã™Ë†Ã˜Â±Ã˜Â¨Ã˜Â·Ã™â€¡Ã˜Â§ Ã˜Â¨Ã™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã˜Â®Ã˜Â§Ã˜Â±Ã˜Â¬Ã™Å Ã˜Â© Ã˜Â§Ã˜Â­Ã˜ÂªÃ˜Â±Ã˜Â§Ã™ÂÃ™Å Ã˜Â©.</div>
+          <div class="muted" style="margin-top:10px;">منصة تحسين محتوى منتجات سلة وربطها بلوحة خارجية احترافية.</div>
         </div>
       </div>
     </div>
     {$content}
     <div style="margin-top:26px;text-align:center;color:var(--muted);font-size:14px;padding-top:20px;border-top:1px solid var(--border-color);">
-      <span style="margin:0 10px;"><a href="{$safeAppUrl}/" style="color:var(--muted);text-decoration:none;">Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¦Ã™Å Ã˜Â³Ã™Å Ã˜Â©</a></span>
-      <span style="margin:0 10px;"><a href="{$safeAppUrl}/about" style="color:var(--muted);text-decoration:none;">Ã™â€¦Ã™â€  Ã™â€ Ã˜Â­Ã™â€ </a></span>
-      <span style="margin:0 10px;"><a href="{$safeAppUrl}/faq" style="color:var(--muted);text-decoration:none;">Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â³Ã˜Â¦Ã™â€žÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â§Ã˜Â¦Ã˜Â¹Ã˜Â©</a></span>
-      <span style="margin:0 10px;"><a href="{$safeAppUrl}/privacy" style="color:var(--muted);text-decoration:none;">Ã˜Â§Ã™â€žÃ˜Â®Ã˜ÂµÃ™Ë†Ã˜ÂµÃ™Å Ã˜Â©</a></span>
-      <span style="margin:0 10px;"><a href="{$safeAppUrl}/terms" style="color:var(--muted);text-decoration:none;">Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Ë†Ã˜Â·</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/" style="color:var(--muted);text-decoration:none;">الرئيسية</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/about" style="color:var(--muted);text-decoration:none;">من نحن</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/faq" style="color:var(--muted);text-decoration:none;">الأسئلة الشائعة</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/privacy" style="color:var(--muted);text-decoration:none;">الخصوصية</a></span>
+      <span style="margin:0 10px;"><a href="{$safeAppUrl}/terms" style="color:var(--muted);text-decoration:none;">الشروط</a></span>
       <br><br>
       <span>Powered by RankX SEO</span> | <a href="mailto:seo@rankxseo.com" style="color:var(--primary-2);text-decoration:none;">seo@rankxseo.com</a>
     </div>
