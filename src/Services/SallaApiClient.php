@@ -24,7 +24,7 @@ final class SallaApiClient
             'code' => $code,
         ];
 
-        $response = $this->httpClient->post(self::ACCOUNT_BASE . '/token', $payload);
+        $response = $this->httpClient->postUrlEncoded(self::ACCOUNT_BASE . '/token', $payload);
         return $response['body'];
     }
 
@@ -37,7 +37,7 @@ final class SallaApiClient
             'refresh_token' => $refreshToken,
         ];
 
-        $response = $this->httpClient->post(self::ACCOUNT_BASE . '/token', $payload);
+        $response = $this->httpClient->postUrlEncoded(self::ACCOUNT_BASE . '/token', $payload);
         return $response['body'];
     }
 

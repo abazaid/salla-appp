@@ -28,13 +28,20 @@ final class HttpClient
         return $this->request('POST', $url, $payload, $headers, false, $timeoutSeconds);
     }
 
+    public function postUrlEncoded(string $url, array $payload, array $headers = [], int $timeoutSeconds = 30): array
+    {
+        $headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        return $this->request('POST', $url, $payload, $headers, false, $timeoutSeconds, true);
+    }
+
     private function request(
         string $method,
         string $url,
         ?array $payload,
         array $headers,
         bool $jsonPayload = true,
-        int $timeoutSeconds = 30
+        int $timeoutSeconds = 30,
+        bool $urlEncodedPayload = false
     ): array
     {
         $timeoutSeconds = max(10, $timeoutSeconds);
@@ -73,7 +80,7 @@ final class HttpClient
                     CURLOPT_POSTFIELDS,
                     $jsonPayload
                         ? json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                        : $payload
+                        : ($urlEncodedPayload ? http_build_query($payload) : $payload)
                 );
             }
 
