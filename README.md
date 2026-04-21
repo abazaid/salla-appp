@@ -308,3 +308,30 @@ git push origin main
 - `HOSTINGER_DEPLOYMENT.md`
 - `GITHUB_HOSTINGER_DEPLOY.md`
 
+
+---
+
+## 14) Salla Token Auto Refresh (Every 10 Days)
+
+This project now includes a protected cron endpoint that refreshes store tokens before expiry:
+
+- Route: `GET /internal/cron/refresh-store-tokens`
+- Auth: `X-Cron-Key` header or `?key=...` query parameter
+- Force mode (optional): `?force=1`
+
+Environment variables:
+
+- `SALLA_TOKEN_REFRESH_DAYS=10`
+- `CRON_TOKEN_REFRESH_KEY=<long-random-secret>`
+
+Recommended cron (daily run, refreshes only when due):
+
+```bash
+curl -s "https://app.rankxseo.com/internal/cron/refresh-store-tokens?key=YOUR_SECRET"
+```
+
+How it works:
+
+- Uses `refresh_token` grant to issue a new access token.
+- Uses a lock file to avoid parallel refresh runs.
+- Updates both `stores.json` token payload and DB `stores` token columns (if DB is available).

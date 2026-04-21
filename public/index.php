@@ -11,6 +11,7 @@ use App\Controllers\ProductController;
 use App\Controllers\WebhookController;
 use App\Controllers\AuthController;
 use App\Controllers\AdminController;
+use App\Controllers\MaintenanceController;
 use App\Controllers\PageController;
 use App\Router;
 
@@ -78,5 +79,6 @@ $router->post('/api/products/{id}/images/optimize-alt', [ProductController::clas
 $router->post('/api/products/{id}/images/save-alt', [ProductController::class, 'saveProductImagesAlt']);
 $router->post('/api/products/{id}/images/{imageId}/optimize-alt', [ProductController::class, 'optimizeImageAlt']);
 $router->post('/api/products/{id}/images/{imageId}/save-alt', [ProductController::class, 'saveImageAlt']);
+$router->get('/internal/cron/refresh-store-tokens', [MaintenanceController::class, 'refreshStoreTokens']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');

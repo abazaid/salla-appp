@@ -28,6 +28,19 @@ final class SallaApiClient
         return $response['body'];
     }
 
+    public function refreshAccessToken(string $refreshToken): array
+    {
+        $payload = [
+            'grant_type' => 'refresh_token',
+            'client_id' => \App\Config::get('SALLA_CLIENT_ID'),
+            'client_secret' => \App\Config::get('SALLA_CLIENT_SECRET'),
+            'refresh_token' => $refreshToken,
+        ];
+
+        $response = $this->httpClient->post(self::ACCOUNT_BASE . '/token', $payload);
+        return $response['body'];
+    }
+
     public function getUserInfo(string $accessToken): array
     {
         $response = $this->httpClient->get(self::ACCOUNT_BASE . '/user/info', $this->headers($accessToken));

@@ -227,6 +227,28 @@ final class SaaSRepository
         $this->upsertSubscription((int) $store['id'], $subscription);
     }
 
+    public function updateStoreTokensByMerchantId(int $merchantId, array $tokenData): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE stores
+             SET access_token = :access_token,
+                 refresh_token = :refresh_token,
+                 token_scope = :token_scope,
+                 token_expires_at = :token_expires_at,
+                 updated_at = :updated_at
+             WHERE merchant_id = :merchant_id'
+        );
+
+        $stmt->execute([
+            'merchant_id' => $merchantId,
+            'access_token' => $tokenData['access_token'] ?? null,
+            'refresh_token' => $tokenData['refresh_token'] ?? null,
+            'token_scope' => $tokenData['token_scope'] ?? null,
+            'token_expires_at' => $tokenData['token_expires_at'] ?? null,
+            'updated_at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+        ]);
+    }
+
     public function listStores(): array
     {
         $stmt = $this->pdo->query(
