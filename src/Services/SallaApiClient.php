@@ -18,11 +18,13 @@ final class SallaApiClient
     {
         $payload = [
             'grant_type' => 'authorization_code',
+            'client_id' => \App\Config::get('SALLA_CLIENT_ID'),
+            'client_secret' => \App\Config::get('SALLA_CLIENT_SECRET'),
             'redirect_uri' => \App\Config::get('SALLA_REDIRECT_URI'),
             'code' => $code,
         ];
 
-        $response = $this->httpClient->postUrlEncoded(self::ACCOUNT_BASE . '/token', $payload, $this->oauthClientHeaders());
+        $response = $this->httpClient->postUrlEncoded(self::ACCOUNT_BASE . '/token', $payload);
         return $response['body'];
     }
 
@@ -30,10 +32,12 @@ final class SallaApiClient
     {
         $payload = [
             'grant_type' => 'refresh_token',
+            'client_id' => \App\Config::get('SALLA_CLIENT_ID'),
+            'client_secret' => \App\Config::get('SALLA_CLIENT_SECRET'),
             'refresh_token' => $refreshToken,
         ];
 
-        $response = $this->httpClient->postUrlEncoded(self::ACCOUNT_BASE . '/token', $payload, $this->oauthClientHeaders());
+        $response = $this->httpClient->postUrlEncoded(self::ACCOUNT_BASE . '/token', $payload);
         return $response['body'];
     }
 
@@ -292,18 +296,6 @@ final class SallaApiClient
             'Accept' => 'application/json',
             'Accept-Language' => $languageCode,
             'Content-Language' => $languageCode,
-        ];
-    }
-
-    private function oauthClientHeaders(): array
-    {
-        $clientId = (string) \App\Config::get('SALLA_CLIENT_ID', '');
-        $clientSecret = (string) \App\Config::get('SALLA_CLIENT_SECRET', '');
-        $basic = base64_encode($clientId . ':' . $clientSecret);
-
-        return [
-            'Authorization' => 'Basic ' . $basic,
-            'Accept' => 'application/json',
         ];
     }
 
