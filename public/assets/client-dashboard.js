@@ -105,12 +105,12 @@
     text = text.replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/gu, ' ').trim();
     if (!text) return '';
 
-    // Match strict server behavior with conservative cap for Salla validation.
-    while (text.length > 0) {
-      const charsOk = Array.from(text).length <= 60;
-      const bytesOk = new TextEncoder().encode(text).length <= 60;
-      if (charsOk && bytesOk) break;
-      text = Array.from(text).slice(0, -1).join('').trim();
+    // Salla validation is character-based for ALT (up to 70 chars).
+    // Use character-length limit, not byte-based, to avoid truncating Arabic
+    // (UTF-8 Arabic is 2 bytes/char, so a 60-byte limit would cut at ~30 chars).
+    const maxChars = 70;
+    if (Array.from(text).length > maxChars) {
+      text = Array.from(text).slice(0, maxChars).join('').trim();
     }
 
     return text;
