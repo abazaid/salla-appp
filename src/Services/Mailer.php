@@ -14,27 +14,81 @@ final class Mailer
         $subject = (string) Config::get('MAIL_RESET_SUBJECT', 'تعيين كلمة المرور');
         $safeName = htmlspecialchars($toName !== '' ? $toName : $toEmail, ENT_QUOTES, 'UTF-8');
         $safeUrl = htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8');
+        $appUrl = rtrim((string) Config::get('APP_URL', 'http://localhost:8000'), '/');
+        $safeAppUrl = htmlspecialchars($appUrl, ENT_QUOTES, 'UTF-8');
+        $safeLogoUrl = htmlspecialchars($appUrl . '/assets/rankxseo-logo.png', ENT_QUOTES, 'UTF-8');
 
         $html = <<<HTML
-<html lang="ar" dir="rtl">
-  <body style="margin:0;font-family:Tajawal,Tahoma,Arial,sans-serif;background:#f6efe3;padding:28px;color:#1d1b18;">
-    <div style="max-width:680px;margin:0 auto;background:#fffdf9;border-radius:24px;padding:32px;border:1px solid #eadccc;box-shadow:0 18px 40px rgba(50,35,18,0.08);">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
-        <div>
-          <div style="display:inline-block;padding:8px 14px;border-radius:999px;background:#f1e5d7;color:#7a4e1f;font-size:13px;font-weight:700;">RankX SEO</div>
-          <h1 style="margin:16px 0 8px;font-size:34px;line-height:1.1;">مرحبًا {$safeName}</h1>
-          <p style="margin:0;color:#675f56;line-height:1.9;">تم ربط متجرك بنجاح، ويمكنك الآن تفعيل حسابك للدخول إلى لوحة التحكم الخارجية وإدارة تحسينات المنتجات.</p>
-        </div>
-      </div>
-      <div style="margin-top:24px;padding:20px;border-radius:20px;background:#fbf6ef;border:1px solid #eee1d0;">
-        <p style="margin:0 0 12px;line-height:1.9;">اضغط الزر التالي لتعيين كلمة المرور:</p>
-        <p style="margin:0;"><a href="{$safeUrl}" style="display:inline-block;background:#0f7b66;color:#ffffff;text-decoration:none;padding:14px 20px;border-radius:14px;font-weight:700;">تعيين كلمة المرور</a></p>
-      </div>
-      <p style="margin-top:24px;line-height:1.9;color:#675f56;">إذا لم يعمل الزر، انسخ الرابط التالي وافتحه في المتصفح:</p>
-      <p style="word-break:break-all;color:#7a4e1f;line-height:1.9;">{$safeUrl}</p>
-      <hr style="border:none;border-top:1px solid #eee1d0;margin:28px 0;">
-      <p style="margin:0;color:#8a7d70;line-height:1.8;">تم إرسال هذه الرسالة من منصة RankX SEO لإدارة وتحسين محتوى منتجات سلة.</p>
-    </div>
+<!doctype html>
+<html lang="ar" dir="rtl" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعيين كلمة المرور</title>
+  </head>
+  <body style="margin:0;padding:0;background:#F8FAFC;color:#0F172A;font-family:Tajawal,Tahoma,Arial,sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">فعّل حسابك في RankX SEO وابدأ إدارة تحسينات منتجات سلة من لوحة واحدة.</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#F8FAFC;border-collapse:collapse;">
+      <tr>
+        <td align="center" style="padding:32px 14px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:680px;border-collapse:collapse;text-align:right;direction:rtl;">
+            <tr>
+              <td style="padding:0 4px 14px;">
+                <img src="{$safeLogoUrl}" width="150" alt="RankX SEO" style="display:block;width:150px;max-width:150px;height:auto;border:0;">
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:22px;overflow:hidden;box-shadow:0 22px 55px rgba(15,23,42,0.08);">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+                  <tr>
+                    <td style="height:7px;background:#3B82F6;background:linear-gradient(135deg,#3B82F6 0%,#6366F1 55%,#8B5CF6 100%);font-size:0;line-height:0;">&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:34px 34px 12px;">
+                      <span style="display:inline-block;padding:8px 14px;border-radius:999px;background:#EEF2FF;color:#4F46E5;font-size:13px;font-weight:700;line-height:1;">منصة تحسين محركات البحث لمتاجر سلة</span>
+                      <h1 style="margin:18px 0 10px;color:#0F172A;font-size:30px;line-height:1.35;font-weight:800;">مرحبًا {$safeName}</h1>
+                      <p style="margin:0;color:#475569;font-size:16px;line-height:1.9;">يمكنك الآن تعيين كلمة مرور حسابك في RankX SEO والدخول إلى لوحة التحكم لإدارة تحسين وصف المنتجات، عناصر SEO، وتحسينات محتوى متجرك من مكان واحد.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:18px 34px 6px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:18px;border-collapse:separate;">
+                        <tr>
+                          <td style="padding:22px;">
+                            <p style="margin:0 0 16px;color:#0F172A;font-size:16px;line-height:1.8;font-weight:700;">اضغط الزر التالي لتفعيل حسابك وتعيين كلمة المرور:</p>
+                            <a href="{$safeUrl}" style="display:inline-block;background:#3B82F6;background:linear-gradient(135deg,#3B82F6 0%,#6366F1 55%,#8B5CF6 100%);color:#FFFFFF;text-decoration:none;padding:14px 26px;border-radius:12px;font-size:16px;font-weight:800;line-height:1.3;">تعيين كلمة المرور</a>
+                            <p style="margin:16px 0 0;color:#64748B;font-size:13px;line-height:1.8;">لأمان حسابك، لا تشارك هذا الرابط مع أي شخص.</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:20px 34px 0;">
+                      <p style="margin:0 0 10px;color:#475569;font-size:14px;line-height:1.8;">إذا لم يعمل الزر، انسخ الرابط التالي وافتحه في المتصفح:</p>
+                      <div style="direction:ltr;text-align:left;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:12px;padding:12px;color:#4F46E5;font-size:13px;line-height:1.7;word-break:break-all;">{$safeUrl}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:26px 34px 34px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top:1px solid #E2E8F0;border-collapse:collapse;">
+                        <tr>
+                          <td style="padding-top:18px;color:#64748B;font-size:13px;line-height:1.8;">
+                            تم إرسال هذه الرسالة من منصة <strong style="color:#0F172A;">RankX SEO</strong> لإدارة وتحسين محتوى منتجات سلة.
+                            <br>
+                            <a href="{$safeAppUrl}" style="color:#6366F1;text-decoration:none;">{$safeAppUrl}</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
 HTML;
