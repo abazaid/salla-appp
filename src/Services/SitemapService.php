@@ -164,7 +164,7 @@ final class SitemapService
             [
                 'Accept' => 'application/xml,text/xml,text/plain,*/*',
                 'Accept-Language' => 'ar,en-US;q=0.9,en;q=0.8',
-                'User-Agent' => 'Mozilla/5.0 (compatible; RankXSEO-Bot/1.0; +https://app.rankxseo.com)',
+                'User-Agent' => 'Mozilla/5.0 (compatible; RankXSEO-Bot/1.0; +https://rankxseo.com)',
             ],
             [
                 'Accept' => 'application/xml,text/xml,text/plain,*/*',

@@ -109,15 +109,15 @@ http://localhost:8000
 ### OAuth / Webhook / Embedded
 - Redirect URL:
 ```text
-https://app.rankxseo.com/oauth/callback
+https://rankxseo.com/oauth/callback
 ```
 - Webhook URL:
 ```text
-https://app.rankxseo.com/webhooks/salla
+https://rankxseo.com/webhooks/salla
 ```
 - Embedded URL (اختياري حالياً):
 ```text
-https://app.rankxseo.com/embedded
+https://rankxseo.com/embedded
 ```
 
 ### Scopes المطلوبة
@@ -206,15 +206,12 @@ ADD COLUMN mode VARCHAR(50) NULL AFTER product_id;
 
 ### المسار المقترح
 - كود التطبيق: `public_html/app`
-- Document Root للدومين الفرعي `app.rankxseo.com`:
-```text
-/public_html/app/public
-```
+- Document Root: `public_html/app/public` (الدومين الرئيسي rankxseo.com)
 
 ### نقاط مهمة
 - لا ترفع `.env` إلى Git.
 - لا تعتمد على `public/storage/stores.json` للنسخة الإنتاجية إذا أنت تستخدم DB (هذا الملف runtime/history).
-- فعّل SSL على `app.rankxseo.com`.
+- فعّل SSL على rankxseo.com.
 - تأكد من سجلات البريد SPF / DKIM / DMARC.
 
 ### إن كان عندك 404 في static أو API
@@ -327,7 +324,7 @@ Environment variables:
 Recommended cron (daily run, refreshes only when due):
 
 ```bash
-curl -s "https://app.rankxseo.com/internal/cron/refresh-store-tokens?key=YOUR_SECRET"
+curl -s "https://rankxseo.com/internal/cron/refresh-store-tokens?key=YOUR_SECRET"
 ```
 
 How it works:

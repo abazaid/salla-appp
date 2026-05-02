@@ -17,4 +17,4 @@ When the user says "اكتب مقال" or gives a keyword/topic:
 6. **Publish** — git add, commit, and push to deploy — MUST do all three, never skip
 
 ## Internal links
-Always link to: https://rankxseo.com (main site), https://app.rankxseo.com (dashboard), and relevant service pages.
+Always link to: https://rankxseo.com (main site) and relevant service pages.

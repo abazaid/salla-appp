@@ -2,13 +2,12 @@
 
 هذا الملف يجهزك لرفع المشروع إلى:
 
-- `https://app.rankxseo.com`
+- `https://rankxseo.com`
 - على استضافة `Hostinger`
 
 ## 1. الدومين
 
-- اجعل الموقع التسويقي على `rankxseo.com`
-- اجعل المنصة على `app.rankxseo.com`
+- الموقع والمنصة على `rankxseo.com`
 
 ## 2. قاعدة البيانات
 
@@ -26,7 +25,7 @@ database/schema.sql
 ```env
 APP_NAME="RankX SEO"
 APP_ENV=production
-APP_URL=https://app.rankxseo.com
+APP_URL=https://rankxseo.com
 APP_KEY=change-this
 
 DB_CONNECTION=mysql
@@ -60,13 +59,13 @@ OPENAI_REASONING_EFFORT=low
 - `Webhook URL`
 
 ```text
-https://app.rankxseo.com/webhooks/salla
+https://rankxseo.com/webhooks/salla
 ```
 
 - `Embedded Page URL`
 
 ```text
-https://app.rankxseo.com/embedded
+https://rankxseo.com/embedded
 ```
 
 ## 5. البريد

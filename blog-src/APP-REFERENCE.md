@@ -2,7 +2,7 @@
 
 **المنصة:** SaaS متخصصة في تحسين محتوى متاجر سلة (Salla) باستخدام الذكاء الاصطناعي
 **الموقع:** rankxseo.com  
-**التطبيق:** app.rankxseo.com  
+**التطبيق:** rankxseo.com  
 **المدونة:** rankxseo.com/blog  
 **البريد:** seo@rankxseo.com  
 **اللغة:** العربية كاملة (RTL)
@@ -182,7 +182,7 @@
 ## ٨. الروابط المهمة
 
 - الموقع الرئيسي: https://rankxseo.com
-- لوحة التحكم: https://app.rankxseo.com
+- لوحة التحكم: https://rankxseo.com
 - المدونة: https://rankxseo.com/blog
 - صفحة الأسعار: https://rankxseo.com/pricing
 - الأسئلة الشائعة: https://rankxseo.com/faq
