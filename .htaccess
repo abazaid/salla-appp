@@ -9,5 +9,8 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# Astro blog at /blog — pass through to static files
+RewriteRule ^blog(/.*)?$ - [L]
+
 # Send all application routes through the front controller.
 RewriteRule ^ index.php [L,QSA]
