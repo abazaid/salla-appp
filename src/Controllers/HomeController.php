@@ -500,21 +500,6 @@ final class HomeController
       <h2>الباقات والأسعار</h2>
       <p>اختر الباقة المناسبة لمتجرك وابدأ بتحسين محتواك اليوم.</p>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));">
-        <article class="card" style="border:2px solid #10B981;">
-          <h3 style="color:#10B981;">🟢 التجربة الاقتصادية</h3>
-          <div style="font-size:32px;font-weight:800;margin:10px 0;">5 ر.س<span style="font-size:16px;color:var(--muted);font-weight:400;">/شهر</span></div>
-          <p style="color:var(--muted);font-size:14px;">جرّب المنصة بسعر رمزي</p>
-          <ul class="list" style="font-size:15px;">
-            <li>10 تحسين وصف منتج</li>
-            <li>10 تحسين SEO منتج</li>
-            <li>10 تحسين ALT صور</li>
-            <li>5 كلمات مفتاحية</li>
-            <li>1 تحليل دومين</li>
-            <li>5 تحسين ماركات</li>
-            <li>5 تحسين الأقسام</li>
-          </ul>
-          <a class="btn btn-primary" href="{$loginHref}" style="margin-top:12px;background:#10B981;">ابدأ الآن</a>
-        </article>
         <article class="card" style="border:2px solid #3B82F6;">
           <h3 style="color:#3B82F6;">🔵 الخطة الأساسية</h3>
           <div style="font-size:32px;font-weight:800;margin:10px 0;">29 ر.س<span style="font-size:16px;color:var(--muted);font-weight:400;">/شهر</span></div>
