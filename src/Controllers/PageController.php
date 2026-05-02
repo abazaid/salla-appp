@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -309,10 +309,7 @@ final class PageController
 
     <div class="footer">
       <p>
-        <a href="{$safeAppUrl}/">الرئيسية</a> · 
-        <a href="{$safeAppUrl}/faq">الأسئلة الشائعة</a> · 
-        <a href="{$safeAppUrl}/privacy">سياسة الخصوصية</a> · 
-        <a href="{$safeAppUrl}/terms">الشروط والأحكام</a>
+        <a href="/">الرئيسية</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/privacy">سياسة الخصوصية</a> · <a href="/terms">الشروط والأحكام</a>
       </p>
       <p>© 2024 RankX SEO - جميع الحقوق محفوظة</p>
     </div>
@@ -330,7 +327,7 @@ HTML;
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
         $logoSrc = '/assets/rankxseo-logo.png';
         $faviconSrc = 'https://rankxseo.com/favicon.png';
-        $loginHref = $safeAppUrl . '/login';
+        $loginHref = '/login';
 
         $html = <<<HTML
 <!doctype html>
@@ -724,10 +721,7 @@ HTML;
 
     <div class="footer">
       <p>
-        <a href="{$safeAppUrl}/">الرئيسية</a> · 
-        <a href="{$safeAppUrl}/about">من نحن</a> · 
-        <a href="{$safeAppUrl}/privacy">سياسة الخصوصية</a> · 
-        <a href="{$safeAppUrl}/terms">الشروط والأحكام</a>
+        <a href="/">الرئيسية</a> · <a href="/about">من نحن</a> · <a href="/privacy">سياسة الخصوصية</a> · <a href="/terms">الشروط والأحكام</a>
       </p>
       <p>© 2024 RankX SEO - جميع الحقوق محفوظة</p>
     </div>
@@ -908,10 +902,7 @@ HTML;
 
     <div class="footer">
       <p>
-        <a href="{$safeAppUrl}/">الرئيسية</a> · 
-        <a href="{$safeAppUrl}/about">من نحن</a> · 
-        <a href="{$safeAppUrl}/faq">الأسئلة الشائعة</a> · 
-        <a href="{$safeAppUrl}/terms">الشروط والأحكام</a>
+        <a href="/">الرئيسية</a> · <a href="/about">من نحن</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/terms">الشروط والأحكام</a>
       </p>
       <p>© 2024 RankX SEO - جميع الحقوق محفوظة</p>
     </div>
@@ -1095,10 +1086,7 @@ HTML;
 
     <div class="footer">
       <p>
-        <a href="{$safeAppUrl}/">الرئيسية</a> · 
-        <a href="{$safeAppUrl}/about">من نحن</a> · 
-        <a href="{$safeAppUrl}/faq">الأسئلة الشائعة</a> · 
-        <a href="{$safeAppUrl}/privacy">سياسة الخصوصية</a>
+        <a href="/">الرئيسية</a> · <a href="/about">من نحن</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/privacy">سياسة الخصوصية</a>
       </p>
       <p>© 2024 RankX SEO - جميع الحقوق محفوظة</p>
     </div>
@@ -1116,7 +1104,7 @@ HTML;
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
         $logoSrc = '/assets/rankxseo-logo.png';
         $faviconSrc = 'https://rankxseo.com/favicon.png';
-        $loginHref = $safeAppUrl . '/login';
+        $loginHref = '/login';
 
         $plans = Plans::all();
         $plansHtml = '';
@@ -1406,11 +1394,7 @@ HTML;
 
     <div class="footer">
       <p>
-        <a href="{$safeAppUrl}/">الرئيسية</a> · 
-        <a href="{$safeAppUrl}/about">من نحن</a> · 
-        <a href="{$safeAppUrl}/faq">الأسئلة الشائعة</a> · 
-        <a href="{$safeAppUrl}/privacy">الخصوصية</a> · 
-        <a href="{$safeAppUrl}/terms">الشروط</a>
+        <a href="/">الرئيسية</a> · <a href="/about">من نحن</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/privacy">الخصوصية</a> · <a href="/terms">الشروط</a>
       </p>
       <p>© 2024 RankX SEO - جميع الحقوق محفوظة</p>
     </div>

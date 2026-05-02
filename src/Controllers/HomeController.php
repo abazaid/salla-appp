@@ -13,7 +13,7 @@ final class HomeController
     {
         $appUrl = (string) Config::get('APP_URL', 'http://localhost:8000');
         $safeAppUrl = htmlspecialchars(rtrim($appUrl, '/'), ENT_QUOTES, 'UTF-8');
-        $loginHref = $safeAppUrl . '/login';
+        $loginHref = '/login';
         $logoSrc = '/assets/rankxseo-logo.png';
         $faviconSrc = 'https://rankxseo.com/favicon.png';
 
@@ -637,12 +637,12 @@ final class HomeController
 
     <div class="foot">
       <p style="margin:0 0 10px;">
-        <a href="{$safeAppUrl}/" style="color:var(--muted);text-decoration:none;margin:0 8px;">الرئيسية</a>
-        <a href="{$safeAppUrl}/pricing" style="color:var(--muted);text-decoration:none;margin:0 8px;">الباقات</a>
-        <a href="{$safeAppUrl}/about" style="color:var(--muted);text-decoration:none;margin:0 8px;">من نحن</a>
-        <a href="{$safeAppUrl}/faq" style="color:var(--muted);text-decoration:none;margin:0 8px;">الأسئلة الشائعة</a>
-        <a href="{$safeAppUrl}/privacy" style="color:var(--muted);text-decoration:none;margin:0 8px;">الخصوصية</a>
-        <a href="{$safeAppUrl}/terms" style="color:var(--muted);text-decoration:none;margin:0 8px;">الشروط</a>
+        <a href="/" style="color:var(--muted);text-decoration:none;margin:0 8px;">الرئيسية</a>
+        <a href="/pricing" style="color:var(--muted);text-decoration:none;margin:0 8px;">الباقات</a>
+        <a href="/about" style="color:var(--muted);text-decoration:none;margin:0 8px;">من نحن</a>
+        <a href="/faq" style="color:var(--muted);text-decoration:none;margin:0 8px;">الأسئلة الشائعة</a>
+        <a href="/privacy" style="color:var(--muted);text-decoration:none;margin:0 8px;">الخصوصية</a>
+        <a href="/terms" style="color:var(--muted);text-decoration:none;margin:0 8px;">الشروط</a>
       </p>
       <p style="margin:0;">Powered by RankX SEO | <a href="mailto:seo@rankxseo.com" style="color:var(--primary-2);">seo@rankxseo.com</a></p>
     </div>
