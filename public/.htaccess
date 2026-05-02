@@ -1,3 +1,7 @@
+# Redirect app.rankxseo.com homepage to main domain — doesn't affect /login, /dashboard, ...
+RewriteCond %{HTTP_HOST} ^app\.rankxseo\.com$ [NC]
+RewriteRule ^$ https://rankxseo.com/ [R=301,L]
+
 RewriteEngine On
 
 # Ensure consistent UTF-8 charset for static/text responses.
