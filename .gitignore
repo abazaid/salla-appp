@@ -13,6 +13,10 @@ public/storage/*.log
 !storage/.gitkeep
 !public/storage/.gitkeep
 
+# Astro blog dependencies
+blog-src/node_modules/
+blog-src/dist/
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -1,0 +1,92 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  pubDate={post.data.pubDate}
+  image={post.data.image}
+>
+  <div class="post-content">
+    <Content />
+  </div>
+
+  {post.data.tags.length > 0 && (
+    <div class="post-tags">
+      <span class="tags-label">الوسوم:</span>
+      {post.data.tags.map((tag) => (
+        <span class="tag">{tag}</span>
+      ))}
+    </div>
+  )}
+
+  <nav class="post-nav">
+    <a href="/blog/" class="back-link">&larr; العودة إلى المدونة</a>
+  </nav>
+</BaseLayout>
+
+<style>
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.9;
+  }
+
+  .post-content h2 {
+    margin-top: 2rem;
+  }
+
+  .post-content p {
+    margin-bottom: 1.25rem;
+  }
+
+  .post-content ul, .post-content ol {
+    margin-bottom: 1.25rem;
+  }
+
+  .post-tags {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .tags-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .tag {
+    background: var(--bg-secondary);
+    color: var(--text);
+    padding: 0.2rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    border: 1px solid var(--border);
+  }
+
+  .post-nav {
+    margin-top: 2rem;
+    padding-top: 1rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 500;
+  }
+</style>

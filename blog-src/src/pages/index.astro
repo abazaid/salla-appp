@@ -1,0 +1,133 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+
+const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<BaseLayout>
+  <div class="blog-hero">
+    <h1>{SITE_TITLE}</h1>
+    <p class="hero-desc">{SITE_DESCRIPTION}</p>
+  </div>
+
+  <div class="posts-grid">
+    {sortedPosts.map((post) => (
+      <a href={`/blog/posts/${post.slug}/`} class="post-card">
+        <article>
+          <time datetime={post.data.pubDate.toISOString()}>
+            {post.data.pubDate.toLocaleDateString('ar-SA', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </time>
+          <h2>{post.data.title}</h2>
+          <p>{post.data.description}</p>
+          {post.data.tags.length > 0 && (
+            <div class="tags">
+              {post.data.tags.map((tag) => (
+                <span class="tag">{tag}</span>
+              ))}
+            </div>
+          )}
+        </article>
+      </a>
+    ))}
+  </div>
+
+  {sortedPosts.length === 0 && (
+    <div class="empty-state">
+      <p>لا توجد مقالات بعد. قريباً!</p>
+    </div>
+  )}
+</BaseLayout>
+
+<style>
+  .blog-hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+  }
+
+  .blog-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0 0 0.75rem;
+  }
+
+  .hero-desc {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .posts-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem 0 3rem;
+  }
+
+  .post-card {
+    display: block;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .post-card time {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-card h2 {
+    font-size: 1.35rem;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+  }
+
+  .post-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .tag {
+    background: var(--accent);
+    color: #fff;
+    padding: 0.2rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 0;
+    color: var(--text-secondary);
+  }
+</style>
