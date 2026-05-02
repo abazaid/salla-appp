@@ -1,8 +1,10 @@
-# Redirect ALL app.rankxseo.com traffic to the main domain (including /faq, /pricing, etc.)
-RewriteCond %{HTTP_HOST} ^app\.rankxseo\.com$ [NC]
-RewriteRule ^(.*)$ https://rankxseo.com/$1 [R=301,L]
-
 RewriteEngine On
+
+# Redirect app.rankxseo.com public pages to main domain — app routes (/login, /dashboard, /admin, /api/*, ...) stay on subdomain
+RewriteCond %{HTTP_HOST} ^app\.rankxseo\.com$ [NC]
+RewriteRule ^(faq|pricing|privacy|terms|about)$ https://rankxseo.com/$1 [R=301,L]
+RewriteCond %{HTTP_HOST} ^app\.rankxseo\.com$ [NC]
+RewriteRule ^$ https://rankxseo.com/ [R=301,L]
 
 # Ensure consistent UTF-8 charset for static/text responses.
 AddDefaultCharset UTF-8
