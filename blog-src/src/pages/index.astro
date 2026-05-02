@@ -17,7 +17,7 @@ const sortedPosts = allPosts.sort(
 
   <div class="posts-grid">
     {sortedPosts.map((post) => (
-      <a href={`/blog/posts/${post.slug}/`} class="post-card">
+      <a href={`/blog/${post.slug}/`} class="post-card">
         <article>
           <time datetime={post.data.pubDate.toISOString()}>
             {post.data.pubDate.toLocaleDateString('ar-SA', {
