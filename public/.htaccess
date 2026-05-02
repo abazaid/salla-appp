@@ -1,6 +1,6 @@
-# Redirect app.rankxseo.com homepage to main domain — doesn't affect /login, /dashboard, ...
+# Redirect ALL app.rankxseo.com traffic to the main domain (including /faq, /pricing, etc.)
 RewriteCond %{HTTP_HOST} ^app\.rankxseo\.com$ [NC]
-RewriteRule ^$ https://rankxseo.com/ [R=301,L]
+RewriteRule ^(.*)$ https://rankxseo.com/$1 [R=301,L]
 
 RewriteEngine On
 
