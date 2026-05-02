@@ -12,7 +12,9 @@ final class PageController
 {
     public function sitemap(): void
     {
-        $appUrl = rtrim((string) Config::get('APP_URL', 'http://localhost:8000'), '/');
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'rankxseo.com';
+        $appUrl = $scheme . '://' . $host;
         $now = gmdate('Y-m-d\TH:i:s\Z');
 
         $pages = [
@@ -29,15 +31,32 @@ final class PageController
 
         foreach ($pages as $page) {
             $loc = htmlspecialchars($appUrl . $page['path'], ENT_QUOTES | ENT_XML1, 'UTF-8');
-            $changefreq = htmlspecialchars($page['changefreq'], ENT_QUOTES | ENT_XML1, 'UTF-8');
-            $priority = htmlspecialchars($page['priority'], ENT_QUOTES | ENT_XML1, 'UTF-8');
 
             $xml .= "  <url>\n";
             $xml .= "    <loc>{$loc}</loc>\n";
             $xml .= "    <lastmod>{$now}</lastmod>\n";
-            $xml .= "    <changefreq>{$changefreq}</changefreq>\n";
-            $xml .= "    <priority>{$priority}</priority>\n";
+            $xml .= "    <changefreq>{$page['changefreq']}</changefreq>\n";
+            $xml .= "    <priority>{$page['priority']}</priority>\n";
             $xml .= "  </url>\n";
+        }
+
+        // Include blog posts from the built Astro sitemap
+        $blogSitemapPath = __DIR__ . '/../../blog/sitemap-0.xml';
+        if (file_exists($blogSitemapPath)) {
+            $blogXml = simplexml_load_file($blogSitemapPath);
+            if ($blogXml !== false) {
+                foreach ($blogXml->url as $url) {
+                    $loc = trim((string) $url->loc);
+                    if ($loc !== '') {
+                        $xml .= "  <url>\n";
+                        $xml .= "    <loc>" . htmlspecialchars($loc, ENT_QUOTES | ENT_XML1, 'UTF-8') . "</loc>\n";
+                        $xml .= "    <lastmod>{$now}</lastmod>\n";
+                        $xml .= "    <changefreq>monthly</changefreq>\n";
+                        $xml .= "    <priority>0.6</priority>\n";
+                        $xml .= "  </url>\n";
+                    }
+                }
+            }
         }
 
         $xml .= "</urlset>";
@@ -50,11 +69,13 @@ final class PageController
 
     public function robots(): void
     {
-        $appUrl = rtrim((string) Config::get('APP_URL', 'http://localhost:8000'), '/');
-        $sitemapUrl = $appUrl . '/sitemap.xml';
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'rankxseo.com';
+        $sitemapUrl = $scheme . '://' . $host . '/sitemap.xml';
 
         $content = "User-agent: *\n";
         $content .= "Allow: /\n";
+        $content .= "Allow: /blog/\n";
         $content .= "Disallow: /admin\n";
         $content .= "Disallow: /dashboard\n";
         $content .= "Disallow: /login\n";
